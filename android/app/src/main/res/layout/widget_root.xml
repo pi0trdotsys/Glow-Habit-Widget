@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:textColor="#9398a5"
             android:textSize="11sp"
-            android:text="Today's habits" />
+            android:text="Dzisiejsze zadania" />
     </LinearLayout>
 
     <ListView
@@ -48,5 +48,5 @@
         android:gravity="center"
         android:textColor="#9398a5"
         android:textSize="13sp"
-        android:text="No habits today" />
+        android:text="Brak zadań na dziś" />
 </LinearLayout>

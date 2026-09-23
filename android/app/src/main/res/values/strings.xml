@@ -4,6 +4,10 @@
     <string name="title_activity_main">Loop</string>
     <string name="package_name">app.lovable.glow_habit_widget</string>
     <string name="custom_url_scheme">app.lovable.glow_habit_widget</string>
-    <string name="widget_list_desc">Today\'s habits as a simple list with progress.</string>
-    <string name="widget_icons_desc">Today\'s habits with icons, progress ring and time left in the day.</string>
+    <string name="widget_list_label">Loop - lista</string>
+    <string name="widget_icons_label">Loop - ikony</string>
+    <string name="widget_next_label">Loop - następne zadanie</string>
+    <string name="widget_list_desc">Dzisiejsze zadania jako prosta lista z postępem.</string>
+    <string name="widget_icons_desc">Dzisiejsze zadania z ikonami, pierścieniem postępu i czasem do końca dnia.</string>
+    <string name="widget_next_desc">1×1: co zrobić teraz. Sam wybiera następne zadanie na podstawie pory dnia i postępu.</string>
 </resources>

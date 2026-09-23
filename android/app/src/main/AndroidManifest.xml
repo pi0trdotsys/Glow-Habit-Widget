@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Health Connect client needs API 26; calls are guarded by HealthSteps.available(). -->
+    <uses-sdk tools:overrideLibrary="androidx.health.connect.client" />
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -18,7 +22,32 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Health Connect: "why does Loop need steps" (Android 13 and older) -->
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
         </activity>
+
+        <!-- Hold-to-complete overlay: widget taps open it, holding the ring logs the task -->
+        <activity
+            android:name=".HoldActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Loop.Hold"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity="app.lovable.glow_habit_widget.hold" />
+
+        <!-- Health Connect permission usage screen (Android 14+) opens the app -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".MainActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -29,7 +58,8 @@
         </provider>
 
         <!-- Home-screen habit widget -->
-        <receiver android:name=".HabitWidgetProvider" android:exported="false">
+        <receiver android:name=".HabitWidgetProvider" android:exported="false"
+            android:label="@string/widget_list_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="app.lovable.glow_habit_widget.TOGGLE" />
@@ -47,7 +77,8 @@
         />
 
         <!-- Icon widget (progress ring + day countdown) -->
-        <receiver android:name=".HabitWidget2Provider" android:exported="false">
+        <receiver android:name=".HabitWidget2Provider" android:exported="false"
+            android:label="@string/widget_icons_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="app.lovable.glow_habit_widget.TOGGLE" />
@@ -57,9 +88,42 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info2" />
         </receiver>
+
+        <!-- 1x1 "next task" widget -->
+        <receiver android:name=".NextTaskWidgetProvider" android:exported="false"
+            android:label="@string/widget_next_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="app.lovable.glow_habit_widget.TOGGLE" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info3" />
+        </receiver>
+
+        <!-- Progress notification + Szpila: alarm ticks, notification action, re-arm after reboot/update -->
+        <receiver android:name=".NotifierReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Steps from Health Connect (incl. background reads for widgets/notifications) -->
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
+    <!-- Late-night screen time; granted by the user under "Usage access" -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+    </queries>
 </manifest>

@@ -1,113 +1,167 @@
-# Loop - Habit Tracker
+<div align="center">
 
-Build healthy habits and keep your streak alive. Loop is a fast, offline-first
-habit tracker that runs as a web app **and** as a native Android app with two
-**home-screen widgets** you can tick habits off from - without opening the app.
+<img src="public/icon-512.png" width="96" alt="Loop" />
 
-<p align="center">
-  <img src="docs/screenshots/today.png" width="200" alt="Today screen" />
-  <img src="docs/screenshots/report.png" width="200" alt="Weekly report" />
-  <img src="docs/screenshots/splash.png" width="200" alt="Splash screen" />
-</p>
-<p align="center">
-  <img src="docs/screenshots/widget-icons.png" width="200" alt="Icon widget with progress ring and day countdown" />
-  <img src="docs/screenshots/home-widget.png" width="200" alt="List widget" />
-</p>
+# Loop
 
-> Top: Today, Weekly report, splash screen. Bottom: the two **home-screen
-> widgets** - an icon widget (progress ring + time left in the day) and a simple
-> list, both with tap-to-complete.
+**Nawyki, które same się pilnują.**
+Rób to, co chcesz robić. Rzuć to, czego nie chcesz. A jak odpuścisz, usłyszysz o tym.
 
-## Download
+<br />
 
-Grab the latest signed APK from the
-[**Releases**](https://github.com/pi0trdotsys/glow-habit-widget/releases/latest)
-page and sideload it (you'll need to allow "install from unknown sources").
+[![Pobierz APK](https://img.shields.io/github/v/release/pi0trdotsys/Glow-Habit-Widget?label=Pobierz%20APK&style=for-the-badge&color=59e0ad&labelColor=0b0d11)](https://github.com/pi0trdotsys/Glow-Habit-Widget/releases/latest)
+&nbsp;
+![Android](https://img.shields.io/badge/Android-7%2B-59e0ad?style=for-the-badge&labelColor=0b0d11)
+&nbsp;
+![Offline](https://img.shields.io/badge/100%25-offline-59e0ad?style=for-the-badge&labelColor=0b0d11)
 
-> The app replaces any earlier TWA build of Loop - same package id
-> (`app.lovable.glow_habit_widget`). Uninstall the old one first if present.
+<br />
 
-## Features
+<img src="docs/screenshots/today.png" width="240" alt="Ekran Dziś ze Szpilą i planem dnia" />
+&nbsp;&nbsp;
+<img src="docs/screenshots/report.png" width="240" alt="Porównanie tydzień do tygodnia" />
+&nbsp;&nbsp;
+<img src="docs/screenshots/today-plan.png" width="240" alt="Zadania i zakazane" />
 
-- **Daily / weekday / times-per-week** habit schedules
-- **Hold to complete** with streaks and weekly progress
-- **70+ habit icons** to pick from (hygiene, fitness, food, mind, work,
-  nature and more, including a dedicated tooth icon for brushing habits)
-- **Native notifications**:
-  - **Per-habit reminders** - set a time on any habit's page to be nudged daily
-  - **Daily check-in** reminder at a time you choose
-  - **Weekly recap** notification that nudges you to compare this week vs last
-- **Weekly report** with per-habit breakdown
-- **Two native home-screen widgets** (both 4x2, tap-to-toggle):
-  - **Icon widget** - habit icons, a progress ring, and time left in the day
-  - **List widget** - today's habits as a simple list with progress
-  - both **reset automatically at midnight** for the new day
-- **Minimalist splash screen** and a custom adaptive app icon
-- **100% offline** - all data lives on-device (no account, no backend)
+</div>
 
-## Tech stack
+<br />
 
-- [TanStack Start](https://tanstack.com/start) (React 19, file-based routing)
-- Tailwind CSS v4, Radix UI, Zustand (persisted to `localStorage`)
-- [Capacitor](https://capacitorjs.com/) for the native Android shell
-  (Preferences, Splash Screen, Local Notifications plugins)
-- Two native Android **App Widgets** (Java, `RemoteViews`; icons from lucide
-  converted to vector drawables, progress ring drawn on a `Canvas`)
+## ◉ Dzień, który układa się sam
 
-## How the home-screen widget works
+Otwierasz Loop i od razu wiesz, co teraz. Aplikacja zna twoje zadania, porę dnia
+i to, kiedy zwykle je robisz, więc podsuwa **jedno następne zadanie** i
+**plan na resztę dnia**. Osiem szklanek wody? Rozłoży je równo od rana do wieczora.
 
-The web app is fully client-side; its data lives in `localStorage`. A native
-widget can't read that, so habit data is bridged into Android `SharedPreferences`:
+Przytrzymaj kafelek, a zadanie wskakuje na swoje miejsce. Ile razy, ile minut,
+ile kroków - ustawiasz po swojemu.
 
-```
-Web app (Zustand → localStorage)
-   │  startWidgetBridge()  - native only, no-op on web
-   ▼
-@capacitor/preferences  →  SharedPreferences "CapacitorStorage"
-   │   widget_state  (today's snapshot)
-   │   widget_pending (taps queued while the app is closed)
-   ▼
-Both App Widgets (RemoteViews) - render habits + progress; the icon widget
-   │   also computes time-left-in-day natively
-   │   tap a habit → updates the snapshot + queues an absolute-state op
-   ▼
-App reconciles the queue on next open (idempotent), then re-publishes
-```
+## ◉ Zakazane. Na czerwono.
 
-Key files: [`src/lib/widget/bridge.ts`](src/lib/widget/bridge.ts) and
-[`android/app/src/main/java/app/lovable/glow_habit_widget/`](android/app/src/main/java/app/lovable/glow_habit_widget/).
+Fast food, telefon do późna, słodycze. Dodaj to, czego **nie** chcesz robić,
+i ustaw limit, np. „najwyżej raz w tygodniu”.
 
-## Development (web)
+Zasada jest prosta i bezlitosna: każdego dnia potwierdzasz **„dziś czysto”**.
+Brak potwierdzenia do północy = wpadka.
+
+## ◉ Szpila 😈
+
+Twój złośliwy towarzysz. Wbija szpile w ciągu dnia, gdy zadania leżą odłogiem,
+i ma tekst na każdą okazję: na nieumyte zęby, na 2000 kroków o 18:00, na frytki.
+Im dłużej zwlekasz, tym ostrzej. Pamięta twoje wpadki. W niedzielę robi
+podsumowanie tygodnia, którego nie chcesz przeczytać.
+
+A gdy coś zrobisz, dostaniesz pochwałę. Złośliwą, ale zawsze.
+
+> **Szpila domyślnie przeklina.** Jeśli wolisz grzeczniej, przełącz ją w
+> Ustawieniach na **„Łagodny”**. Możesz też wybrać 3, 5 albo 8 szpil dziennie
+> i godziny ciszy.
+
+<div align="center">
+<img src="docs/screenshots/szpila.png" width="240" alt="Ustawienia Szpili" />
+&nbsp;&nbsp;
+<img src="docs/screenshots/new-habit.png" width="240" alt="Nowe zakazane zadanie" />
+&nbsp;&nbsp;
+<img src="docs/screenshots/report-insights.png" width="240" alt="Powiązania między nawykami i miesiąc" />
+</div>
+
+## ◉ Liczby, które mówią prawdę
+
+- **Tydzień do tygodnia**, ale uczciwie: w środę o 14:35 porównujesz się ze
+  środą 14:35 sprzed tygodnia, a nie z całym zakończonym tygodniem.
+- **Powiązania między nawykami**: „Dzień po nocy z telefonem robisz o 4000
+  kroków mniej”. Loop sam je wyłapuje po około dwóch tygodniach.
+- **Widok miesiąca** i twoja zwykła pora dla każdego zadania.
+
+## ◉ Bez otwierania aplikacji
+
+- **Trzy widżety**: mały 1×1 z następnym zadaniem, ikony z pierścieniem postępu
+  i czasem do końca dnia oraz prosta lista. Dotknij zadania, przytrzymaj
+  pierścień i gotowe - przypadkowe dotknięcie niczego nie zalicza.
+- **Pasek postępu w powiadomieniu** z planem, jak domknąć dzień.
+- **Przyciski prosto w szpilach**: „+1 szklanka”, „Dziś czysto”, „Była wpadka”,
+  „Odwal się (1 h)”.
+- **Wieczorne rozliczenie** o 21:30: wszystkie zakazane jednym powiadomieniem.
+
+## ◉ Śledzi się samo
+
+- **Kroki z Health Connect** - Google Fit, Samsung Health czy Mi Fitness
+  wpisują je za ciebie.
+- **Telefon do późna z czasu ekranu** - używasz telefonu po 23:30 dłużej niż
+  pozwalasz? Szpila to zobaczy. Nie trzeba niczego klikać.
+
+<br />
+
+---
+
+<br />
+
+## ▸ Instalacja
+
+1. Pobierz **`loop-2.0.0.apk`** z [Releases](https://github.com/pi0trdotsys/Glow-Habit-Widget/releases/latest).
+2. Otwórz plik na telefonie i zezwól na instalację z tego źródła.
+3. Uruchom Loop, podaj imię i zgódź się na powiadomienia.
+
+Dostajesz od razu gotowe zadania: mycie zębów, wodę, 8000 kroków, czytanie,
+telefon do późna i fast food. Edytujesz je, usuwasz albo dodajesz własne
+z gotowych szablonów.
+
+> **Masz Loop 1.x?** Wersja 2.0 ma nowy podpis, więc najpierw odinstaluj starą
+> wersję. Od 2.0 kolejne aktualizacje instalują się na obecną bez utraty danych.
+
+## ▸ Pierwsze 2 minuty, które robią różnicę
+
+| | Gdzie | Po co |
+|---|---|---|
+| 🔔 | Zgoda na powiadomienia | Szpila, pasek postępu, rozliczenie dnia |
+| 👣 | Ustawienia → Automatyczne śledzenie → **Połącz** | Kroki wpisują się same |
+| 📱 | Ustawienia → Automatyczne śledzenie → **Otwórz** | Ocena „telefonu do późna” z czasu ekranu |
+| 🔋 | Ustawienia systemu → Bateria → Loop → **Bez ograniczeń** | Szpile przychodzą punktualnie (szczególnie Xiaomi, POCO, Samsung) |
+| ➕ | Przytrzymaj ekran główny → **Widżety** → Loop | Wszystko pod kciukiem |
+
+## ▸ Twoje dane są twoje
+
+Wszystko zostaje na telefonie. Bez konta, bez chmury, bez reklam, bez śledzenia.
+Loop codziennie sam robi kopię do folderu **Pobrane/Loop** (ostatnie 7 dni).
+Możesz też zapisać kopię ręcznie, wysłać ją na Dysk albo mailem i przywrócić
+jednym dotknięciem.
+
+<br />
+
+<div align="center">
+
+**Loop** · zrobione z pasją i odrobiną jadu
+
+<img src="docs/screenshots/splash.png" width="160" alt="Loop" />
+
+</div>
+
+<br />
+
+<details>
+<summary><b>Dla programistów</b></summary>
+
+<br />
+
+React 19 + TanStack Start + Tailwind v4 w powłoce **Capacitor 8**. Widżety,
+powiadomienia, Health Connect i czas ekranu są natywne (Java/Kotlin). Dane
+żyją w `localStorage` i są lustrzane do `SharedPreferences`, skąd czyta je
+strona natywna ([`src/lib/widget/bridge.ts`](src/lib/widget/bridge.ts)).
 
 ```bash
 bun install
-bun run dev          # http://localhost:8080
-bun run build        # production SSR build (used for web deploy)
-```
+bun run dev              # web, http://localhost:8080
+bun run test             # testy logiki (planer, tydzień do tygodnia, zakazane, powiązania, kopie)
 
-## Building the Android app
-
-Requirements: **JDK 21** (Capacitor 8), Android SDK with `build-tools;34.0.0`.
-
-```bash
-# 1. Static, client-only SPA build for Capacitor (separate from the SSR build)
-bun run build:cap
+bun run build:cap        # statyczny build dla Capacitora
 bun x cap sync android
-
-# 2. Build a release APK
 cd android
-JAVA_HOME=/path/to/jdk-21 ./gradlew :app:assembleRelease
-
-# 3. Align + sign (replace with your keystore)
-$ANDROID_HOME/build-tools/34.0.0/zipalign -f -p 4 \
-  app/build/outputs/apk/release/app-release-unsigned.apk app-aligned.apk
-$ANDROID_HOME/build-tools/34.0.0/apksigner sign \
-  --ks your.keystore --ks-key-alias your-alias \
-  --out loop-release.apk app-aligned.apk
+./gradlew :app:assembleRelease
+./gradlew testReleaseUnitTest   # planer w Javie musi liczyć jak TS (tests/planner-vectors.json)
 ```
 
-Then install with `adb install -r loop-release.apk` and add the **Loop** widget
-from the launcher's widget picker.
+Podpis: `android/keystore.properties` (poza gitem; `storeFile`, `storePassword`,
+`keyAlias`, `keyPassword`). Jeden klucz dla wszystkich buildów, więc
+aktualizacje instalują się bez odinstalowania. Wymagany JDK 21.
 
-> The widget is empty until you open the app once - that first launch publishes
-> the snapshot the widget reads.
+</details>

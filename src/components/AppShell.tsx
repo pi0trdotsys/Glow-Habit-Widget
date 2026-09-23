@@ -5,10 +5,10 @@ import { useHabits } from "@/lib/habits/store";
 import { NameOnboarding } from "./NameOnboarding";
 
 const tabs = [
-  { to: "/", label: "Today", icon: Home },
-  { to: "/habits", label: "Habits", icon: LayoutGrid },
-  { to: "/report", label: "Report", icon: BarChart3 },
-  { to: "/settings", label: "Settings", icon: SettingsIcon },
+  { to: "/", label: "Dziś", icon: Home },
+  { to: "/habits", label: "Zadania", icon: LayoutGrid },
+  { to: "/report", label: "Raport", icon: BarChart3 },
+  { to: "/settings", label: "Ustawienia", icon: SettingsIcon },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {

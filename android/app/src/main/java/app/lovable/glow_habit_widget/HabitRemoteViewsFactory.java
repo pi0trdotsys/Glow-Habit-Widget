@@ -75,23 +75,21 @@ public class HabitRemoteViewsFactory implements RemoteViewsService.RemoteViewsFa
         RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget_row);
 
         String name = h.optString("name", "");
-        boolean done = h.optBoolean("done", false);
-        int color;
-        try {
-            color = Color.parseColor(h.optString("colorHex", "#59e0ad"));
-        } catch (Exception e) {
-            color = Color.parseColor("#59e0ad");
-        }
+        boolean done = WidgetShared.isDone(h);
+        boolean avoid = WidgetShared.isAvoid(h);
+        int color = WidgetShared.color(h);
+        String amount = WidgetShared.amountText(h);
 
-        rv.setTextViewText(R.id.row_name, name);
+        rv.setTextViewText(R.id.row_name, avoid ? "⛔ " + name : name);
         rv.setInt(R.id.row_dot, "setTextColor", color);
         rv.setInt(R.id.row_name, "setTextColor", done ? NAME_DONE : NAME_ACTIVE);
-        rv.setTextViewText(R.id.row_check, done ? "✓" : "");
+        String check = done ? "✓" : "slip".equals(h.optString("status")) ? "✗" : amount.isEmpty() ? "" : amount;
+        rv.setTextViewText(R.id.row_check, check);
+        rv.setFloat(R.id.row_check, "setTextSize", check.length() > 2 ? 11f : 16f);
         rv.setInt(R.id.row_check, "setTextColor", color);
 
         Intent fill = new Intent();
         fill.putExtra(WidgetShared.EXTRA_HABIT_ID, h.optString("id"));
-        fill.putExtra(WidgetShared.EXTRA_DONE, done);
         rv.setOnClickFillInIntent(R.id.row_root, fill);
         return rv;
     }

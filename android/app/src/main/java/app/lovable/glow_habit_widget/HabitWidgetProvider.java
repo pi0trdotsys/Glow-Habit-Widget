@@ -40,10 +40,10 @@ public class HabitWidgetProvider extends AppWidgetProvider {
         rv.setRemoteAdapter(R.id.widget_list, svc);
         rv.setEmptyView(R.id.widget_list, R.id.widget_empty);
 
-        Intent toggle = new Intent(context, HabitWidgetProvider.class);
-        toggle.setAction(WidgetShared.ACTION_TOGGLE);
-        PendingIntent togglePi = PendingIntent.getBroadcast(
-            context, 0, toggle,
+        // Row taps open the hold-to-complete overlay (fill-in intents add the habit id).
+        Intent hold = HoldActivity.intent(context, null, false, null);
+        PendingIntent togglePi = PendingIntent.getActivity(
+            context, 0, hold,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
         rv.setPendingIntentTemplate(R.id.widget_list, togglePi);
 
@@ -60,12 +60,12 @@ public class HabitWidgetProvider extends AppWidgetProvider {
     private static String headerTitle(Context context) {
         int total = WidgetShared.habits(context).length();
         if (total == 0) return "Loop";
-        return WidgetShared.doneCount(context) + " / " + total + " today";
+        return WidgetShared.doneCount(context) + " / " + total + " dziś";
     }
 
     private static String headerSubtitle(Context context) {
         String name = WidgetShared.userName(context);
-        return name.isEmpty() ? "Today's habits" : ("Hi " + name);
+        return name.isEmpty() ? "Dzisiejsze zadania" : ("Cześć, " + name);
     }
 
     @Override
@@ -73,12 +73,7 @@ public class HabitWidgetProvider extends AppWidgetProvider {
         super.onReceive(context, intent);
         String action = intent.getAction();
         if (WidgetShared.ACTION_TOGGLE.equals(action)) {
-            String habitId = intent.getStringExtra(WidgetShared.EXTRA_HABIT_ID);
-            boolean currentlyDone = intent.getBooleanExtra(WidgetShared.EXTRA_DONE, false);
-            if (habitId != null) {
-                WidgetShared.applyToggle(context, habitId, !currentlyDone);
-            }
-            WidgetShared.updateAll(context);
+            WidgetShared.tapInBackground(goAsync(), context, intent.getStringExtra(WidgetShared.EXTRA_HABIT_ID), false);
         } else if (Intent.ACTION_DATE_CHANGED.equals(action)
                 || Intent.ACTION_TIME_CHANGED.equals(action)
                 || Intent.ACTION_TIMEZONE_CHANGED.equals(action)) {

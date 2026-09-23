@@ -1,15 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { format } from "date-fns";
 import { HabitTile } from "@/components/HabitTile";
 import { useHabits } from "@/lib/habits/store";
-import { isDueOn } from "@/lib/habits/utils";
+import { isDueOn, todayProgress } from "@/lib/habits/utils";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/widget")({
   head: () => ({
     meta: [
-      { title: "Widget — Loop" },
-      { name: "description", content: "Quick widget view: hold a tile to complete." },
+      { title: "Widżet - Loop" },
+      { name: "description", content: "Szybki widok: przytrzymaj kafelek, by zaliczyć." },
     ],
   }),
   component: WidgetPage,
@@ -22,12 +21,7 @@ function WidgetPage() {
   const completions = useHabits((s) => s.completions);
   const today = new Date();
   const due = habits.filter((h) => isDueOn(h, today)).slice(0, 8);
-  const doneCount = due.filter((h) =>
-    completions.some(
-      (c) => c.habitId === h.id && c.date === format(today, "yyyy-MM-dd"),
-    ),
-  ).length;
-  const progressPercent = due.length > 0 ? (doneCount / due.length) * 100 : 0;
+  const progressPercent = todayProgress(habits, completions, today).fraction * 100;
 
   return (
     <div
@@ -43,7 +37,7 @@ function WidgetPage() {
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-                  Today's Progress
+                  Postęp dnia
                 </span>
                 <span className="text-[10px] font-bold text-primary">
                   {Math.round(progressPercent)}%
@@ -60,7 +54,7 @@ function WidgetPage() {
 
           {due.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No habits scheduled.
+              Brak zadań na dziś.
             </p>
           ) : (
             <div className="grid grid-cols-4 gap-y-6 gap-x-2 justify-items-center">

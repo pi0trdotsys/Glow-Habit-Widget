@@ -10,6 +10,7 @@
     "build:cap": "vite build --config vite.config.capacitor.ts && cp dist/client/_shell.html dist/client/index.html",
     "preview": "vite preview",
     "lint": "eslint .",
+    "test": "bun test tests",
     "format": "prettier --write ."
   },
   "dependencies": {

@@ -13,8 +13,12 @@ import { AnimatePresence } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { startWidgetBridge } from "../lib/widget/bridge";
-import { syncNotifications } from "../lib/notifications";
+import { refreshNative, startWidgetBridge } from "../lib/widget/bridge";
+import {
+  getPermissionState,
+  requestNotificationPermission,
+  syncNotifications,
+} from "../lib/notifications";
 import { useHabits } from "../lib/habits/store";
 import { SplashScreen } from "@/components/SplashScreen";
 import { Toaster } from "@/components/ui/sonner";
@@ -24,16 +28,16 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Nie ma takiej strony</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          Strona, której szukasz, nie istnieje albo została przeniesiona.
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            Strona główna
           </Link>
         </div>
       </div>
@@ -52,10 +56,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          Nie udało się załadować strony
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          Coś poszło nie tak. Spróbuj odświeżyć albo wróć na stronę główną.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -65,13 +69,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            Spróbuj ponownie
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            Strona główna
           </a>
         </div>
       </div>
@@ -84,17 +88,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Loop - Habit Tracker" },
-      { name: "description", content: "Build healthy habits. Keep your streak alive." },
+      { title: "Loop - nawyki" },
+      { name: "description", content: "Buduj dobre nawyki, rzucaj złe. Utrzymaj serię." },
       { name: "theme-color", content: "#0f0f12" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "Loop" },
-      { property: "og:title", content: "Loop - Habit Tracker" },
-      { property: "og:description", content: "Build healthy habits. Keep your streak alive." },
+      { property: "og:title", content: "Loop - nawyki" },
+      { property: "og:description", content: "Buduj dobre nawyki, rzucaj złe. Utrzymaj serię." },
       { property: "og:type", content: "website" },
-      { name: "twitter:title", content: "Loop - Habit Tracker" },
-      { name: "twitter:description", content: "Build healthy habits. Keep your streak alive." },
+      { name: "twitter:title", content: "Loop - nawyki" },
+      { name: "twitter:description", content: "Buduj dobre nawyki, rzucaj złe. Utrzymaj serię." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/5ebe8d17-cac7-4450-bb49-299bedfb8569" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/5ebe8d17-cac7-4450-bb49-299bedfb8569" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -117,7 +121,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pl">
       <head>
         <HeadContent />
       </head>
@@ -152,6 +156,24 @@ function RootComponent() {
       if (t) clearTimeout(t);
       unsub();
     };
+  }, []);
+
+  useEffect(() => {
+    // The progress notification and Szpila are on by default, so ask for the
+    // notification permission once on the native app (Android 13+ prompt).
+    if (!Capacitor.isNativePlatform()) return;
+    const { progress, taunts } = useHabits.getState().notifications;
+    if (!progress && !taunts) return;
+    const t = setTimeout(() => {
+      void getPermissionState().then(async (p) => {
+        if (p !== "default") return;
+        if ((await requestNotificationPermission()) === "granted") {
+          refreshNative();
+          void syncNotifications();
+        }
+      });
+    }, 2500);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {

@@ -110,3 +110,5 @@ export const HABIT_ICONS = [
 ] as const;
 
 export type HabitIconName = (typeof HABIT_ICONS)[number];
+/** Red accent for forbidden ("avoid") habits. */
+export const AVOID_COLOR = "var(--avoid)";

@@ -106,6 +106,8 @@
   --habit-rose: oklch(0.76 0.17 8);
   --habit-lime: oklch(0.86 0.18 130);
   --habit-sand: oklch(0.78 0.07 75);
+  /* Forbidden ("avoid") habits - red theme. Hex twin: AVOID_HEX in widget/bridge.ts */
+  --avoid: oklch(0.67 0.22 18);
 }
 
 .dark {

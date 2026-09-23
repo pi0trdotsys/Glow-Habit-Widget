@@ -108,7 +108,7 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.0, duration: 0.5, ease: "easeOut" }}
       >
-        Habit Tracker
+        Nawyki
       </motion.p>
     </motion.div>
   );
