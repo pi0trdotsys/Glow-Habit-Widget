@@ -4,7 +4,7 @@ import { HabitForm } from "@/components/HabitForm";
 import { useHabits } from "@/lib/habits/store";
 
 export const Route = createFileRoute("/habits/new")({
-  head: () => ({ meta: [{ title: "Nowe zadanie - Loop" }] }),
+  head: () => ({ meta: [{ title: "Nowe zadanie - Szpila" }] }),
   component: NewHabit,
 });
 

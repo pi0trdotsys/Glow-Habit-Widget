@@ -12,7 +12,7 @@ import {
   fmtNum,
   goalOf,
   indexEntries,
-  isDueOn,
+  countsOn,
   kindOf,
   todayKey,
   unitLabel,
@@ -78,7 +78,7 @@ export function habitInsights(habits: Habit[], completions: Completion[], days =
           const d = addDays(now, -i);
           const e = addDays(d, lag);
           if (todayKey(e) >= todayK) continue; // only finished days
-          if (!isDueOn(cause, d) || !isDueOn(effect, e)) continue;
+          if (!countsOn(cause, idx, d, now) || !countsOn(effect, idx, e, now)) continue;
           if (cause.schedule.type === "timesPerWeek" || effect.schedule.type === "timesPerWeek") continue;
           (isBad(cause, idx, d, now) ? badVals : goodVals).push(effectValue(effect, idx, e, now));
         }
@@ -145,7 +145,7 @@ export function monthGrid(habits: Habit[], completions: Completion[], month: Dat
     let sum = 0;
     if (key <= todayK) {
       for (const h of habits) {
-        if (!isDueOn(h, d) || h.schedule.type === "timesPerWeek") continue;
+        if (!countsOn(h, idx, d, now) || h.schedule.type === "timesPerWeek") continue;
         due++;
         sum += dayScore(h, idx, d, now);
       }

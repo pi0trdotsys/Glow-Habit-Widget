@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, LayoutGrid, Settings as SettingsIcon, BarChart3 } from "lucide-react";
+import { Home, LayoutGrid, Settings as SettingsIcon, BarChart3, Cat } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 import { useHabits } from "@/lib/habits/store";
 import { NameOnboarding } from "./NameOnboarding";
@@ -8,6 +8,7 @@ const tabs = [
   { to: "/", label: "Dziś", icon: Home },
   { to: "/habits", label: "Zadania", icon: LayoutGrid },
   { to: "/report", label: "Raport", icon: BarChart3 },
+  { to: "/szpila", label: "Szpila", icon: Cat },
   { to: "/settings", label: "Ustawienia", icon: SettingsIcon },
 ] as const;
 
@@ -33,7 +34,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md border-t border-border bg-background/85 backdrop-blur-xl"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <ul className="grid grid-cols-4">
+        <ul className="grid grid-cols-5">
           {tabs.map(({ to, label, icon: Icon }) => {
             const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
             return (

@@ -1,13 +1,15 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Loop</string>
-    <string name="title_activity_main">Loop</string>
+    <string name="app_name">Szpila</string>
+    <string name="title_activity_main">Szpila</string>
     <string name="package_name">app.lovable.glow_habit_widget</string>
     <string name="custom_url_scheme">app.lovable.glow_habit_widget</string>
-    <string name="widget_list_label">Loop - lista</string>
-    <string name="widget_icons_label">Loop - ikony</string>
-    <string name="widget_next_label">Loop - następne zadanie</string>
+    <string name="widget_list_label">Szpila - lista</string>
+    <string name="widget_icons_label">Szpila - ikony</string>
+    <string name="widget_next_label">Szpila - następne zadanie</string>
+    <string name="widget_szpila_label">Szpila - wredny kot</string>
     <string name="widget_list_desc">Dzisiejsze zadania jako prosta lista z postępem.</string>
     <string name="widget_icons_desc">Dzisiejsze zadania z ikonami, pierścieniem postępu i czasem do końca dnia.</string>
     <string name="widget_next_desc">1×1: co zrobić teraz. Sam wybiera następne zadanie na podstawie pory dnia i postępu.</string>
+    <string name="widget_szpila_desc">4×1: wredny kot Szpila wbija szpile o zadaniach do zrobienia. Bez zakazanych - bezpieczny na ekran główny.</string>
 </resources>

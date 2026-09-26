@@ -75,6 +75,11 @@ export interface Habit {
   lateAfter?: string;
   /** source "screen": minutes of late screen time tolerated before it's a slip. */
   lateLimit?: number;
+  /**
+   * source "screen": what counts as late use. "social" (default) = only social
+   * media apps (an alarm, music or a podcast don't count); "screen" = any screen time.
+   */
+  lateBasis?: "social" | "screen";
 }
 
 export type HabitSource = "steps" | "screen";

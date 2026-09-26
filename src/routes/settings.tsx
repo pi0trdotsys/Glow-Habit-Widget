@@ -27,10 +27,12 @@ import {
   type StepsStatus,
 } from "@/lib/sensors";
 import { SzpilaAvatar } from "@/components/Szpila";
+import { LiveGuardCard } from "@/components/LiveGuardCard";
 import { Toggle } from "@/components/HabitForm";
 import { AppShell } from "@/components/AppShell";
 import { useHabits } from "@/lib/habits/store";
 import { lastAutoBackup, restoreBackup, saveBackup } from "@/lib/backup";
+import { pinWidget, type WidgetKind } from "@/lib/widget/bridge";
 import {
   getPermissionState,
   requestNotificationPermission,
@@ -40,7 +42,7 @@ import {
 import { formatMinute } from "@/lib/habits/utils";
 
 export const Route = createFileRoute("/settings")({
-  head: () => ({ meta: [{ title: "Ustawienia - Loop" }] }),
+  head: () => ({ meta: [{ title: "Ustawienia - Szpila" }] }),
   component: SettingsPage,
 });
 
@@ -397,11 +399,9 @@ function SettingsPage() {
 
         <SensorsCard onMessage={setMsg} />
 
-        <Row
-          icon={<Smartphone size={18} />}
-          title="Widżety na ekranie głównym"
-          desc="Przytrzymaj pusty obszar ekranu głównego → Widżety → Loop. Są trzy: lista, ikony z pierścieniem postępu i mały 1×1 „Następne zadanie”, który sam wybiera, co robić teraz."
-        />
+        <LiveGuardCard />
+
+        <WidgetsCard onMessage={setMsg} />
         <div className="rounded-2xl bg-card p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -411,7 +411,7 @@ function SettingsPage() {
             <Toggle checked={autoBackup} onChange={setAutoBackup} />
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Raz dziennie zapisuje kopię do Pobrane/Loop (po jednym pliku na dzień tygodnia, więc masz ostatnie 7
+            Raz dziennie zapisuje kopię do Pobrane/Szpila (po jednym pliku na dzień tygodnia, więc masz ostatnie 7
             dni). Po reinstalacji przywrócisz ją przyciskiem „Przywróć z pliku”.
             {lastAuto && ` Ostatnia: ${lastAuto}.`}
           </p>
@@ -448,30 +448,10 @@ function SettingsPage() {
         {msg && <p className="pt-2 text-center text-xs text-muted-foreground">{msg}</p>}
 
         <p className="pt-10 text-center text-xs text-muted-foreground">
-          Loop · nawyki offline, bez konta
+          Szpila · nawyki z pazurem · offline, bez konta
         </p>
       </div>
     </AppShell>
-  );
-}
-
-function Row({
-  icon,
-  title,
-  desc,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <div className="flex gap-3 rounded-2xl bg-card p-4">
-      <div className="mt-0.5 text-primary">{icon}</div>
-      <div>
-        <div className="font-medium">{title}</div>
-        <p className="mt-1 text-xs text-muted-foreground">{desc}</p>
-      </div>
-    </div>
   );
 }
 
@@ -614,4 +594,48 @@ function tauntWindow(wake: string, bedtime: string): string {
 function toMinutes(t: string): number {
   const [h, m] = t.split(":").map(Number);
   return h * 60 + (m || 0);
+}
+
+const WIDGETS: { kind: WidgetKind; name: string; desc: string }[] = [
+  { kind: "szpila", name: "Szpila 4×1", desc: "Wredny kot i szpila o twoich zadaniach (bez zakazanych)" },
+  { kind: "next", name: "Następne zadanie 1×1", desc: "Co zrobić teraz - sam wybiera" },
+  { kind: "icons", name: "Ikony 4×2", desc: "Pierścień postępu, czas do końca dnia" },
+  { kind: "list", name: "Lista 4×2", desc: "Dzisiejsze zadania jako lista" },
+];
+
+/** Home-screen widgets with a one-tap "add" (system pin dialog). */
+function WidgetsCard({ onMessage }: { onMessage: (m: string) => void }) {
+  return (
+    <div className="rounded-2xl bg-card p-4">
+      <div className="flex items-center gap-3">
+        <Smartphone size={18} className="text-primary" />
+        <span className="font-medium">Widżety na ekranie głównym</span>
+      </div>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        Dotknij „Dodaj”, a telefon zapyta, gdzie postawić widżet. Możesz też przytrzymać pusty obszar ekranu
+        głównego → Widżety → Szpila.
+      </p>
+      <ul className="mt-3 space-y-2">
+        {WIDGETS.map((w) => (
+          <li key={w.kind} className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium">{w.name}</div>
+              <div className="truncate text-[11px] text-muted-foreground">{w.desc}</div>
+            </div>
+            <button
+              onClick={async () => {
+                if (!Capacitor.isNativePlatform()) return onMessage("Widżety działają w aplikacji na Androida.");
+                const ok = await pinWidget(w.kind);
+                if (!ok) onMessage("Twój launcher nie obsługuje dodawania z aplikacji - dodaj widżet z listy widżetów.");
+              }}
+              className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold"
+              style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}
+            >
+              Dodaj
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }

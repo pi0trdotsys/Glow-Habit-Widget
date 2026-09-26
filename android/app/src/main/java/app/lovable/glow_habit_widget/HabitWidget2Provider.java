@@ -50,9 +50,9 @@ public class HabitWidget2Provider extends AppWidgetProvider {
         RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget2_root);
 
         JSONArray habits = WidgetShared.habits(context);
-        int total = habits.length();
+        int total = WidgetShared.countedTotal(context);
         int done = WidgetShared.doneCount(context);
-        int n = Math.min(total, MAX_CELLS);
+        int n = Math.min(habits.length(), MAX_CELLS); // every row gets a cell; `total` only drives the ring
 
         rv.setImageViewBitmap(R.id.widget2_ring, WidgetShared.progressRing(context, done, total));
         rv.setTextViewText(R.id.widget2_title, total > 0 ? "Dziś" : "Loop");

@@ -1,18 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, ChevronRight, Clock } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Plus, ChevronDown, ChevronRight, Sunrise } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { HabitTile, praiseToast } from "@/components/HabitTile";
 import { HabitIcon } from "@/components/HabitIcon";
-import { AvoidCard } from "@/components/AvoidCard";
-import { SzpilaCard } from "@/components/Szpila";
-import { DeltaPill, WeekBars } from "@/components/WeekCompare";
+import { AvoidChips } from "@/components/AvoidChips";
+import { SzpilaBubble } from "@/components/Szpila";
+import { DeltaPill } from "@/components/WeekCompare";
 import { useHabits } from "@/lib/habits/store";
 import { AVOID_COLOR, HABIT_COLOR_VAR } from "@/lib/habits/colors";
 import {
-  amountText,
+  avoidStatus,
   currentStreak,
   daysLabel,
   formatMinute,
@@ -26,14 +27,17 @@ import {
   todayProgress,
   unitLabel,
   weeklyReport,
+  AVOID_GRACE_MIN,
   type PlanItem,
 } from "@/lib/habits/utils";
-import { pendingLabel, szpilaNow } from "@/lib/habits/szpila";
+import { szpilaNow } from "@/lib/habits/szpila";
+import { NightBillCard } from "@/components/NightBill";
+import { useBackHandler } from "@/lib/back";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dziś - Loop" },
+      { title: "Dziś - Szpila" },
       { name: "description", content: "Dzisiejsze zadania. Przytrzymaj kafelek, by zaliczyć." },
     ],
   }),
@@ -49,6 +53,11 @@ function useMinuteTick() {
   }, []);
 }
 
+/**
+ * "Fokus" home: greeting + progress ring, one-line Szpila, the one thing to do
+ * now, then tiles and forbidden-habit chips. The day plan folds away and the
+ * week-vs-week comparison is a pill linking to the report.
+ */
 function TodayPage() {
   useMinuteTick();
   const habits = useHabits((s) => s.habits);
@@ -71,64 +80,74 @@ function TodayPage() {
     [seed, completions, habits, level, userName],
   );
 
+  // Morning review: yesterday's unconfirmed forbidden habits can be settled until noon.
+  const yesterday = addDays(today, -1);
+  const settleYesterday =
+    minuteOfDay(today) < AVOID_GRACE_MIN
+      ? habits.filter(
+          (h) =>
+            kindOf(h) === "avoid" &&
+            h.source !== "screen" &&
+            isDueOn(h, yesterday) &&
+            avoidStatus(h, completions, yesterday, today) === "pending",
+        )
+      : [];
+
   return (
     <AppShell>
-      <header className="px-5 pt-10 pb-5">
-        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-          {format(today, "EEEE, d MMMM", { locale: pl })}
-        </p>
-        <h1 className="mt-2 font-display text-4xl font-bold tracking-tight">
-          {greetingFor(today)}
-          {userName ? `, ${userName}` : ""}
-        </h1>
-        <div className="mt-4 flex items-center gap-3 text-sm text-muted-foreground">
-          <span className="rounded-full bg-card px-3 py-1">
+      <header className="flex items-center justify-between gap-4 px-5 pt-10 pb-4">
+        <div className="min-w-0">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+            {format(today, "EEEE, d MMMM", { locale: pl })}
+          </p>
+          <h1 className="mt-1.5 truncate font-display text-3xl font-bold tracking-tight">
+            {greetingFor(today)}
+            {userName ? `, ${userName}` : ""}
+          </h1>
+          <p className="mt-1 text-xs text-muted-foreground">
             {progress.done}/{progress.total} zrobione
-          </span>
-          {topStreak > 0 && <span className="rounded-full bg-card px-3 py-1">🔥 seria {daysLabel(topStreak)}</span>}
+            {topStreak > 0 && ` · 🔥 seria ${daysLabel(topStreak)}`}
+          </p>
         </div>
+        <ProgressRing fraction={progress.fraction} />
       </header>
 
-      <SzpilaCard say={say} onReroll={() => setSeed((s) => s + 1)} />
-
-      {due.length > 0 && <DayPlan plan={plan} progress={progress} />}
-
-      {habits.length > 0 && (
-        <Link to="/report" className="mx-5 mb-7 block rounded-2xl bg-card p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <div>
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Tydzień do tygodnia</div>
-              <div className="mt-0.5 text-[11px] text-muted-foreground">{report.windowLabel} vs to samo tydzień temu</div>
+      <div className="space-y-3 px-5">
+        <SzpilaBubble say={say} onReroll={() => setSeed((s) => s + 1)} />
+        <NightBillCard now={today} />
+        {settleYesterday.length > 0 && (
+          <section
+            className="rounded-2xl p-3"
+            style={{ background: `color-mix(in oklab, ${AVOID_COLOR} 8%, var(--card))` }}
+          >
+            <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold" style={{ color: AVOID_COLOR }}>
+              <Sunrise size={14} /> Rozlicz wczoraj · do {formatMinute(AVOID_GRACE_MIN)}
             </div>
-            <DeltaPill delta={report.delta} />
-          </div>
-          <WeekBars r={report} />
-        </Link>
-      )}
+            <AvoidChips habits={settleYesterday} day={yesterday} />
+          </section>
+        )}
+        {due.length > 0 && <NowCard plan={plan} />}
+        {due.length > 0 && <PlanFold plan={plan} delta={report.delta} hasHistory={!report.noBaseline} />}
+      </div>
 
       {due.length === 0 ? (
         <EmptyState />
       ) : (
         <>
           {build.length > 0 && (
-            <>
-              <SectionTitle>Do zrobienia</SectionTitle>
-              <div className="grid grid-cols-3 gap-y-7 gap-x-2 px-5">
-                {build.map((h) => (
-                  <HabitTile key={h.id} habit={h} />
-                ))}
-              </div>
-            </>
+            <div className="mt-7 grid grid-cols-3 gap-y-7 gap-x-2 px-5">
+              {build.map((h) => (
+                <HabitTile key={h.id} habit={h} />
+              ))}
+            </div>
           )}
           {avoid.length > 0 && (
-            <>
-              <SectionTitle color={AVOID_COLOR}>Zakazane · potwierdź, że dziś nie</SectionTitle>
-              <div className="space-y-2 px-5">
-                {avoid.map((h) => (
-                  <AvoidCard key={h.id} habit={h} />
-                ))}
-              </div>
-            </>
+            <section className="mt-8 px-5">
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: AVOID_COLOR }}>
+                Zakazane · dotknij, by potwierdzić
+              </h2>
+              <AvoidChips habits={avoid} />
+            </section>
           )}
         </>
       )}
@@ -155,14 +174,31 @@ function TodayPage() {
   );
 }
 
-function SectionTitle({ children, color }: { children: React.ReactNode; color?: string }) {
+function ProgressRing({ fraction }: { fraction: number }) {
+  const size = 64;
+  const stroke = 6;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const pct = Math.round(fraction * 100);
   return (
-    <h2
-      className="mb-4 mt-8 px-5 text-xs font-semibold uppercase tracking-[0.16em] first:mt-0"
-      style={{ color: color ?? "var(--muted-foreground)" }}
-    >
-      {children}
-    </h2>
+    <div className="relative grid shrink-0 place-items-center" style={{ width: size, height: size }} aria-label={`Postęp dnia ${pct}%`}>
+      <svg width={size} height={size} className="absolute inset-0 -rotate-90" aria-hidden>
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--border)" strokeWidth={stroke} fill="none" />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          stroke="var(--primary)"
+          strokeWidth={stroke}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - fraction)}
+          style={{ transition: "stroke-dashoffset 500ms ease-out" }}
+        />
+      </svg>
+      <span className="text-sm font-bold tabular-nums">{pct}%</span>
+    </div>
   );
 }
 
@@ -182,121 +218,126 @@ function actionLabel(item: PlanItem): string {
   return `+${step} ${unitLabel(item.habit, step)}`;
 }
 
-/** "Next up" + today's progress bar + the plan to finish the day. */
-function DayPlan({ plan, progress }: { plan: PlanItem[]; progress: { done: number; total: number; fraction: number } }) {
+/** The single thing to do right now. */
+function NowCard({ plan }: { plan: PlanItem[] }) {
   const logStep = useHabits((s) => s.logStep);
   const setAmount = useHabits((s) => s.setAmount);
   const setAvoid = useHabits((s) => s.setAvoid);
-  const nowMin = minuteOfDay();
   const next = plan[0];
-  const pct = Math.round(progress.fraction * 100);
-
+  if (!next) {
+    return (
+      <div className="rounded-2xl bg-card p-4 text-center text-sm text-muted-foreground">
+        Wszystko na dziś zrobione. 🎉
+      </div>
+    );
+  }
+  const color = next.avoid ? AVOID_COLOR : HABIT_COLOR_VAR[next.habit.color];
   const doNext = () => {
-    if (!next) return;
     const h = next.habit;
     const key = todayKey();
     logStep(h.id);
-    const finishes = next.avoid || next.left <= goalOf(h).step;
-    if (finishes) {
+    if (next.avoid || next.left <= goalOf(h).step) {
       praiseToast(h, () => (next.avoid ? setAvoid(h.id, key, null) : setAmount(h.id, key, next.amount)));
     }
   };
-
   return (
-    <section className="mx-5 mb-6 rounded-3xl bg-card p-4">
-      <div className="flex items-baseline justify-between">
-        <span className="text-xs uppercase tracking-wider text-muted-foreground">Postęp dnia</span>
-        <span className="text-sm font-bold tabular-nums">
-          {progress.done}/{progress.total} · {pct}%
-        </span>
+    <div className="flex items-center gap-3 rounded-2xl bg-card p-3.5">
+      <Link
+        to="/habits/$id"
+        params={{ id: next.habit.id }}
+        className="grid h-12 w-12 shrink-0 place-items-center rounded-full"
+        style={{ backgroundColor: `color-mix(in oklab, ${color} 22%, transparent)` }}
+      >
+        <HabitIcon name={next.habit.icon} size={22} style={next.avoid ? { color } : undefined} />
+      </Link>
+      <div className="min-w-0 flex-1">
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Teraz</div>
+        <div className="truncate font-semibold">{next.habit.name}</div>
+        <div className="truncate text-xs" style={{ color: next.overdue ? AVOID_COLOR : "var(--muted-foreground)" }}>
+          {whenLabel(next, minuteOfDay())}
+          {!next.avoid && goalOf(next.habit).type !== "check" && ` · ${next.amount}/${goalOf(next.habit).target}`}
+        </div>
       </div>
-      <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-background">
-        <div
-          className="h-full rounded-full transition-[width] duration-500"
-          style={{ width: `${pct}%`, backgroundColor: "var(--primary)" }}
-        />
+      <button
+        type="button"
+        onClick={doNext}
+        className="shrink-0 rounded-full px-3.5 py-2 text-sm font-semibold transition-transform active:scale-95"
+        style={{ backgroundColor: next.avoid ? AVOID_COLOR : "var(--primary)", color: "var(--primary-foreground)" }}
+      >
+        {actionLabel(next)}
+      </button>
+    </div>
+  );
+}
+
+/** "Plan dnia (N)" folded by default, plus the week-vs-week pill linking to the report. */
+function PlanFold({ plan, delta, hasHistory }: { plan: PlanItem[]; delta: number; hasHistory: boolean }) {
+  const [open, setOpen] = useState(false);
+  const rest = plan.slice(1);
+  useBackHandler(open, () => setOpen(false));
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          disabled={rest.length === 0}
+          className="flex items-center gap-1 py-1 text-sm font-medium text-muted-foreground disabled:opacity-50"
+        >
+          Plan dnia ({rest.length})
+          <motion.span animate={{ rotate: open ? 180 : 0 }}>
+            <ChevronDown size={16} />
+          </motion.span>
+        </button>
+        {hasHistory && (
+          <Link to="/report" className="flex items-center gap-0.5" aria-label="Tydzień do tygodnia">
+            <DeltaPill delta={delta} />
+            <ChevronRight size={14} className="text-muted-foreground" />
+          </Link>
+        )}
       </div>
-
-      {next ? (
-        <>
-          <div className="mt-4 text-xs uppercase tracking-wider text-muted-foreground">Teraz</div>
-          <div className="mt-2 flex items-center gap-3">
-            <Link
-              to="/habits/$id"
-              params={{ id: next.habit.id }}
-              className="grid h-12 w-12 shrink-0 place-items-center rounded-full"
-              style={{
-                backgroundColor: `color-mix(in oklab, ${next.avoid ? AVOID_COLOR : HABIT_COLOR_VAR[next.habit.color]} 22%, transparent)`,
-              }}
-            >
-              <HabitIcon name={next.habit.icon} size={22} style={next.avoid ? { color: AVOID_COLOR } : undefined} />
-            </Link>
-            <div className="min-w-0 flex-1">
-              <div className="truncate font-semibold">{next.habit.name}</div>
-              <div className="text-xs" style={{ color: next.overdue ? AVOID_COLOR : "var(--muted-foreground)" }}>
-                {whenLabel(next, nowMin)}
-                {!next.avoid && goalOf(next.habit).type !== "check" && ` · ${amountText(next.habit, next.amount)}`}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={doNext}
-              className="shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-transform active:scale-95"
-              style={{
-                backgroundColor: next.avoid ? AVOID_COLOR : "var(--primary)",
-                color: "var(--primary-foreground)",
-              }}
-            >
-              {actionLabel(next)}
-            </button>
-          </div>
-
-          {plan.length > 1 && (
-            <>
-              <div className="mt-5 flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted-foreground">
-                <Clock size={12} /> Plan na resztę dnia · {pendingLabel(plan.length)}
-              </div>
-              <ul className="mt-2 divide-y divide-border">
-                {plan.slice(1, 7).map((p) => (
-                  <li key={p.habit.id}>
-                    <Link
-                      to="/habits/$id"
-                      params={{ id: p.habit.id }}
-                      className="flex items-center gap-3 py-2 text-sm"
-                    >
-                      <span
-                        className="w-12 shrink-0 tabular-nums text-xs"
-                        style={{ color: p.overdue ? AVOID_COLOR : "var(--muted-foreground)" }}
-                      >
-                        {formatMinute(p.at)}
-                      </span>
-                      <HabitIcon
-                        name={p.habit.icon}
-                        size={16}
-                        style={{ color: p.avoid ? AVOID_COLOR : HABIT_COLOR_VAR[p.habit.color] }}
-                      />
-                      <span className="min-w-0 flex-1 truncate">{p.avoid ? `Potwierdź: ${p.habit.name}` : p.habit.name}</span>
-                      <span className="shrink-0 text-xs text-muted-foreground">
-                        {p.avoid ? "" : goalOf(p.habit).type === "check" ? "" : `zostało ${p.left} ${unitLabel(p.habit, p.left)}`}
-                      </span>
-                      <ChevronRight size={14} className="text-muted-foreground" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </>
-      ) : (
-        <p className="mt-4 text-sm text-muted-foreground">Wszystko na dziś zrobione. 🎉</p>
-      )}
-    </section>
+      <AnimatePresence initial={false}>
+        {open && rest.length > 0 && (
+          <motion.ul
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="mt-1 divide-y divide-border overflow-hidden rounded-2xl bg-card px-3"
+          >
+            {rest.map((p) => (
+              <li key={p.habit.id}>
+                <Link to="/habits/$id" params={{ id: p.habit.id }} className="flex items-center gap-3 py-2.5 text-sm">
+                  <span
+                    className="w-11 shrink-0 text-xs tabular-nums"
+                    style={{ color: p.overdue ? AVOID_COLOR : "var(--muted-foreground)" }}
+                  >
+                    {formatMinute(p.at)}
+                  </span>
+                  <HabitIcon
+                    name={p.habit.icon}
+                    size={16}
+                    style={{ color: p.avoid ? AVOID_COLOR : HABIT_COLOR_VAR[p.habit.color] }}
+                  />
+                  <span className="min-w-0 flex-1 truncate">{p.avoid ? `Potwierdź: ${p.habit.name}` : p.habit.name}</span>
+                  {!p.avoid && goalOf(p.habit).type !== "check" && (
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {p.left} {unitLabel(p.habit, p.left)}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
 function EmptyState() {
   return (
-    <div className="mx-5 mt-4 rounded-3xl border border-border bg-card p-8 text-center">
+    <div className="mx-5 mt-6 rounded-3xl border border-border bg-card p-8 text-center">
       <p className="text-sm text-muted-foreground">Nie masz jeszcze zadań na dziś.</p>
       <Link
         to="/habits/new"

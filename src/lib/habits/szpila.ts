@@ -9,8 +9,10 @@
 // (the widget/notification side re-computes them from the live snapshot).
 import type { Completion, Habit } from "./types";
 import type { TauntLevel } from "./store";
-import { MORE_ALL_DONE, MORE_CAUGHT, MORE_EVENING, MORE_HARD, MORE_RAGE } from "./szpila-more";
+import { MORE_ALL_DONE, MORE_CAUGHT, MORE_EVENING, MORE_HARD, MORE_RAGE, MOTIVATE } from "./szpila-more";
+import { EXTRA_AVOID, EXTRA_HARD, EXTRA_RULES, EXTRA_SOFT, type ExtraCategory } from "./szpila-extra";
 import { addDays } from "date-fns";
+import { humorLines, humorNag, withHumor, type HumorId } from "./gamification";
 import {
   avoidStatus,
   dayScore,
@@ -29,7 +31,10 @@ import {
 
 export const SZPILA_NAME = "Szpila";
 
-export type Category =
+/** Szpila is a mean cat: normal jab, angry (escalated / slip), grudgingly impressed. Mirrored in HabitNotifier.java. */
+export const SZPILA_EMOJI = { normal: "😼", angry: "😾", impressed: "😸" } as const;
+
+type BaseCategory =
   | "teeth"
   | "water"
   | "steps"
@@ -48,6 +53,10 @@ export type Category =
   | "games"
   | "social"
   | "avoidGeneric";
+
+export type Category = BaseCategory | ExtraCategory;
+
+const isExtra = (c: Category): c is ExtraCategory => c in EXTRA_HARD;
 
 interface Lines {
   nag: string[];
@@ -78,6 +87,9 @@ const RULES: [Category, RegExp][] = [
 function categoryOf(h: Habit): Category {
   const n = `${h.name} ${h.icon}`.toLowerCase();
   const avoid = kindOf(h) === "avoid";
+  for (const [cat, re] of EXTRA_RULES) {
+    if (re.test(n) && EXTRA_AVOID.includes(cat) === avoid) return cat;
+  }
   for (const [cat, re] of RULES) {
     if (!re.test(n)) continue;
     const isAvoidCat = ["phone", "fastfood", "sweets", "alcohol", "smoking", "games", "social"].includes(cat);
@@ -90,7 +102,7 @@ function categoryOf(h: Habit): Category {
 // Lines - hard (vulgar) and soft
 // ---------------------------------------------------------------------------
 
-const HARD: Record<Category, Lines> = {
+const HARD: Record<BaseCategory, Lines> = {
   teeth: {
     nag: [
       "Zęby dalej nieumyte? Z takim ryjem to tylko do dentysty po kredyt, kurwa.",
@@ -276,7 +288,7 @@ const HARD: Record<Category, Lines> = {
   },
 };
 
-const SOFT: Record<Category, Lines> = {
+const SOFT: Record<BaseCategory, Lines> = {
   teeth: {
     nag: [
       "Zęby dalej czekają na szczoteczkę. Dwie minuty, dasz radę.",
@@ -411,6 +423,16 @@ const CAUGHT: Record<TauntLevel, string[]> = {
   soft: ["{m} min z telefonem po {after} - zapisuję wpadkę. Pora odłożyć telefon i iść spać."],
 };
 
+/** Caught by the social-media basis ({m} minutes of social media after {after}). */
+const CAUGHT_SOCIAL: Record<TauntLevel, string[]> = {
+  hard: [
+    "Mam cię! {m} min social mediów po {after}. Wpadka zapisana. Budzik, muzyka - OK. TikTok i Insta - nie.",
+    "{m} minut scrollowania social mediów po {after}. To nie był budzik, to był nałóg. Wpadka.",
+    "Widzę wszystko: {m} min social mediów po {after} - Insta, YouTube i reszta. Odłóż to kurestwo i spać.",
+  ],
+  soft: ["{m} min w social mediach po {after} - zapisuję wpadkę. Pora odłożyć telefon."],
+};
+
 /** Mirrors HabitNotifier.tier(): 1 = rage lines. */
 export function escalationTier(overdueMin: number, jabsToday = 0): 0 | 1 {
   return overdueMin >= 180 || jabsToday >= 3 ? 1 : 0;
@@ -449,14 +471,22 @@ function pick<T>(arr: T[], seed?: number): T {
   return arr[i];
 }
 
+/** Szpila's unlocked voice (store.szpila.humor), mixed into the hard-level pools. */
+let activeHumor: HumorId = "wredny";
+export function setHumor(humor: HumorId): void {
+  activeHumor = humor;
+}
+export const currentHumor = (): HumorId => activeHumor;
+
 function linesFor(h: Habit, level: TauntLevel): Lines {
   const cat = categoryOf(h);
-  if (level === "soft") return SOFT[cat];
-  const base = HARD[cat];
-  const more = MORE_HARD[cat] ?? {};
+  if (level === "soft") return isExtra(cat) ? EXTRA_SOFT[cat] : SOFT[cat];
+  const base: Lines = isExtra(cat) ? EXTRA_HARD[cat] : HARD[cat];
+  const more = isExtra(cat) ? {} : MORE_HARD[cat] ?? {};
+  const motivate = kindOf(h) === "avoid" ? MOTIVATE.avoid : MOTIVATE.build;
   return {
-    nag: [...base.nag, ...(more.nag ?? [])],
-    praise: [...base.praise, ...(more.praise ?? [])],
+    nag: withHumor([...base.nag, ...(more.nag ?? []), ...motivate], humorNag(h, activeHumor)),
+    praise: withHumor([...base.praise, ...(more.praise ?? []), ...MOTIVATE.praise], humorLines(activeHumor).praise),
     slip: base.slip || more.slip ? [...(base.slip ?? []), ...(more.slip ?? [])] : undefined,
   };
 }
@@ -492,15 +522,19 @@ export function rageLines(h: Habit, level: TauntLevel, userName: string | null):
   const cat = categoryOf(h);
   const fallback = kindOf(h) === "avoid" ? "avoidGeneric" : "generic";
   const pool =
-    level === "hard"
+    level === "hard" && isExtra(cat)
+      ? [...EXTRA_HARD[cat].rage, ...MORE_RAGE[fallback]!]
+      : level === "hard"
       ? [...(RAGE_HARD[cat] ?? RAGE_HARD[fallback]!), ...(MORE_RAGE[cat] ?? MORE_RAGE[fallback] ?? [])]
       : RAGE_SOFT;
-  return usable(pool, h).map((l) => personal(l, h, userName));
+  // Build habits also get the motivating rage ("Dosyć tego. Wstajesz i robisz…").
+  const all = level === "hard" && kindOf(h) === "build" ? [...pool, ...MOTIVATE.rage] : pool;
+  return usable(all, h).map((l) => personal(l, h, userName));
 }
 
 /** "Caught you" lines for screen-judged habits ({m} minutes / {after} time filled natively). */
-export function caughtLines(level: TauntLevel): string[] {
-  return CAUGHT[level];
+export function caughtLines(level: TauntLevel, basis: "social" | "screen" = "screen"): string[] {
+  return basis === "social" ? CAUGHT_SOCIAL[level] : CAUGHT[level];
 }
 
 const slipsWord = (n: number) => plural5w(n, "wpadka", "wpadki", "wpadek");
@@ -570,7 +604,7 @@ export function weeklyRoast(habits: Habit[], completions: Completion[], level: T
     }
   }
   const delta = r.delta > 0 ? `+${r.delta}` : `${r.delta}`;
-  const parts = [`${who}tydzień: ${r.thisWeek.rate}% (${delta} pkt vs poprzedni).`];
+  const parts = [`${who}tydzień: ${r.thisWeek.rate}%${r.noBaseline ? "" : ` (${delta} pkt vs poprzedni)`}.`];
   if (best && worst && best.name !== worst.name) {
     parts.push(
       hard
@@ -581,7 +615,8 @@ export function weeklyRoast(habits: Habit[], completions: Completion[], level: T
   if (slips > 0) {
     parts.push(hard ? `Wpadek z zakazanymi: ${slips}. Brawo, mistrzu wymówek.` : `Wpadki z zakazanymi: ${slips}.`);
   }
-  parts.push(
+  if (!r.noBaseline)
+    parts.push(
     r.delta >= 0
       ? hard
         ? "Lepiej niż tydzień temu. Nie przyzwyczajaj się, będę patrzeć na ręce."

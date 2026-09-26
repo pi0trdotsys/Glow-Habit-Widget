@@ -7,7 +7,7 @@ import { useHabits } from "@/lib/habits/store";
 import type { Habit } from "@/lib/habits/types";
 import { AVOID_COLOR } from "@/lib/habits/colors";
 import { avoidStatus, limitOf, limitLabel, slipsInPeriod, todayKey } from "@/lib/habits/utils";
-import { slipFor } from "@/lib/habits/szpila";
+import { SZPILA_EMOJI, slipFor } from "@/lib/habits/szpila";
 import { DEFAULT_LATE_AFTER, DEFAULT_LATE_LIMIT } from "@/lib/sensors";
 
 const PERIOD_LABEL = { day: "dziś", week: "w tym tygodniu", month: "w tym miesiącu" } as const;
@@ -32,9 +32,8 @@ export function AvoidCard({ habit }: { habit: Habit }) {
     const prev = status;
     setAvoid(habit.id, key, "slip");
     const { notifications, userName } = useHabits.getState();
-    toast(`😈 ${slipFor(habit, notifications.tauntLevel, userName)}`, {
+    toast(`${SZPILA_EMOJI.angry} ${slipFor(habit, notifications.tauntLevel, userName)}`, {
       action: { label: "Cofnij", onClick: () => setAvoid(habit.id, key, prev === "clean" ? "clean" : null) },
-      duration: 4500,
     });
   };
 

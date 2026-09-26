@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 4x1 "Szpila": the mean cat and one jab. Tap the cat for another jab, tap the text to open the app.
+     Jabs only come from habits to DO - forbidden habits never show up on the home screen. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/szpila_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/widget2_bg"
+    android:paddingStart="10dp"
+    android:paddingEnd="14dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
+
+    <!-- the cat + its condition ("kot w domu": groomed / neglected overlay) -->
+    <FrameLayout android:id="@+id/szpila_cat_box"
+        android:layout_width="48dp" android:layout_height="48dp">
+        <ImageView android:id="@+id/szpila_cat"
+            android:layout_width="match_parent" android:layout_height="match_parent"
+            android:src="@drawable/ic_szpila_smug"
+            android:contentDescription="Szpila - dotknij po kolejną szpilę" />
+        <ImageView android:id="@+id/szpila_cond"
+            android:layout_width="match_parent" android:layout_height="match_parent"
+            android:visibility="gone"
+            android:contentDescription="@null" />
+    </FrameLayout>
+
+    <LinearLayout android:id="@+id/szpila_text_box"
+        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_weight="1" android:layout_marginStart="10dp"
+        android:orientation="vertical">
+        <TextView android:id="@+id/szpila_title"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="SZPILA" android:textColor="#ff4d5e" android:textSize="9sp"
+            android:textStyle="bold" android:letterSpacing="0.15" />
+        <TextView android:id="@+id/szpila_text"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:maxLines="3" android:ellipsize="end"
+            android:text="Mrrr. Otwórz Szpilę, a zacznę się czepiać."
+            android:textColor="#f4f5f9" android:textSize="12sp" android:lineSpacingMultiplier="1.05" />
+    </LinearLayout>
+</LinearLayout>

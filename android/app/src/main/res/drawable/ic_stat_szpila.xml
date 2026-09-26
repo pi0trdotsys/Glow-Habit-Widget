@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar icon: silhouette of Szpila (the mean cat) with the pin through its ear,
+     same geometry as the app icon (ic_launcher_foreground). White only - the system tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="64" android:viewportHeight="64">
+    <!-- ears -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M9 29 L15 4 L29 18 Z M55 29 L49 4 L35 18 Z" />
+    <!-- head with smug slit eyes and nose cut out -->
+    <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
+        android:pathData="M7,38 a25,22 0 1,0 50,0 a25,22 0 1,0 -50,0 Z
+            M16 35 Q23 30.5 30 35 Q23 38.5 16 35 Z
+            M34 35 Q41 30.5 48 35 Q41 38.5 34 35 Z
+            M28.5 43 L35.5 43 L32 47 Z" />
+    <!-- the pin: ball + shaft outside the ear, tip sticking out on the other side -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M60,6.2 m-4.2,0 a4.2,4.2 0 1,0 8.4,0 a4.2,4.2 0 1,0 -8.4,0 Z" />
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="3" android:strokeLineCap="round"
+        android:pathData="M57 7 L50 9.2" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M42.2 9.3 L43.6 12.6 L33.5 14.2 Z" />
+</vector>

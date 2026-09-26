@@ -17,7 +17,7 @@ import { LocalNotifications } from "@capacitor/local-notifications";
 import type { LocalNotificationSchema } from "@capacitor/local-notifications";
 import { useHabits } from "@/lib/habits/store";
 import { formatMinute, kindOf, planDay, weeklyReport } from "@/lib/habits/utils";
-import { SZPILA_NAME, szpilaNow } from "@/lib/habits/szpila";
+import { SZPILA_EMOJI, SZPILA_NAME, szpilaNow } from "@/lib/habits/szpila";
 
 export type PermissionState = "granted" | "denied" | "default" | "unsupported";
 
@@ -79,7 +79,7 @@ function weeklyReportBody(): string {
   const { habits, completions, userName } = useHabits.getState();
   const who = userName ? `${userName}, ` : "";
   if (habits.length === 0) {
-    return `${who}otwórz Loop i dodaj zadania, żeby zacząć tydzień z przytupem.`;
+    return `${who}otwórz Szpilę i dodaj zadania, żeby zacząć tydzień z przytupem.`;
   }
   const r = weeklyReport(habits, completions);
   const d = r.delta;
@@ -178,7 +178,7 @@ async function syncNative(): Promise<void> {
     const { hour, minute } = parseTime(notifications.time);
     schedule.push({
       id: ID_DAILY,
-      title: "Loop",
+      title: "Szpila",
       body: "Pora sprawdzić dzisiejsze zadania.",
       schedule: { on: { hour, minute } },
     });
@@ -257,7 +257,7 @@ function webTick(): void {
   };
 
   if (notifications.enabled && notifications.time === hhmm) {
-    fire("daily", "Loop", "Pora sprawdzić dzisiejsze zadania.");
+    fire("daily", "Szpila", "Pora sprawdzić dzisiejsze zadania.");
   }
   for (const h of habits) {
     if (h.reminder && h.reminder === hhmm) {
@@ -289,7 +289,7 @@ function webTick(): void {
       const plan = planDay(habits, completions, now);
       if (plan.length === 0) continue;
       const say = szpilaNow(habits, completions, plan, notifications.tauntLevel, userName, m);
-      fire(`taunt-${m}`, `😈 ${SZPILA_NAME}`, say.text);
+      fire(`taunt-${m}`, `${say.mood === "angry" ? SZPILA_EMOJI.angry : SZPILA_EMOJI.normal} ${SZPILA_NAME}`, say.text);
     }
   }
 }

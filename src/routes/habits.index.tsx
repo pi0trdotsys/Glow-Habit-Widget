@@ -9,7 +9,7 @@ import { kindOf } from "@/lib/habits/utils";
 export const Route = createFileRoute("/habits/")({
   head: () => ({
     meta: [
-      { title: "Zadania - Loop" },
+      { title: "Zadania - Szpila" },
       { name: "description", content: "Wszystkie twoje zadania w jednym miejscu." },
     ],
   }),

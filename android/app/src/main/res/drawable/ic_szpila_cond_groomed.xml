@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Kot w domu" overlay: groomed (a forma streak) - glossy fur, sparkles and a bow tie.
+     Drawn over ic_szpila_*; same 64-unit space as SzpilaAvatar / Condition in Szpila.tsx. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp" android:height="64dp"
+    android:viewportWidth="64" android:viewportHeight="64">
+    <!-- gloss -->
+    <path android:pathData="M19 23 Q29 17 41 19.5" android:strokeColor="#FFFFFFFF" android:strokeAlpha="0.35"
+        android:strokeWidth="2" android:strokeLineCap="round" />
+    <!-- sparkles -->
+    <path android:pathData="M55 12 l1.3 3.2 l3.2 1.3 l-3.2 1.3 l-1.3 3.2 l-1.3 -3.2 l-3.2 -1.3 l3.2 -1.3 Z" android:fillColor="#FFFFF6C8" />
+    <path android:pathData="M7 18 l0.9 2.2 l2.2 0.9 l-2.2 0.9 l-0.9 2.2 l-0.9 -2.2 l-2.2 -0.9 l2.2 -0.9 Z" android:fillColor="#FFFFF6C8" />
+    <path android:pathData="M59 44 l0.8 1.9 l1.9 0.8 l-1.9 0.8 l-0.8 1.9 l-0.8 -1.9 l-1.9 -0.8 l1.9 -0.8 Z" android:fillColor="#FFFFF6C8" />
+    <!-- bow tie -->
+    <path android:pathData="M32 58 L24.5 54.2 L24.5 61.8 Z" android:fillColor="#FFFF4D5E" android:strokeColor="#FFB3122A" android:strokeWidth="0.8" android:strokeLineJoin="round" />
+    <path android:pathData="M32 58 L39.5 54.2 L39.5 61.8 Z" android:fillColor="#FFFF4D5E" android:strokeColor="#FFB3122A" android:strokeWidth="0.8" android:strokeLineJoin="round" />
+    <path android:pathData="M30,58 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" android:fillColor="#FFB3122A" />
+</vector>

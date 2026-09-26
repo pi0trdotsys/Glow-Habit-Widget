@@ -24,10 +24,35 @@ interface SensorsPlugin {
   screenStatus(): Promise<{ granted: boolean }>;
   openUsageSettings(): Promise<void>;
   lateScreen(opts: { afterMin: number; days: number }): Promise<{
-    nights: { daysAgo: number; minutes: number; closed: boolean }[];
+    nights: LateNight[];
   }>;
+  nightReport(opts: { daysAgo: number }): Promise<NightReport>;
 }
 const Native = registerPlugin<SensorsPlugin>("HabitWidget");
+
+/** One night from the native side: screen minutes and social media minutes after lateAfter. */
+export interface LateNight {
+  daysAgo: number;
+  minutes: number;
+  /** Social media minutes (absent on older native builds). */
+  social?: number;
+  closed: boolean;
+}
+
+/** "Rachunek za noc" for one night (NightStats.report). */
+export interface NightReport {
+  date: string;
+  granted: boolean;
+  apps?: { pkg: string; label: string; visits: number; minutes: number }[];
+  visits?: number;
+  /** Social media minutes after midnight. */
+  social?: number;
+  /** Screen-on minutes after midnight. */
+  screen?: number;
+  /** Minute of day the phone went down for the night, -1 = unknown. */
+  asleep?: number;
+  closed?: boolean;
+}
 
 const isNative = () => Capacitor.isNativePlatform();
 
@@ -64,8 +89,19 @@ export async function openUsageSettings(): Promise<void> {
   if (isNative()) await Native.openUsageSettings();
 }
 
-export const DEFAULT_LATE_AFTER = "23:30";
+/** "Late" starts after midnight by default - an hour before 05:00 means that night, after 24:00. */
+export const DEFAULT_LATE_AFTER = "00:00";
 export const DEFAULT_LATE_LIMIT = 15;
+
+export function lateBasisOf(h: Habit): "social" | "screen" {
+  return h.lateBasis ?? "social";
+}
+
+/** The minutes that judge a night: social media only (default) or any screen time. */
+export function nightMinutes(n: LateNight, basis: "social" | "screen"): number {
+  if (basis === "social" && n.social != null) return n.social;
+  return n.minutes;
+}
 
 export function lateAfterMin(h: Habit): number {
   const [hh, mm] = (h.lateAfter || DEFAULT_LATE_AFTER).split(":").map(Number);
@@ -85,6 +121,16 @@ async function syncSteps(): Promise<void> {
   }
 }
 
+/**
+ * Verdict for one screen-judged night: over the limit = slip (even mid-night),
+ * the night is over within the limit = clean, otherwise still undecided (null).
+ * Mirrors HabitNotifier.checkLateScreen.
+ */
+export function screenVerdict(minutes: number, limit: number, closed: boolean): "clean" | "slip" | null {
+  if (minutes > limit) return "slip";
+  return closed ? "clean" : null;
+}
+
 async function syncScreen(): Promise<void> {
   const { habits, completions, setAvoid } = useHabits.getState();
   const screenHabits = habits.filter((h) => kindOf(h) === "avoid" && h.source === "screen");
@@ -94,17 +140,40 @@ async function syncScreen(): Promise<void> {
     const limit = h.lateLimit ?? DEFAULT_LATE_LIMIT;
     const { nights } = await Native.lateScreen({ afterMin: lateAfterMin(h), days: 7 });
     for (const n of nights) {
-      if (n.minutes < 0) continue;
+      const minutes = nightMinutes(n, lateBasisOf(h));
+      if (minutes < 0) continue;
       const day = addDays(now, -n.daysAgo);
       if (!isDueOn(h, day)) continue;
       const key = todayKey(day);
       const existing = completions.find((c) => c.habitId === h.id && c.date === key);
       if (existing && !existing.auto) continue; // a manual answer always wins
-      const status = n.minutes > limit ? "slip" : n.closed ? "clean" : null;
-      if (!status) continue;
       const current = existing ? (existing.slipped ? "slip" : "clean") : null;
+      const status = screenVerdict(minutes, limit, n.closed);
+      // Also clears automatic verdicts that no longer hold (e.g. from an older, wrong window).
       if (current !== status) setAvoid(h.id, key, status, undefined, true);
     }
+  }
+}
+
+/** Last nights' bills (social media per app, screen minutes, asleep) into the store. */
+async function syncNights(): Promise<void> {
+  if (!(await screenGranted())) return;
+  const out: Record<string, NightReport> = {};
+  for (const daysAgo of [1, 2, 3]) {
+    const r = await Native.nightReport({ daysAgo });
+    if (r?.granted && r.date) out[r.date] = r;
+  }
+  useHabits.getState().mergeNightReports(out);
+}
+
+/** Last night's bill fresh from the phone (null on web / without usage access). */
+export async function nightReport(daysAgo = 1): Promise<NightReport | null> {
+  if (!isNative()) return null;
+  try {
+    const r = await Native.nightReport({ daysAgo });
+    return r.granted ? r : null;
+  } catch {
+    return null;
   }
 }
 
@@ -117,6 +186,7 @@ export async function syncSensors(): Promise<void> {
   try {
     await syncSteps().catch(() => {});
     await syncScreen().catch(() => {});
+    await syncNights().catch(() => {});
   } finally {
     running = false;
   }

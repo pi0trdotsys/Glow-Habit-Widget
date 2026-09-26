@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Ban } from "lucide-react";
 import { HabitIcon } from "./HabitIcon";
-import { useHoldToComplete } from "@/hooks/useHoldToComplete";
+import { HOLD_TO_COMPLETE_MS, useHoldToComplete } from "@/hooks/useHoldToComplete";
 import { useHabits } from "@/lib/habits/store";
 import type { Habit } from "@/lib/habits/types";
 import { HABIT_COLOR_VAR, AVOID_COLOR } from "@/lib/habits/colors";
@@ -18,7 +18,7 @@ import {
   kindOf,
   todayKey,
 } from "@/lib/habits/utils";
-import { praiseFor } from "@/lib/habits/szpila";
+import { SZPILA_EMOJI, praiseFor } from "@/lib/habits/szpila";
 
 interface Props {
   habit: Habit;
@@ -30,9 +30,8 @@ const CELEBRATE_EMOJI = ["🎉", "✨", "💪", "🔥", "🌟", "🙌"];
 /** Shows Szpila's back-handed compliment with an undo action. */
 export function praiseToast(habit: Habit, undo: () => void) {
   const { notifications, userName } = useHabits.getState();
-  toast(`😈 ${praiseFor(habit, notifications.tauntLevel, userName)}`, {
+  toast(`${SZPILA_EMOJI.impressed} ${praiseFor(habit, notifications.tauntLevel, userName)}`, {
     action: { label: "Cofnij", onClick: undo },
-    duration: 4000,
   });
 }
 
@@ -56,7 +55,7 @@ export function HabitTile({ habit, compact = false }: Props) {
   const fraction = avoid ? (status === "pending" ? 0 : 1) : Math.min(1, amount / g.target);
 
   const { handlers, progress, isHolding } = useHoldToComplete({
-    duration: 600,
+    duration: HOLD_TO_COMPLETE_MS,
     onComplete: () => {
       if (avoid) {
         const prev = status;
@@ -102,8 +101,8 @@ export function HabitTile({ habit, compact = false }: Props) {
   }
 
   // Ring math
-  const size = compact ? 68 : 116;
-  const stroke = compact ? 5 : 8;
+  const size = compact ? 68 : 96;
+  const stroke = compact ? 5 : 7;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   // While holding, preview the next step on top of what's already logged.
@@ -116,7 +115,7 @@ export function HabitTile({ habit, compact = false }: Props) {
       : status === "slip"
       ? "Wpadka ✗"
       : habit.source === "screen"
-      ? "📱 automatycznie"
+      ? "📱 czeka na noc"
       : "Przytrzymaj = dziś czysto"
     : g.type !== "check"
     ? amountText(habit, amount)
@@ -177,7 +176,7 @@ export function HabitTile({ habit, compact = false }: Props) {
         >
           <HabitIcon
             name={habit.icon}
-            size={compact ? 22 : 34}
+            size={compact ? 22 : 30}
             strokeWidth={1.8}
             className={avoid ? "" : "text-foreground"}
             style={avoid ? { color: AVOID_COLOR } : undefined}

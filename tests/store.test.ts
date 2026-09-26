@@ -51,7 +51,7 @@ describe("store", () => {
 
   test("invalid backups are rejected without touching data", () => {
     const id = useHabits.getState().addHabit({ name: "X", icon: "Star", color: "mint", schedule: { type: "daily" } });
-    expect(() => useHabits.getState().importData('{"foo":1}')).toThrow("To nie jest kopia zapasowa Loop.");
+    expect(() => useHabits.getState().importData('{"foo":1}')).toThrow("To nie jest kopia zapasowa Szpili.");
     expect(() => useHabits.getState().importData("nope")).toThrow();
     expect(useHabits.getState().habits.map((h) => h.id)).toEqual([id]);
   });
@@ -78,7 +78,8 @@ describe("Szpila lines", () => {
     const now = new Date();
     const cleanAll = Array.from({ length: 30 }, (_, i) => entry(ff, addDays(now, -i - 1)));
     expect(memoryLines(ff, cleanAll, "hard", null)).toEqual([]);
-    const twoSlips = cleanAll.slice(2); // the last two nights unconfirmed = slips
+    // two unconfirmed days before yesterday = slips (yesterday itself may still be open until noon)
+    const twoSlips = cleanAll.filter((_, i) => i !== 1 && i !== 2);
     expect(memoryLines(ff, twoSlips, "hard", null)[0]).toContain("2 wpadki");
   });
 
@@ -86,5 +87,21 @@ describe("Szpila lines", () => {
     const read = habit({ name: "Czytanie" }, 30);
     expect(weeklyRoast([read], [], "soft", "Ola")).toMatch(/^Ola, tydzień: \d+%/);
     expect(weeklyRoast([], [], "hard", null)).toBe("");
+  });
+});
+
+describe("new categories", () => {
+  test("coding, languages and common vices get their own lines", () => {
+    const code = habit({ name: "Programuj", icon: "Code", goal: { type: "minutes", target: 30, step: 15 } });
+    const lang = habit({ name: "Ucz się języka obcego", icon: "Languages", goal: { type: "minutes", target: 15, step: 5 } });
+    const porn = habit({ name: "Pornografia", icon: "EyeOff", kind: "avoid" });
+    const meals = habit({ name: "Pomijanie posiłków", icon: "UtensilsCrossed", kind: "avoid" });
+    const bed = habit({ name: "Scrollowanie w łóżku", icon: "Smartphone", kind: "avoid" });
+    expect(nagLines(code, "hard", null).join(" ")).toMatch(/edytor|commit|repo/i);
+    expect(nagLines(lang, "hard", null).join(" ")).toMatch(/słówk|Duolingo/i);
+    expect(nagLines(porn, "hard", null).join(" ")).toMatch(/porno/i);
+    expect(nagLines(meals, "hard", null).join(" ")).toMatch(/posiłk/i);
+    expect(nagLines(bed, "hard", null).join(" ")).toMatch(/łóżk/i);
+    expect(nagLines(code, "soft", null).length).toBeGreaterThan(0);
   });
 });

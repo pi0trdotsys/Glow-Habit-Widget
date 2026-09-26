@@ -52,12 +52,16 @@ final class HabitNotifier {
     static final int ID_REVIEW = 7200;
     static final int ID_ROAST = 7300;
     static final int ID_PRAISE = 7400;
+    static final int ID_MORNING = 7250;
+    static final int ID_BILL = 7260;
 
     static final String ACTION_TICK = "app.lovable.glow_habit_widget.NOTIFIER_TICK";
     static final String ACTION_DO_NEXT = "app.lovable.glow_habit_widget.DO_NEXT";
     static final String ACTION_SLIP = "app.lovable.glow_habit_widget.SLIP";
     static final String ACTION_ALL_CLEAN = "app.lovable.glow_habit_widget.ALL_CLEAN";
     static final String ACTION_SNOOZE = "app.lovable.glow_habit_widget.SNOOZE";
+    static final String ACTION_Y_CLEAN = "app.lovable.glow_habit_widget.YESTERDAY_CLEAN";
+    static final String ACTION_Y_SLIP = "app.lovable.glow_habit_widget.YESTERDAY_SLIP";
     static final String EXTRA_CANCEL_ID = "cancelId";
 
     private static final String PREFS = "loop_notifier";
@@ -68,10 +72,18 @@ final class HabitNotifier {
     private static final String KEY_LAST_ROAST = "last_roast";
     private static final String KEY_LATE_JAB = "late_jab";
     private static final String KEY_LATE_EVAL = "late_eval";
+    private static final String KEY_LAST_MORNING = "last_morning";
+    private static final String KEY_LAST_BILL = "last_bill";
+    /** Yesterday stays answerable until noon - mirrors AVOID_GRACE_MIN in utils.ts. */
+    static final int GRACE_MIN = 12 * 60;
     /** A jab fires if its slot passed less than this many minutes ago (MIUI delays alarms). */
     private static final int SLOT_GRACE = 60;
     private static final int ROAST_MINUTE = 20 * 60; // Sunday 20:00
     private static final Random RNG = new Random();
+    /** Szpila is a mean cat - mirrors SZPILA_EMOJI in szpila.ts. */
+    static final String EMOJI_NORMAL = "😼";
+    static final String EMOJI_ANGRY = "😾";
+    static final String EMOJI_IMPRESSED = "😸";
 
     private HabitNotifier() {}
 
@@ -84,6 +96,11 @@ final class HabitNotifier {
             // never let a notification problem break widget updates
         }
         scheduleNext(c);
+        try {
+            LiveGuard.scheduleStart(c);
+            LiveGuard.ensure(c);
+        } catch (Exception ignored) {
+        }
     }
 
     /** Alarm tick (background thread): sync sensors, maybe jab/review/roast, refresh everything. */
@@ -95,6 +112,8 @@ final class HabitNotifier {
             checkLateScreen(c);
             maybeTaunt(c);
             maybeReview(c);
+            maybeMorningReview(c);
+            maybeNightBill(c);
             maybeRoast(c);
         } catch (Exception ignored) {
         }
@@ -198,6 +217,28 @@ final class HabitNotifier {
         return ("+" + step + " " + WidgetShared.unit(h, step)).trim();
     }
 
+    /** Pending build habits worth a one-tap button, in plan order (not step-synced ones). */
+    static List<JSONObject> quickRows(List<JSONObject> plan, int max) {
+        List<JSONObject> out = new ArrayList<>();
+        for (JSONObject h : plan) {
+            if (out.size() >= max) break;
+            if (WidgetShared.isAvoid(h) || "steps".equals(h.optString("source")) || WidgetShared.isDone(h)) continue;
+            out.add(h);
+        }
+        return out;
+    }
+
+    /** "+1 szklanka" / "+15 min Czytanie" / "✓ Mycie" - short enough for a notification button. */
+    static String quickLabel(JSONObject h) {
+        String first = h.optString("name").trim().split("\\s+")[0];
+        String goal = h.optString("goal", "check");
+        if ("check".equals(goal)) return "✓ " + first;
+        int step = Math.max(1, Math.min(WidgetShared.step(h), WidgetShared.target(h) - WidgetShared.amount(h)));
+        if ("minutes".equals(goal)) return "+" + step + " min " + first;
+        String unit = WidgetShared.unit(h, step);
+        return unit.isEmpty() ? "+" + step + " " + first : "+" + step + " " + unit;
+    }
+
     /** After a button: close the jab/review and, if the task got finished, show a short praise. */
     static void afterAction(Context c, Intent intent) {
         int cancelId = intent.getIntExtra(EXTRA_CANCEL_ID, 0);
@@ -209,9 +250,9 @@ final class HabitNotifier {
         String praise = h.optString("praise", "");
         if (praise.isEmpty()) return;
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_SZPILA)
-            .setSmallIcon(R.drawable.ic_habit_flame)
+            .setSmallIcon(R.drawable.ic_stat_szpila)
             .setColor(WidgetShared.AVOID)
-            .setContentTitle("😈 Szpila")
+            .setContentTitle(EMOJI_IMPRESSED + " Szpila")
             .setContentText(praise)
             .setStyle(new NotificationCompat.BigTextStyle().bigText(praise))
             .setSilent(true)
@@ -244,20 +285,22 @@ final class HabitNotifier {
         }
         WidgetShared.normalizeIfStale(c);
         rows = WidgetShared.habits(c);
-        int total = rows.length();
+        int total = 0;
         int done = 0;
         float sum = 0;
-        for (int i = 0; i < total; i++) {
+        for (int i = 0; i < rows.length(); i++) {
             JSONObject h = rows.optJSONObject(i);
+            if (!WidgetShared.counts(h)) continue; // undecided night: neither done nor missed
+            total++;
             if (WidgetShared.isDone(h)) done++;
             sum += WidgetShared.fraction(h);
         }
-        int pct = Math.round(100f * sum / total);
+        int pct = total == 0 ? 0 : Math.round(100f * sum / total);
         List<JSONObject> plan = WidgetShared.plan(c);
 
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_PROGRESS)
-            .setSmallIcon(R.drawable.ic_habit_target)
-            .setColor(WidgetShared.ACCENT)
+            .setSmallIcon(R.drawable.ic_stat_szpila)
+            .setColor(WidgetShared.AVOID)
             .setProgress(100, pct, false)
             .setOnlyAlertOnce(true)
             .setSilent(true)
@@ -287,9 +330,13 @@ final class HabitNotifier {
             b.setContentTitle("Dziś: " + done + "/" + total + " · " + pct + "%")
                 .setContentText(now)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(big.toString()))
-                .addAction(0, "✓ " + actionLabel(next) + ": " + next.optString("name"),
-                    action(c, ACTION_DO_NEXT, next.optString("id"), ID_PROGRESS, 7002))
                 .setOngoing(true);
+            // Quick log: up to 3 buttons ("+1 szklanka", "+15 min Czytanie", "✓ Mycie") - no need to open the app.
+            List<JSONObject> quick = quickRows(plan, 3);
+            for (int i = 0; i < quick.size(); i++) {
+                JSONObject h = quick.get(i);
+                b.addAction(0, quickLabel(h), action(c, ACTION_DO_NEXT, h.optString("id"), ID_PROGRESS, 7002 + i));
+            }
         }
         post(c, ID_PROGRESS, b);
     }
@@ -389,9 +436,9 @@ final class HabitNotifier {
     /** A jab with buttons. `target` null = no task buttons (just the snooze). */
     static void postJab(Context c, String text, JSONObject target, boolean angry) {
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_SZPILA)
-            .setSmallIcon(R.drawable.ic_habit_flame)
+            .setSmallIcon(R.drawable.ic_stat_szpila)
             .setColor(WidgetShared.AVOID)
-            .setContentTitle(angry ? "🤬 Szpila" : "😈 Szpila")
+            .setContentTitle((angry ? EMOJI_ANGRY : EMOJI_NORMAL) + " Szpila")
             .setContentText(text)
             .setStyle(new NotificationCompat.BigTextStyle().bigText(text))
             .setAutoCancel(true)
@@ -426,7 +473,9 @@ final class HabitNotifier {
         List<JSONObject> pending = new ArrayList<>();
         for (int i = 0; i < rows.length(); i++) {
             JSONObject h = rows.optJSONObject(i);
-            if (WidgetShared.isAvoid(h) && WidgetShared.isPending(h)) pending.add(h);
+            // Night habits (e.g. scrolling in bed, due 22:30) happen after the review - they
+            // get settled in the morning review instead.
+            if (WidgetShared.isAvoid(h) && WidgetShared.isPending(h) && h.optInt("start", 0) <= at + 30) pending.add(h);
         }
         p.edit().putString(KEY_LAST_REVIEW, WidgetShared.today()).apply();
         if (pending.isEmpty()) return;
@@ -435,7 +484,7 @@ final class HabitNotifier {
         for (JSONObject h : pending) big.append("\n⛔ ").append(h.optString("name"));
         big.append("\n\nBez potwierdzenia do północy liczę to jako wpadki.");
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_REVIEW)
-            .setSmallIcon(R.drawable.ic_habit_moon)
+            .setSmallIcon(R.drawable.ic_stat_szpila)
             .setColor(WidgetShared.AVOID)
             .setContentTitle("Rozliczenie dnia · " + pending.size() + " do potwierdzenia")
             .setContentText("Potwierdź zakazane, zanim uznam je za wpadki.")
@@ -451,6 +500,93 @@ final class HabitNotifier {
         post(c, ID_REVIEW, b);
     }
 
+    /** From wake-up until noon: settle yesterday's unanswered forbidden habits. */
+    static void maybeMorningReview(Context c) {
+        JSONObject s = settings(c);
+        if (!s.optBoolean("review", true) || !canNotify(c)) return;
+        int now = WidgetShared.nowMinute();
+        if (now < wake(s) || now >= GRACE_MIN) return;
+        SharedPreferences p = own(c);
+        if (WidgetShared.today().equals(p.getString(KEY_LAST_MORNING, ""))) return;
+        JSONArray open = WidgetShared.yesterdayOpen(c);
+        p.edit().putString(KEY_LAST_MORNING, WidgetShared.today()).apply();
+        if (open.length() == 0) return;
+
+        StringBuilder big = new StringBuilder("Wczoraj bez potwierdzenia:");
+        for (int i = 0; i < open.length(); i++) big.append("\n⛔ ").append(open.optJSONObject(i).optString("name"));
+        big.append("\n\nDo 12:00 możesz to jeszcze rozliczyć. Potem liczę to jako wpadki.");
+        NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_REVIEW)
+            .setSmallIcon(R.drawable.ic_stat_szpila)
+            .setColor(WidgetShared.AVOID)
+            .setContentTitle("Rozlicz wczoraj · " + open.length())
+            .setContentText("Jak minęła wczorajsza noc? Masz czas do 12:00.")
+            .setStyle(new NotificationCompat.BigTextStyle().bigText(big.toString()))
+            .setAutoCancel(true)
+            .addAction(0, "✓ Wczoraj czysto", action(c, ACTION_Y_CLEAN, null, ID_MORNING, 7251));
+        for (int i = 0; i < Math.min(2, open.length()); i++) {
+            JSONObject it = open.optJSONObject(i);
+            b.addAction(0, "Wpadka: " + it.optString("name"), action(c, ACTION_Y_SLIP, it.optString("id"), ID_MORNING, 7252 + i));
+        }
+        PendingIntent openApp = WidgetShared.openAppIntent(c, 7250);
+        if (openApp != null) b.setContentIntent(openApp);
+        post(c, ID_MORNING, b);
+    }
+
+    /**
+     * "Rachunek za noc": once in the morning, what last night really looked like -
+     * social media per app after midnight, screen minutes, when the phone went down.
+     */
+    static void maybeNightBill(Context c) {
+        JSONObject s = settings(c);
+        if (!s.optBoolean("review", true) || !canNotify(c) || !ScreenTime.granted(c)) return;
+        int now = WidgetShared.nowMinute();
+        if (now < wake(s) || now >= GRACE_MIN) return;
+        SharedPreferences p = own(c);
+        if (WidgetShared.today().equals(p.getString(KEY_LAST_BILL, ""))) return;
+        p.edit().putString(KEY_LAST_BILL, WidgetShared.today()).apply();
+        JSONObject r = NightStats.report(c, 1);
+        if (!r.optBoolean("granted")) return;
+        billPost(c, r);
+    }
+
+    /** Title + body of the night bill; the Szpila line comes from the snapshot ("bill"). */
+    static String[] billText(JSONObject r, JSONObject lines) {
+        int social = r.optInt("social");
+        int screen = r.optInt("screen");
+        int asleep = r.optInt("asleep", -1);
+        boolean bad = social > 0;
+        StringBuilder body = new StringBuilder();
+        String apps = NightStats.appsLine(r.optJSONArray("apps"));
+        body.append(apps.isEmpty() ? "Zero social mediów po północy." : "Po północy: " + apps);
+        body.append("\n📱 ").append(screen).append(" min z telefonem po północy");
+        if (asleep >= 0) body.append("\n🌙 Telefon odłożony ok. ").append(WidgetShared.fmtMinute(asleep));
+        JSONArray pool = new JSONArray();
+        JSONArray all = lines != null ? lines.optJSONArray(bad ? "bad" : "good") : null;
+        for (int i = 0; all != null && i < all.length(); i++) {
+            String l = all.optString(i);
+            if (asleep >= 0 || !l.contains("{asleep}")) pool.put(l);
+        }
+        String line = WidgetShared.pick(pool);
+        if (!line.isEmpty()) body.append("\n\n").append(NightStats.fill(line, r));
+        String title = "🧾 Rachunek za noc · " + (bad ? r.optInt("visits") + "× social media, " + social + " min" : "czysto");
+        return new String[]{title, body.toString()};
+    }
+
+    private static void billPost(Context c, JSONObject r) {
+        String[] t = billText(r, WidgetShared.state(c).optJSONObject("bill"));
+        String first = t[1].split("\n")[0];
+        NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_REVIEW)
+            .setSmallIcon(R.drawable.ic_stat_szpila)
+            .setColor(WidgetShared.AVOID)
+            .setContentTitle((r.optInt("social") > 0 ? EMOJI_ANGRY : EMOJI_IMPRESSED) + " " + t[0])
+            .setContentText(first)
+            .setStyle(new NotificationCompat.BigTextStyle().bigText(t[1]))
+            .setAutoCancel(true);
+        PendingIntent openApp = WidgetShared.openAppIntent(c, 7261);
+        if (openApp != null) b.setContentIntent(openApp);
+        post(c, ID_BILL, b);
+    }
+
     static void maybeRoast(Context c) {
         JSONObject s = settings(c);
         if (!s.optBoolean("taunts", true) || !canNotify(c)) return;
@@ -463,9 +599,9 @@ final class HabitNotifier {
         p.edit().putString(KEY_LAST_ROAST, WidgetShared.today()).apply();
         if (roast.isEmpty()) return;
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_SZPILA)
-            .setSmallIcon(R.drawable.ic_habit_flame)
+            .setSmallIcon(R.drawable.ic_stat_szpila)
             .setColor(WidgetShared.AVOID)
-            .setContentTitle("😈 Szpila: podsumowanie tygodnia")
+            .setContentTitle(EMOJI_NORMAL + " Szpila: podsumowanie tygodnia")
             .setContentText(roast)
             .setStyle(new NotificationCompat.BigTextStyle().bigText(roast))
             .setAutoCancel(true);
@@ -489,9 +625,11 @@ final class HabitNotifier {
             int after = h.optInt("lateAfter", 23 * 60 + 30);
             int limit = h.optInt("lateLimit", 15);
 
-            // Tonight, before midnight: caught red-handed -> slip + jab right away.
-            if (now >= after && !"slip".equals(h.optString("status"))) {
-                int m = ScreenTime.lateMinutes(c, 0, after);
+            // Tonight, before midnight (only when "late" starts before midnight, e.g. 23:30):
+            // caught red-handed -> slip + jab right away.
+            int eff = ScreenTime.effectiveAfter(after);
+            if (eff < 24 * 60 && now >= eff && !"slip".equals(h.optString("status"))) {
+                int m = lateUse(c, h, 0, after);
                 if (m > limit) {
                     WidgetShared.edit(c, id, (row, date) -> {
                         row.put("status", "slip");
@@ -506,7 +644,7 @@ final class HabitNotifier {
             // is crossed, clean once the window closes at 05:00.
             String yKey = WidgetShared.dateKey(1);
             if (wasEvaluated(c, id, yKey)) continue;
-            int m = ScreenTime.lateMinutes(c, 1, after);
+            int m = lateUse(c, h, 1, after);
             if (m < 0) continue;
             boolean closed = ScreenTime.windowClosed(1);
             if (m <= limit && !closed) continue;
@@ -518,6 +656,18 @@ final class HabitNotifier {
             if (m > limit && !closed) lateJab(c, h, m, after, yKey);
             markEvaluated(c, id, yKey);
         }
+    }
+
+    /**
+     * Judge by social media only (default) or by any screen time. With "social",
+     * an alarm, music or a podcast with the screen on after midnight isn't a slip.
+     */
+    static boolean socialBasis(JSONObject h) {
+        return !"screen".equals(h.optString("lateBasis", "social"));
+    }
+
+    private static int lateUse(Context c, JSONObject h, int daysAgo, int after) {
+        return socialBasis(h) ? NightStats.socialMinutes(c, daysAgo, after) : ScreenTime.lateMinutes(c, daysAgo, after);
     }
 
     private static boolean wasEvaluated(Context c, String id, String date) {
@@ -557,6 +707,7 @@ final class HabitNotifier {
         List<Integer> candidates = new ArrayList<>();
         if (s.optBoolean("taunts", true)) for (int m : slots(s)) candidates.add(m);
         if (s.optBoolean("review", true)) candidates.add(s.optInt("reviewAt", 21 * 60 + 30));
+        if (s.optBoolean("review", true)) candidates.add(wake(s) + 1);
         candidates.add(ROAST_MINUTE);
         JSONArray rows = WidgetShared.habits(c);
         for (int i = 0; i < rows.length(); i++) {

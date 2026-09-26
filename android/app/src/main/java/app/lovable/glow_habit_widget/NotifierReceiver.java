@@ -40,6 +40,19 @@ public class NotifierReceiver extends BroadcastReceiver {
             WidgetShared.confirmAllClean(context);
             HabitNotifier.afterAction(context, intent);
             WidgetShared.updateAll(context);
+        } else if (HabitNotifier.ACTION_Y_CLEAN.equals(action)) {
+            WidgetShared.settleYesterday(context, null, "clean");
+            HabitNotifier.afterAction(context, intent);
+        } else if (HabitNotifier.ACTION_Y_SLIP.equals(action)) {
+            if (habitId != null) WidgetShared.settleYesterday(context, habitId, "slip");
+            HabitNotifier.afterAction(context, intent);
+        } else if (LiveGuard.ACTION_START.equals(action)) {
+            // exact alarm at the window start: allowed to start the foreground service
+            LiveGuard.ensure(context);
+            LiveGuard.scheduleStart(context);
+        } else if (LiveGuard.ACTION_SNOOZE.equals(action)) {
+            LiveGuard.snooze(context, LiveGuard.ESCALATE_MIN);
+            androidx.core.app.NotificationManagerCompat.from(context).cancel(LiveGuardService.ID_LIVE);
         } else if (HabitNotifier.ACTION_SNOOZE.equals(action)) {
             HabitNotifier.snooze(context, 60);
             HabitNotifier.afterAction(context, intent);

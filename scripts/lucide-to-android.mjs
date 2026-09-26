@@ -18,6 +18,12 @@ const ICONS = [
   "Guitar", "Headphones", "Film", "Gamepad2", "Sprout", "Flower2",
   "TreePine", "MountainSnow", "Sunrise", "Sunset", "CloudRain", "Wind",
   "Dog", "Recycle", "Shirt", "Scissors", "Glasses", "Feather", "Mic",
+  // Loop 2.1: coding / languages and things people try to cut down on
+  "Terminal", "Globe", "Smartphone", "BedDouble", "EyeOff", "UtensilsCrossed",
+  "Hamburger", "Pizza", "Sandwich", "Candy", "Lollipop", "Donut", "IceCreamCone",
+  "Beer", "Wine", "Martini", "Cigarette", "Dice5", "Coins", "ShoppingCart",
+  "ShoppingBag", "CreditCard", "Tv", "Popcorn", "AlarmClockOff", "Hourglass",
+  "MessageCircleX", "Ban",
 ];
 
 const SRC = "node_modules/lucide-react/dist/esm/icons";

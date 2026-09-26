@@ -33,7 +33,8 @@ import org.json.JSONObject;
  */
 public class HoldActivity extends Activity {
     static final String EXTRA_FORWARD_ONLY = "forwardOnly";
-    private static final long HOLD_MS = 600;
+    /** Same as HOLD_TO_COMPLETE_MS in src/hooks/useHoldToComplete.ts. */
+    private static final long HOLD_MS = 1200;
 
     private String habitId;
     private boolean forwardOnly;
@@ -165,7 +166,7 @@ public class HoldActivity extends Activity {
             if (slip) msg = "Wpadka zapisana. Szpila już ostrzy język.";
             else if (after != null && WidgetShared.isDone(after)) {
                 String praise = after.optString("praise", "");
-                msg = praise.isEmpty() ? "Zaliczone ✓" : "😈 " + praise;
+                msg = praise.isEmpty() ? "Zaliczone ✓" : HabitNotifier.EMOJI_IMPRESSED + " " + praise;
             } else if (after != null && !WidgetShared.amountText(after).isEmpty()) {
                 msg = "Zapisane · " + WidgetShared.amountText(after);
             } else {

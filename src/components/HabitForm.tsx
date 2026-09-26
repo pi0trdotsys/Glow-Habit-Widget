@@ -40,19 +40,41 @@ const COLOR_NAMES: Record<HabitColor, string> = {
 };
 
 /** One-tap starting points, tuned so the planner and Szpila recognise them. */
+const A = (name: string, icon: string, times: number, period: "day" | "week" | "month" = "week"): HabitDraft => ({
+  name,
+  icon,
+  color: "rose",
+  schedule: { type: "daily" },
+  kind: "avoid",
+  limit: { times, period },
+});
+
 const TEMPLATES: HabitDraft[] = [
   { name: "Mycie zębów", icon: "Tooth", color: "mint", schedule: { type: "daily" }, goal: { type: "count", target: 2, step: 1, unit: "razy" } },
   { name: "Picie wody", icon: "GlassWater", color: "sky", schedule: { type: "daily" }, goal: { type: "count", target: 8, step: 1, unit: "szklanek" } },
   { name: "8000 kroków", icon: "Footprints", color: "lime", schedule: { type: "daily" }, goal: { type: "count", target: 8000, step: 1000, unit: "kroków" } },
   { name: "Czytanie książki", icon: "BookOpen", color: "amber", schedule: { type: "daily" }, goal: { type: "minutes", target: 20, step: 10 }, timeOfDay: "evening" },
+  { name: "Programuj", icon: "Code", color: "violet", schedule: { type: "daily" }, goal: { type: "minutes", target: 30, step: 15 } },
+  { name: "Ucz się języka obcego", icon: "Languages", color: "coral", schedule: { type: "daily" }, goal: { type: "minutes", target: 15, step: 5 } },
   { name: "Medytacja", icon: "Sparkles", color: "violet", schedule: { type: "daily" }, goal: { type: "minutes", target: 10, step: 5 }, timeOfDay: "morning" },
   { name: "Siłownia", icon: "Dumbbell", color: "coral", schedule: { type: "timesPerWeek", target: 3 } },
   { name: "Witaminy", icon: "Pill", color: "sand", schedule: { type: "daily" }, timeOfDay: "morning" },
-  { name: "Telefon do późna", icon: "Phone", color: "rose", schedule: { type: "daily" }, kind: "avoid", limit: { times: 1, period: "week" } },
-  { name: "Fast food", icon: "Utensils", color: "coral", schedule: { type: "daily" }, kind: "avoid", limit: { times: 1, period: "week" } },
-  { name: "Słodycze", icon: "Cookie", color: "rose", schedule: { type: "daily" }, kind: "avoid", limit: { times: 2, period: "week" } },
-  { name: "Alkohol", icon: "CupSoda", color: "amber", schedule: { type: "daily" }, kind: "avoid", limit: { times: 1, period: "week" } },
-  { name: "Scrollowanie rolek", icon: "Film", color: "violet", schedule: { type: "daily" }, kind: "avoid", limit: { times: 0, period: "week" } },
+  A("Scrollowanie w łóżku", "Smartphone", 1),
+  A("Fast food", "Hamburger", 1),
+  A("Słodycze", "Candy", 2),
+  A("Pornografia", "EyeOff", 0),
+  A("Pomijanie posiłków", "UtensilsCrossed", 0),
+  A("Alkohol", "Beer", 1),
+  A("Papierosy", "Cigarette", 0),
+  A("Energetyki", "Zap", 0),
+  A("Scrollowanie rolek", "Film", 0),
+  A("Seriale do nocy", "Tv", 1),
+  A("Zakupy impulsywne", "ShoppingCart", 0),
+  A("Hazard", "Dice5", 0),
+  A("Drzemka budzika", "AlarmClockOff", 1),
+  A("Obgryzanie paznokci", "Hand", 0),
+  A("Kawa po 16:00", "Coffee", 1),
+  A("Prokrastynacja", "Hourglass", 1),
 ];
 
 interface Props {
@@ -83,6 +105,7 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
   const [source, setSource] = useState<HabitSource | undefined>(initial?.source);
   const [lateAfter, setLateAfter] = useState(initial?.lateAfter ?? DEFAULT_LATE_AFTER);
   const [lateLimit, setLateLimit] = useState(initial?.lateLimit ?? DEFAULT_LATE_LIMIT);
+  const [lateBasis, setLateBasis] = useState<"social" | "screen">(initial?.lateBasis ?? "social");
   const isNative = Capacitor.isNativePlatform();
 
   const avoid = kind === "avoid";
@@ -135,6 +158,7 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
       source: (source === "steps" && !avoid && goalType === "count") || (source === "screen" && avoid) ? source : undefined,
       lateAfter: source === "screen" && avoid ? lateAfter : undefined,
       lateLimit: source === "screen" && avoid ? lateLimit : undefined,
+      lateBasis: source === "screen" && avoid ? lateBasis : undefined,
       reminder: reminderOn ? reminderTime : null,
     });
   };
@@ -243,6 +267,8 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
                 setLateAfter={setLateAfter}
                 lateLimit={lateLimit}
                 setLateLimit={setLateLimit}
+                lateBasis={lateBasis}
+                setLateBasis={setLateBasis}
               />
             )}
           </Section>
@@ -536,6 +562,8 @@ function ScreenSourceBox({
   setLateAfter,
   lateLimit,
   setLateLimit,
+  lateBasis,
+  setLateBasis,
 }: {
   on: boolean;
   onToggle: (on: boolean) => void;
@@ -543,6 +571,8 @@ function ScreenSourceBox({
   setLateAfter: (v: string) => void;
   lateLimit: number;
   setLateLimit: (n: number) => void;
+  lateBasis: "social" | "screen";
+  setLateBasis: (b: "social" | "screen") => void;
 }) {
   const [granted, setGranted] = useState<boolean | null>(null);
   useEffect(() => {
@@ -560,7 +590,8 @@ function ScreenSourceBox({
         <div>
           <div className="text-sm font-medium">Oceniaj z czasu ekranu</div>
           <div className="text-[11px] text-muted-foreground">
-            Bez klikania: telefon używany w nocy dłużej niż limit = wpadka, inaczej rano dzień jest czysty.
+            Bez klikania i bez domyślnego zaznaczenia: nocne scrollowanie dłuższe niż tolerancja = wpadka,
+            spokojna noc = czysto (o 5:00). Do tego czasu dzień jest nierozstrzygnięty.
           </div>
         </div>
         <Toggle checked={on} onChange={onToggle} />
@@ -575,9 +606,44 @@ function ScreenSourceBox({
               className="rounded-xl border border-border bg-background px-3 py-1.5 text-sm outline-none"
             />
           </Row>
+          <p className="text-[11px] text-muted-foreground">
+            Godzina przed 5:00 (np. 00:00) oznacza tę noc po północy - liczy się noc z dnia na dzień.
+          </p>
           <Row label="Tolerancja (minut)">
             <NumberInput value={lateLimit} onChange={setLateLimit} max={240} />
           </Row>
+          <div>
+            <div className="mb-2 text-xs text-muted-foreground">Co się liczy</div>
+            <div className="grid grid-cols-2 gap-2">
+              {(
+                [
+                  ["social", "Tylko social media", "Budzik, muzyka czy podcast nie są wpadką"],
+                  ["screen", "Cały czas ekranu", "Każda minuta z włączonym ekranem"],
+                ] as const
+              ).map(([id, label, hint]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setLateBasis(id)}
+                  aria-pressed={lateBasis === id}
+                  className="rounded-xl border p-2.5 text-left transition"
+                  style={{
+                    borderColor: lateBasis === id ? AVOID_COLOR : "var(--border)",
+                    backgroundColor: lateBasis === id ? "color-mix(in oklab, var(--avoid) 12%, transparent)" : "transparent",
+                  }}
+                >
+                  <div className="text-xs font-semibold">{label}</div>
+                  <div className="mt-0.5 text-[10px] leading-snug text-muted-foreground">{hint}</div>
+                </button>
+              ))}
+            </div>
+            {lateBasis === "social" && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Social media = TikTok, Instagram, Facebook, YouTube, X, Reddit, Snapchat, Pinterest, Twitch, LinkedIn,
+                Threads (oprócz wyłączonych w „Szpila na żywo”).
+              </p>
+            )}
+          </div>
           {granted === false && (
             <button
               onClick={() => void openUsageSettings()}

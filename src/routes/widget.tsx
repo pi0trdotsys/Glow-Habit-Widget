@@ -7,7 +7,7 @@ import { useEffect } from "react";
 export const Route = createFileRoute("/widget")({
   head: () => ({
     meta: [
-      { title: "Widżet - Loop" },
+      { title: "Widżet - Szpila" },
       { name: "description", content: "Szybki widok: przytrzymaj kafelek, by zaliczyć." },
     ],
   }),

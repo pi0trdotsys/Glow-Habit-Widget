@@ -151,10 +151,22 @@ function entryOf(idx: EntryIndex | Completion[], habitId: string, key: string): 
   return idx.find((c) => c.habitId === habitId && c.date === key);
 }
 
+/** Local calendar day the habit was created (createdAt is UTC ISO). */
+export function createdKey(h: Habit): string {
+  return h.createdAt ? todayKey(new Date(h.createdAt)) : "0000-00-00";
+}
+
+/**
+ * Until this minute of the next day, an unconfirmed avoid-habit day is still
+ * open ("rozlicz wczoraj") - e.g. scrolling in bed happens after midnight and
+ * gets confirmed in the morning. Mirrored in WidgetShared (morning review).
+ */
+export const AVOID_GRACE_MIN = 12 * 60;
+
 export function isDueOn(habit: Habit, date: Date): boolean {
   // A habit isn't due before the day it was created - otherwise avoid habits
   // would retroactively rack up "slips" and weekly comparisons would be skewed.
-  if (habit.createdAt && todayKey(date) < habit.createdAt.slice(0, 10)) return false;
+  if (habit.createdAt && todayKey(date) < createdKey(habit)) return false;
   const s = habit.schedule;
   if (s.type === "daily") return true;
   if (s.type === "weekdays") {
@@ -187,7 +199,11 @@ export function amountOn(
 
 export type AvoidStatus = "clean" | "slip" | "pending";
 
-/** Avoid habit status for a day. Unconfirmed past days count as slips. */
+/**
+ * Avoid habit status for a day. Unconfirmed past days count as slips - except
+ * screen-judged habits, which are never pre-decided: they stay "pending"
+ * (undecided, not counted) until the night's screen time decides.
+ */
 export function avoidStatus(
   h: Habit,
   idx: EntryIndex | Completion[],
@@ -200,7 +216,15 @@ export function avoidStatus(
   const isToday = key === todayKey(now);
   let confirmed = !!e;
   if (e && cutoffMin != null && e.log?.length) confirmed = e.log.some(([m]) => m <= cutoffMin);
-  if (!confirmed) return isToday || cutoffMin != null ? "pending" : "slip";
+  if (!confirmed) {
+    if (isToday || cutoffMin != null) return "pending";
+    if (isAutoScreen(h)) return "pending";
+    // The creation day is never an automatic slip - there was no fair chance to confirm it.
+    if (key === createdKey(h)) return "pending";
+    // Yesterday can still be settled until noon.
+    if (key === todayKey(addDays(now, -1)) && minuteOfDay(now) < AVOID_GRACE_MIN) return "pending";
+    return "slip";
+  }
   return e!.slipped ? "slip" : "clean";
 }
 
@@ -247,12 +271,26 @@ export function dayScore(
   if (kindOf(h) === "avoid") {
     const st = avoidStatus(h, idx, date, now, cutoffMin);
     if (st === "clean") return 1;
-    // Screen-judged habits are fine until the night's screen time says otherwise.
-    if (st === "pending") return isAutoScreen(h) ? 1 : 0;
+    if (st === "pending") return 0;
     return slipsInPeriod(h, idx, date, now) <= limitOf(h).times ? 1 : 0;
   }
   const g = goalOf(h);
   return Math.min(1, amountOn(h, idx, date, cutoffMin) / g.target);
+}
+
+/**
+ * Does this habit-day count at all? Not when it isn't due, and not while a
+ * screen-judged night is undecided (neither done nor missed).
+ */
+export function countsOn(
+  h: Habit,
+  idx: EntryIndex | Completion[],
+  date: Date,
+  now: Date = new Date(),
+  cutoffMin?: number,
+): boolean {
+  if (!isDueOn(h, date)) return false;
+  return !(isAutoScreen(h) && avoidStatus(h, idx, date, now, cutoffMin) === "pending");
 }
 
 export function isCompletedOn(habit: Habit, completions: Completion[] | EntryIndex, date: Date): boolean {
@@ -268,8 +306,8 @@ export function currentStreak(habit: Habit, completions: Completion[]): number {
   // Grace: if today isn't done yet, count from yesterday.
   if (!isDueOn(habit, cursor) || dayScore(habit, idx, cursor, now) < 1) cursor = addDays(cursor, -1);
   for (let guard = 0; guard < 3650; guard++) {
-    if (habit.createdAt && todayKey(cursor) < habit.createdAt.slice(0, 10)) break;
-    if (!isDueOn(habit, cursor)) {
+    if (habit.createdAt && todayKey(cursor) < createdKey(habit)) break;
+    if (!countsOn(habit, idx, cursor, now)) {
       cursor = addDays(cursor, -1);
       continue;
     }
@@ -287,14 +325,14 @@ export function longestStreak(habit: Habit, completions: Completion[]): number {
   const first = completions
     .filter((c) => c.habitId === habit.id)
     .map((c) => c.date)
-    .concat(habit.createdAt ? [habit.createdAt.slice(0, 10)] : [])
+    .concat(habit.createdAt ? [createdKey(habit)] : [])
     .sort()[0];
   if (!first) return 0;
   let cursor = parseISO(first);
   let best = 0;
   let run = 0;
   while (differenceInCalendarDays(now, cursor) >= 0) {
-    if (isDueOn(habit, cursor)) {
+    if (countsOn(habit, idx, cursor, now)) {
       const isToday = todayKey(cursor) === todayKey(now);
       if (dayScore(habit, idx, cursor, now) >= 1) run += 1;
       else if (!isToday) run = 0;
@@ -312,7 +350,7 @@ export function thisWeekCount(habit: Habit, completions: Completion[]): number {
   let cursor = startOfWeek(now, { weekStartsOn: 1 });
   let n = 0;
   while (todayKey(cursor) <= todayKey(now)) {
-    if (isDueOn(habit, cursor) && dayScore(habit, idx, cursor, now) >= 1) n++;
+    if (countsOn(habit, idx, cursor, now) && dayScore(habit, idx, cursor, now) >= 1) n++;
     cursor = addDays(cursor, 1);
   }
   return n;
@@ -357,7 +395,7 @@ export function completionRate(habit: Habit, completions: Completion[], days = 3
   let done = 0;
   for (let i = 0; i < days; i++) {
     const d = addDays(today, -i);
-    if (!isDueOn(habit, d)) continue;
+    if (!countsOn(habit, idx, d, today)) continue;
     const s = dayScore(habit, idx, d, today);
     if (i === 0 && s < 1) continue;
     due += 1;
@@ -390,8 +428,10 @@ export interface WeekDay {
 export interface WeeklyReport {
   thisWeek: WeekTotals & { done: number };
   lastWeek: WeekTotals & { done: number };
-  /** Percentage-point difference (this - last). */
+  /** Percentage-point difference (this - last); 0 when there is nothing to compare with. */
   delta: number;
+  /** No habit was due last week in the same window (e.g. the first week of use). */
+  noBaseline: boolean;
   /** Label for the window, e.g. "pon-śr do 15:40". */
   windowLabel: string;
   days: WeekDay[];
@@ -413,7 +453,7 @@ function dayWindow(
   now: Date,
   cutoffMin?: number,
 ): { score: number; due: number } {
-  if (!isDueOn(h, d)) return { score: 0, due: 0 };
+  if (!countsOn(h, idx, d, now, cutoffMin)) return { score: 0, due: 0 };
   if (h.schedule.type === "timesPerWeek") {
     // Weekly quota: every done day earns a point, the quota is spread evenly.
     const target = h.schedule.target ?? 1;
@@ -483,7 +523,8 @@ export function weeklyReport(habits: Habit[], completions: Completion[], now: Da
   return {
     thisWeek: { score: round1(sT), due: round1(dT), rate: rateT, done: round1(sT) },
     lastWeek: { score: round1(sL), due: round1(dL), rate: rateL, done: round1(sL) },
-    delta: rateT - rateL,
+    delta: dL === 0 ? 0 : rateT - rateL,
+    noBaseline: dL === 0,
     windowLabel,
     days,
     perHabit,
@@ -519,6 +560,8 @@ function guessWindow(h: Habit): Window | null {
   if (/wod|water|droplet|glass|pij|pić/.test(n)) return { start: 8 * 60, end: 20 * 60 };
   if (/krok|step|footprint|spacer|walk/.test(n)) return { start: 9 * 60, end: 20 * 60 };
   if (/czyt|ksi[ąa]ż|read|book/.test(n)) return { start: 21 * 60, end: 21 * 60 };
+  if (/program|kod|code|terminal/.test(n)) return { start: 18 * 60, end: 18 * 60 };
+  if (/j[ęe]zyk|angiel|languages|duolingo/.test(n)) return { start: 19 * 60 + 30, end: 19 * 60 + 30 };
   if (/medyt|meditat|oddech/.test(n)) return { start: 7 * 60 + 45, end: 7 * 60 + 45 };
   if (/si[łl]own|gym|trening|dumbbell|bieg|run/.test(n)) return { start: 17 * 60 + 30, end: 17 * 60 + 30 };
   if (/witamin|suplement|pill|lek/.test(n)) return { start: 8 * 60 + 30, end: 8 * 60 + 30 };
@@ -656,7 +699,7 @@ export function todayProgress(habits: Habit[], completions: Completion[], now: D
   let total = 0;
   let sum = 0;
   for (const h of habits) {
-    if (!isDueOn(h, now)) continue;
+    if (!countsOn(h, idx, now, now)) continue;
     total++;
     const s = dayScore(h, idx, now, now);
     sum += s;

@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "bun test tests",
+    "test:e2e": "bun run build:cap && bun tests/e2e/app.e2e.ts",
     "format": "prettier --write ."
   },
   "dependencies": {

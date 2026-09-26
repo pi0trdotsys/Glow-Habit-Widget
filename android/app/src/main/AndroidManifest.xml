@@ -22,7 +22,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Health Connect: "why does Loop need steps" (Android 13 and older) -->
+            <!-- Health Connect: "why does Szpila need steps" (Android 13 and older) -->
             <intent-filter>
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
             </intent-filter>
@@ -102,6 +102,18 @@
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info3" />
         </receiver>
 
+        <!-- 4x1 Szpila widget (the mean cat + one jab, habits to do only) -->
+        <receiver android:name=".SzpilaWidgetProvider" android:exported="false"
+            android:label="@string/widget_szpila_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info4" />
+        </receiver>
+
         <!-- Progress notification + Szpila: alarm ticks, notification action, re-arm after reboot/update -->
         <receiver android:name=".NotifierReceiver" android:exported="false">
             <intent-filter>
@@ -109,6 +121,16 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+
+        <!-- Night guard: while 00:00-05:00, Szpila pops up the moment a social media app opens -->
+        <service
+            android:name=".LiveGuardService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="User-enabled night guard: detects social media apps opened after midnight (usage access) and shows a reminder to put the phone away." />
+        </service>
     </application>
 
     <!-- Permissions -->
@@ -123,7 +145,30 @@
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
 
+    <!-- Night guard (foreground service started by an exact alarm at midnight) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
+    <!-- Night guard block: full-screen Szpila over the social media app (granted by the user) -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
+        <!-- social media apps watched by the night guard (LiveGuard.SOCIAL) -->
+        <package android:name="com.zhiliaoapp.musically" />
+        <package android:name="com.ss.android.ugc.trill" />
+        <package android:name="com.instagram.android" />
+        <package android:name="com.instagram.lite" />
+        <package android:name="com.instagram.barcelona" />
+        <package android:name="com.facebook.katana" />
+        <package android:name="com.facebook.lite" />
+        <package android:name="com.google.android.youtube" />
+        <package android:name="com.twitter.android" />
+        <package android:name="com.reddit.frontpage" />
+        <package android:name="com.snapchat.android" />
+        <package android:name="com.pinterest" />
+        <package android:name="tv.twitch.android.app" />
+        <package android:name="com.linkedin.android" />
     </queries>
 </manifest>

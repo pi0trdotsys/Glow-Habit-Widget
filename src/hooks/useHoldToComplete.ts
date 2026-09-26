@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+/** How long a tile must be held to count. Mirrored by HoldActivity.HOLD_MS (widget overlay). */
+export const HOLD_TO_COMPLETE_MS = 1200;
+
 interface Options {
   /** ms to fully complete the hold */
   duration?: number;
@@ -17,7 +20,7 @@ interface Options {
  * - Held to completion -> onComplete + vibration
  */
 export function useHoldToComplete({
-  duration = 600,
+  duration = HOLD_TO_COMPLETE_MS,
   onComplete,
   onTap,
   tapMaxMs = 200,

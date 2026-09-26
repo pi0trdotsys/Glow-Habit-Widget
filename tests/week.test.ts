@@ -37,3 +37,13 @@ describe("weeklyReport compares only up to the same point of the week", () => {
     expect(r.days[3].now).toBeNull(); // Thursday is still ahead
   });
 });
+
+describe("first week of use", () => {
+  test("no baseline -> no fake improvement", () => {
+    const now = WED_1540;
+    const fresh = habit({ name: "Woda", goal: { type: "count", target: 8, step: 1 } }, 2, now);
+    const r = weeklyReport([fresh], [entry(fresh, addDays(now, -1), { amount: 8 })], now);
+    expect(r.noBaseline).toBe(true);
+    expect(r.delta).toBe(0);
+  });
+});

@@ -11,7 +11,7 @@ export function NameOnboarding() {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-background/95 backdrop-blur-xl px-6">
       <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-2xl">
-        <h2 className="font-display text-2xl font-bold tracking-tight">Witaj w Loop</h2>
+        <h2 className="font-display text-2xl font-bold tracking-tight">Witaj w Szpili</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Jak mam się do ciebie zwracać?
         </p>

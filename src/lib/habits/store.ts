@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Completion, Habit, HabitColor, HabitSchedule } from "./types";
+import type { FaceId, HumorId } from "./gamification";
+import type { NightReport } from "@/lib/sensors";
+import { setHumor } from "./szpila";
 import { goalOf, kindOf, minuteOfDay, todayKey } from "./utils";
 
 export type TauntLevel = "hard" | "soft";
@@ -29,6 +32,20 @@ export interface NotificationSettings {
   /** Evening review notification to settle all forbidden habits at once. */
   review: boolean;
   reviewAt: string;
+  /** "Szpila na żywo": pop up the moment a social media app opens at night (Android, usage access). */
+  live: boolean;
+  liveFrom: string;
+  liveUntil: string;
+  /** Packages the night guard ignores. */
+  liveOff: string[];
+  /** After the 3rd jab of a session: full-screen block over the app (needs "draw over other apps"). */
+  liveBlock: boolean;
+}
+
+/** The cat's look + voice (unlocked by forma streaks, see gamification.ts). */
+export interface SzpilaLook {
+  face: FaceId;
+  humor: HumorId;
 }
 
 const defaultNotifications: NotificationSettings = {
@@ -46,7 +63,14 @@ const defaultNotifications: NotificationSettings = {
   quietTo: "09:00",
   review: true,
   reviewAt: "21:30",
+  live: true,
+  liveFrom: "00:00",
+  liveUntil: "05:00",
+  liveOff: [],
+  liveBlock: true,
 };
+
+const defaultLook: SzpilaLook = { face: "wredny", humor: "wredny" };
 
 interface HabitsState {
   habits: Habit[];
@@ -56,9 +80,17 @@ interface HabitsState {
   setUserName: (name: string) => void;
   notifications: NotificationSettings;
   setNotifications: (n: NotificationSettings) => void;
-  /** Daily automatic backup to Download/Loop (Android). */
+  /** Daily automatic backup to Download/Szpila (Android). */
   autoBackup: boolean;
   setAutoBackup: (on: boolean) => void;
+  /** Night-time social media visits per habit day (from the native night guard). */
+  nightHits: Record<string, number>;
+  mergeNightHits: (hits: Record<string, number>) => void;
+  /** "Rachunek za noc" per night (habit day of the evening). */
+  nightReports: Record<string, NightReport>;
+  mergeNightReports: (r: Record<string, NightReport>) => void;
+  szpila: SzpilaLook;
+  setSzpila: (look: Partial<SzpilaLook>) => void;
   addHabit: (h: Omit<Habit, "id" | "createdAt">) => string;
   updateHabit: (id: string, patch: Partial<Omit<Habit, "id">>) => void;
   removeHabit: (id: string) => void;
@@ -116,8 +148,22 @@ const seedHabits: Omit<Habit, "id" | "createdAt">[] = [
     timeOfDay: "evening",
   },
   {
-    name: "Telefon do późna",
-    icon: "Phone",
+    name: "Programuj",
+    icon: "Code",
+    color: "violet",
+    schedule: { type: "daily" },
+    goal: { type: "minutes", target: 30, step: 15 },
+  },
+  {
+    name: "Ucz się języka obcego",
+    icon: "Languages",
+    color: "coral",
+    schedule: { type: "daily" },
+    goal: { type: "minutes", target: 15, step: 5 },
+  },
+  {
+    name: "Scrollowanie w łóżku",
+    icon: "Smartphone",
     color: "rose",
     schedule: { type: "daily" },
     kind: "avoid",
@@ -172,6 +218,30 @@ export const useHabits = create<HabitsState>()(
       setNotifications: (n) => set({ notifications: n }),
       autoBackup: true,
       setAutoBackup: (on) => set({ autoBackup: on }),
+      nightHits: {},
+      mergeNightHits: (hits) =>
+        set((s) => {
+          const next = { ...s.nightHits };
+          let changed = false;
+          for (const [k, v] of Object.entries(hits)) {
+            if (typeof v === "number" && v > (next[k] ?? 0)) {
+              next[k] = v;
+              changed = true;
+            }
+          }
+          return changed ? { nightHits: next } : {};
+        }),
+      nightReports: {},
+      mergeNightReports: (r) =>
+        set((s) => {
+          const next = { ...s.nightReports, ...r };
+          // keep ~120 nights
+          const keys = Object.keys(next).sort();
+          for (const k of keys.slice(0, Math.max(0, keys.length - 120))) delete next[k];
+          return { nightReports: next };
+        }),
+      szpila: defaultLook,
+      setSzpila: (look) => set((s) => ({ szpila: { ...s.szpila, ...look } })),
       addHabit: (h) => {
         const id = uid();
         const habit: Habit = { ...h, id, createdAt: new Date().toISOString() };
@@ -257,6 +327,9 @@ export const useHabits = create<HabitsState>()(
           userName: s.userName,
           notifications: s.notifications,
           autoBackup: s.autoBackup,
+          nightHits: s.nightHits,
+          nightReports: s.nightReports,
+          szpila: s.szpila,
           habits: s.habits,
           completions: s.completions,
         });
@@ -268,12 +341,15 @@ export const useHabits = create<HabitsState>()(
           userName: string | null;
           notifications: Partial<NotificationSettings>;
           autoBackup: boolean;
+          nightHits: Record<string, number>;
+          nightReports: Record<string, NightReport>;
+          szpila: Partial<SzpilaLook>;
         }>;
         const valid =
           Array.isArray(data.habits) &&
           data.habits.every((h) => h && typeof h.id === "string" && typeof h.name === "string" && h.schedule) &&
           (data.completions == null || Array.isArray(data.completions));
-        if (!valid) throw new Error("To nie jest kopia zapasowa Loop.");
+        if (!valid) throw new Error("To nie jest kopia zapasowa Szpili.");
         set((s) => ({
           habits: data.habits!,
           completions: (data.completions ?? []).filter((c) => c && typeof c.habitId === "string" && typeof c.date === "string"),
@@ -281,6 +357,9 @@ export const useHabits = create<HabitsState>()(
           userName: data.userName ?? s.userName,
           notifications: data.notifications ? { ...defaultNotifications, ...data.notifications } : s.notifications,
           autoBackup: data.autoBackup ?? s.autoBackup,
+          nightHits: data.nightHits && typeof data.nightHits === "object" ? data.nightHits : s.nightHits,
+          szpila: data.szpila ? { ...defaultLook, ...data.szpila } : s.szpila,
+          nightReports: data.nightReports && typeof data.nightReports === "object" ? data.nightReports : s.nightReports,
         }));
         return data.habits!.length;
       },
@@ -297,7 +376,7 @@ export const useHabits = create<HabitsState>()(
     }),
     {
       name: "loop-habits-v1",
-      version: 2,
+      version: 3,
       migrate: (persisted, version) => {
         const p = (persisted ?? {}) as Partial<HabitsState>;
         if (version < 2 && Array.isArray(p.habits)) {
@@ -310,6 +389,21 @@ export const useHabits = create<HabitsState>()(
             return { ...c, amount: goalOf(h).target };
           });
         }
+        if (version < 3 && Array.isArray(p.habits)) {
+          // "Telefon do późna" is really about scrolling in bed.
+          p.habits = p.habits.map((h) =>
+            h.name === "Telefon do późna"
+              ? { ...h, name: "Scrollowanie w łóżku", icon: h.icon === "Phone" ? "Smartphone" : h.icon }
+              : h,
+          );
+          // Coding + a foreign language join the default set (unless already tracked).
+          const has = (re: RegExp) => p.habits!.some((h) => re.test(h.name.toLowerCase()));
+          const now = new Date().toISOString();
+          for (const seed of seedHabits.filter((s) => s.name === "Programuj" || s.name === "Ucz się języka obcego")) {
+            const re = seed.name === "Programuj" ? /program|kod|code/ : /j[ęe]zyk|angiel|duolingo/;
+            if (!has(re)) p.habits.push({ ...seed, id: uid(), createdAt: now });
+          }
+        }
         return p as HabitsState;
       },
       // Backfill any notification fields added after a user first persisted
@@ -320,10 +414,17 @@ export const useHabits = create<HabitsState>()(
           ...current,
           ...p,
           notifications: { ...defaultNotifications, ...(p.notifications ?? {}) },
+          szpila: { ...defaultLook, ...(p.szpila ?? {}) },
+          nightHits: p.nightHits ?? {},
+          nightReports: p.nightReports ?? {},
         };
       },
     },
   ),
 );
+
+// Keep Szpila's voice in sync with the chosen humor (also after rehydration).
+setHumor(useHabits.getState().szpila.humor);
+useHabits.subscribe((s) => setHumor(s.szpila.humor));
 
 export type { Habit, Completion, HabitColor, HabitSchedule };

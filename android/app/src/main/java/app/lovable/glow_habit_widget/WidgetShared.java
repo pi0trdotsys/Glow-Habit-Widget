@@ -111,10 +111,26 @@ final class WidgetShared {
 
     static boolean isDone(JSONObject h) {
         if (!isV2(h)) return h.optBoolean("done");
-        // Screen-judged avoid habits count as fine today until the screen time says otherwise.
-        if (isAutoScreen(h)) return !"slip".equals(h.optString("status"));
         if (isAvoid(h)) return "clean".equals(h.optString("status"));
         return amount(h) >= target(h);
+    }
+
+    /**
+     * False for a screen-judged habit whose night isn't decided yet - it's neither
+     * done nor a slip, so it stays out of every counter until the screen time decides.
+     */
+    static boolean counts(JSONObject h) {
+        if (!isAutoScreen(h)) return true;
+        String s = h.optString("status");
+        return "clean".equals(s) || "slip".equals(s);
+    }
+
+    /** Rows that count toward today's totals (see counts). */
+    static int countedTotal(Context c) {
+        JSONArray h = habits(c);
+        int n = 0;
+        for (int i = 0; i < h.length(); i++) if (counts(h.optJSONObject(i))) n++;
+        return n;
     }
 
     static boolean isPending(JSONObject h) {
@@ -258,16 +274,23 @@ final class WidgetShared {
         try {
             JSONObject o = new JSONObject(json);
             if (today().equals(o.optString("date", ""))) return;
+            String oldDate = o.optString("date", "");
             o.put("date", today());
             JSONArray habits = o.optJSONArray("habits");
+            // Yesterday's unanswered forbidden habits stay open until noon (morning review).
+            JSONArray open = new JSONArray();
             if (habits != null) {
                 for (int i = 0; i < habits.length(); i++) {
                     JSONObject h = habits.getJSONObject(i);
+                    if (dateKey(1).equals(oldDate) && isAvoid(h) && !isAutoScreen(h) && isPending(h)) {
+                        open.put(new JSONObject().put("id", h.optString("id")).put("name", h.optString("name")));
+                    }
                     h.put("done", false);
                     h.put("amount", 0);
                     if (isAvoid(h)) h.put("status", "pending");
                 }
             }
+            o.put("yesterday", new JSONObject().put("date", oldDate).put("items", open));
             o.put("doneCount", 0);
             o.put("fraction", 0);
             p.edit().putString(STATE_KEY, o.toString()).apply();
@@ -480,6 +503,42 @@ final class WidgetShared {
             c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH));
     }
 
+    /**
+     * Morning review answer for yesterday: queues ops for yesterday's date and
+     * drops the answered items from the snapshot. habitId null = all items.
+     */
+    static synchronized void settleYesterday(Context context, String habitId, String status) {
+        SharedPreferences p = prefs(context);
+        try {
+            JSONObject o = new JSONObject(p.getString(STATE_KEY, "{}"));
+            JSONObject y = o.optJSONObject("yesterday");
+            if (y == null) return;
+            JSONArray items = y.optJSONArray("items");
+            if (items == null) return;
+            JSONArray keep = new JSONArray();
+            for (int i = 0; i < items.length(); i++) {
+                JSONObject it = items.getJSONObject(i);
+                if (habitId == null || habitId.equals(it.optString("id"))) {
+                    queueOp(context, new JSONObject().put("habitId", it.optString("id"))
+                        .put("date", y.optString("date")).put("status", status));
+                } else {
+                    keep.put(it);
+                }
+            }
+            y.put("items", keep);
+            p.edit().putString(STATE_KEY, o.toString()).commit();
+        } catch (Exception ignored) {
+        }
+    }
+
+    /** Yesterday's still-open forbidden habits, if the snapshot has them for the right date. */
+    static JSONArray yesterdayOpen(Context c) {
+        JSONObject y = state(c).optJSONObject("yesterday");
+        if (y == null || !dateKey(1).equals(y.optString("date"))) return new JSONArray();
+        JSONArray items = y.optJSONArray("items");
+        return items != null ? items : new JSONArray();
+    }
+
     static JSONObject row(Context context, String habitId) {
         JSONArray a = habits(context);
         for (int i = 0; i < a.length(); i++) {
@@ -589,6 +648,9 @@ final class WidgetShared {
         }
         for (int id : mgr.getAppWidgetIds(new ComponentName(context, NextTaskWidgetProvider.class))) {
             NextTaskWidgetProvider.updateWidget(context, mgr, id);
+        }
+        for (int id : mgr.getAppWidgetIds(new ComponentName(context, SzpilaWidgetProvider.class))) {
+            SzpilaWidgetProvider.updateWidget(context, mgr, id);
         }
         HabitNotifier.refresh(context);
     }

@@ -29,7 +29,7 @@ final class BackupStore {
     static final String BACKUP_KEY = "loop_backup";
     private static final String PREFS = "loop_notifier";
     private static final String KEY_LAST_AUTO = "last_auto_backup";
-    private static final String FOLDER = "Loop";
+    private static final String FOLDER = "Szpila";
     private static final String[] DAY_FILE = {"nd", "pon", "wt", "sr", "czw", "pt", "sob"};
 
     private BackupStore() {}
@@ -47,6 +47,11 @@ final class BackupStore {
 
     /** Writes (or overwrites, if this install created it) Download/Loop/<name>. */
     static Saved write(Context c, String name, String json) throws Exception {
+        return write(c, name, json, "application/json");
+    }
+
+    /** Same, for any text file (e.g. CSV exports). */
+    static Saved write(Context c, String name, String json, String mime) throws Exception {
         byte[] data = json.getBytes(StandardCharsets.UTF_8);
         if (Build.VERSION.SDK_INT >= 29) {
             ContentResolver cr = c.getContentResolver();
@@ -56,7 +61,7 @@ final class BackupStore {
             if (uri == null) {
                 ContentValues v = new ContentValues();
                 v.put(MediaStore.Downloads.DISPLAY_NAME, name);
-                v.put(MediaStore.Downloads.MIME_TYPE, "application/json");
+                v.put(MediaStore.Downloads.MIME_TYPE, mime);
                 v.put(MediaStore.Downloads.RELATIVE_PATH, rel);
                 uri = cr.insert(collection, v);
                 if (uri == null) throw new IllegalStateException("MediaStore insert failed");
@@ -105,7 +110,7 @@ final class BackupStore {
         if (json == null || json.isEmpty()) return;
         try {
             String day = DAY_FILE[Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1];
-            write(c, "loop-kopia-" + day + ".json", json);
+            write(c, "szpila-kopia-" + day + ".json", json);
             p.edit().putString(KEY_LAST_AUTO, today).apply();
         } catch (Exception ignored) {
         }

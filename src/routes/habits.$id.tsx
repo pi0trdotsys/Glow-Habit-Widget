@@ -9,6 +9,7 @@ import { useHabits } from "@/lib/habits/store";
 import { AVOID_COLOR, HABIT_COLOR_VAR } from "@/lib/habits/colors";
 import type { Habit } from "@/lib/habits/types";
 import { usualMinute } from "@/lib/habits/insights";
+import { useBackHandler } from "@/lib/back";
 import {
   amountOn,
   completionRate,
@@ -26,7 +27,7 @@ import {
 } from "@/lib/habits/utils";
 
 export const Route = createFileRoute("/habits/$id")({
-  head: () => ({ meta: [{ title: "Zadanie - Loop" }] }),
+  head: () => ({ meta: [{ title: "Zadanie - Szpila" }] }),
   component: HabitDetail,
 });
 
@@ -40,6 +41,7 @@ function HabitDetail() {
   const setAvoid = useHabits((s) => s.setAvoid);
   const updateHabit = useHabits((s) => s.updateHabit);
   const [editing, setEditing] = useState(false);
+  useBackHandler(editing, () => setEditing(false));
 
   if (!habit) {
     return (

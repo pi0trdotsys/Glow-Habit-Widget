@@ -58,7 +58,7 @@ public class HabitWidgetProvider extends AppWidgetProvider {
     }
 
     private static String headerTitle(Context context) {
-        int total = WidgetShared.habits(context).length();
+        int total = WidgetShared.countedTotal(context);
         if (total == 0) return "Loop";
         return WidgetShared.doneCount(context) + " / " + total + " dziś";
     }

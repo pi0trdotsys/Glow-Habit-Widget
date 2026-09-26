@@ -1,14 +1,17 @@
 // Backups that work inside the native app too. A WebView can't "download" a
 // blob, so on Android the JSON goes through the HabitWidget plugin into
-// Download/Loop (and optionally the system share sheet). The latest backup is
+// Download/Szpila (and optionally the system share sheet). The latest backup is
 // also mirrored to SharedPreferences so the native side can write a daily
 // automatic copy (BackupStore.java) even when the app isn't opened.
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import { useHabits } from "@/lib/habits/store";
+import { todayKey } from "@/lib/habits/utils";
+import { csvFileName, toCsv } from "@/lib/habits/stats";
 
 interface BackupPlugin {
   saveBackup(opts: { name: string; json: string; share?: boolean }): Promise<{ location: string }>;
   backupInfo(): Promise<{ lastAuto: string }>;
+  saveFile(opts: { name: string; text: string; mime: string; share?: boolean }): Promise<{ location: string }>;
 }
 const Native = registerPlugin<BackupPlugin>("HabitWidget");
 
@@ -16,7 +19,7 @@ const Native = registerPlugin<BackupPlugin>("HabitWidget");
 export const BACKUP_PREF_KEY = "loop_backup";
 
 export function backupFileName(d: Date = new Date()): string {
-  return `loop-kopia-${d.toISOString().slice(0, 10)}.json`;
+  return `szpila-kopia-${todayKey(d)}.json`; // local date, not UTC
 }
 
 /** Save a backup. Returns a human-readable location for the confirmation message. */
@@ -29,6 +32,24 @@ export async function saveBackup(share = false): Promise<string> {
   }
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+  return `Pobrane/${name}`;
+}
+
+/** Full history as CSV (UTF-8 with BOM so Excel shows Polish letters). Returns the location. */
+export async function exportCsv(share = false): Promise<string> {
+  const { habits, completions, nightHits } = useHabits.getState();
+  const text = "﻿" + toCsv(habits, completions, nightHits);
+  const name = csvFileName();
+  if (Capacitor.isNativePlatform()) {
+    const { location } = await Native.saveFile({ name, text, mime: "text/csv", share });
+    return location;
+  }
+  const url = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));
   const a = document.createElement("a");
   a.href = url;
   a.download = name;

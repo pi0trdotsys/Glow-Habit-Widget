@@ -6,6 +6,7 @@
 // web/PWA - only runs inside the native Capacitor app.
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
+import { addDays } from "date-fns";
 import { useHabits } from "@/lib/habits/store";
 import {
   amountOn,
@@ -35,6 +36,10 @@ import {
 import { lateAfterMin, syncSensors, DEFAULT_LATE_LIMIT } from "@/lib/sensors";
 import type { HabitColor } from "@/lib/habits/types";
 import { BACKUP_PREF_KEY } from "@/lib/backup";
+import { liveState, liveStatus } from "@/lib/live";
+import { billLines } from "@/lib/night";
+import { catCondition } from "@/lib/habits/gamification";
+import { lateBasisOf } from "@/lib/sensors";
 
 const STATE_KEY = "widget_state";
 const PENDING_KEY = "widget_pending";
@@ -57,6 +62,19 @@ export const AVOID_HEX = "#ff4d5e";
 
 interface HabitWidgetPlugin {
   refresh(): Promise<void>;
+  pinWidget(opts: { kind: WidgetKind }): Promise<{ supported: boolean }>;
+}
+
+export type WidgetKind = "szpila" | "next" | "icons" | "list";
+
+/** Ask the launcher to put a widget on the home screen. False when the launcher can't do it. */
+export async function pinWidget(kind: WidgetKind): Promise<boolean> {
+  if (!isNative()) return false;
+  try {
+    return (await HabitWidget.pinWidget({ kind })).supported;
+  } catch {
+    return false;
+  }
 }
 // Native plugin (android/.../HabitWidgetPlugin.java). Absent on web → calls no-op.
 const HabitWidget = registerPlugin<HabitWidgetPlugin>("HabitWidget");
@@ -69,7 +87,7 @@ export function isNative(): boolean {
  * A widget tap queued while the app was closed. Ops carry the absolute desired
  * state, so replaying them is idempotent. `done` is the legacy (v1) shape.
  */
-interface PendingOp {
+export interface PendingOp {
   habitId: string;
   date: string;
   done?: boolean;
@@ -85,8 +103,9 @@ const toMin = (t: string) => {
   return h * 60 + (m || 0);
 };
 
-function buildState() {
-  const { habits, completions, userName, notifications, autoBackup } = useHabits.getState();
+/** The snapshot every native surface reads (widgets, notifications). Exported for tests. */
+export function buildState() {
+  const { habits, completions, userName, notifications, autoBackup, szpila } = useHabits.getState();
   const level = notifications.tauntLevel;
   const today = new Date();
   const key = todayKey(today);
@@ -124,7 +143,12 @@ function buildState() {
       praise: praiseFor(h, level, userName),
       source: h.source ?? "",
       ...(h.source === "screen"
-        ? { lateAfter: lateAfterMin(h), lateLimit: h.lateLimit ?? DEFAULT_LATE_LIMIT, caught: caughtLines(level) }
+        ? {
+            lateAfter: lateAfterMin(h),
+            lateLimit: h.lateLimit ?? DEFAULT_LATE_LIMIT,
+            lateBasis: lateBasisOf(h),
+            caught: caughtLines(level, lateBasisOf(h)),
+          }
         : {}),
     };
   });
@@ -147,6 +171,22 @@ function buildState() {
       reviewAt: toMin(notifications.reviewAt),
     },
     roast: weeklyRoast(habits, completions, level, userName),
+    // Forbidden habits from yesterday still waiting for an answer (open until noon) - morning review.
+    yesterday: {
+      date: todayKey(addDays(today, -1)),
+      items: habits
+        .filter((h) => kindOf(h) === "avoid" && h.source !== "screen" && isDueOn(h, addDays(today, -1)))
+        .filter((h) => avoidStatus(h, idx, addDays(today, -1), today) === "pending")
+        .map((h) => ({ id: h.id, name: h.name })),
+    },
+    // Night guard (LiveGuardService): window, ignored apps and per-app lines.
+    live: liveState(notifications, level, userName, szpila.humor),
+    // Unlocked look of the cat (widget drawables ic_szpila_<face>_<mood>).
+    face: szpila.face,
+    // "Kot w domu": groomed / normal / neglected (widget overlay + mood).
+    cat: catCondition(habits, completions, today),
+    // Morning "rachunek za noc" comments (HabitNotifier.billText).
+    bill: billLines(level, userName),
     allDone: allDoneLines(level),
     evening: eveningLines(level),
     habits: rows,
@@ -174,25 +214,38 @@ async function reconcile(): Promise<void> {
   } catch {
     ops = [];
   }
-  if (ops.length) {
-    const s = useHabits.getState();
-    for (const op of ops) {
-      const h = s.habits.find((x) => x.id === op.habitId);
-      if (!h) continue;
-      if (op.amount != null && kindOf(h) === "build") {
-        s.setAmount(op.habitId, op.date, op.amount, op.minute);
-      } else if (op.status !== undefined && kindOf(h) === "avoid") {
-        const existing = useHabits
-          .getState()
-          .completions.find((c) => c.habitId === op.habitId && c.date === op.date);
-        if (op.auto && existing && !existing.auto) continue; // manual answers win
-        s.setAvoid(op.habitId, op.date, op.status, op.minute, !!op.auto);
-      } else if (op.done != null) {
-        s.setCompletion(op.habitId, op.date, op.done);
-      }
+  applyPendingOps(ops);
+  await Preferences.remove({ key: PENDING_KEY });
+}
+
+/**
+ * Apply widget/notification ops to the store. Ops carry absolute state, so
+ * replaying is idempotent; automatic (screen-time) verdicts never override a
+ * manual answer.
+ */
+export function applyPendingOps(ops: PendingOp[]): void {
+  const s = useHabits.getState();
+  for (const op of ops) {
+    const h = s.habits.find((x) => x.id === op.habitId);
+    if (!h) continue;
+    if (op.amount != null && kindOf(h) === "build") {
+      s.setAmount(op.habitId, op.date, op.amount, op.minute);
+    } else if (op.status !== undefined && kindOf(h) === "avoid") {
+      const existing = useHabits
+        .getState()
+        .completions.find((c) => c.habitId === op.habitId && c.date === op.date);
+      if (op.auto && existing && !existing.auto) continue; // manual answers win
+      s.setAvoid(op.habitId, op.date, op.status, op.minute, !!op.auto);
+    } else if (op.done != null) {
+      s.setCompletion(op.habitId, op.date, op.done);
     }
   }
-  await Preferences.remove({ key: PENDING_KEY });
+}
+
+/** Pull the night guard's visit counts into the store (stats, weekly challenges, backups). */
+async function syncNightHits(): Promise<void> {
+  const st = await liveStatus();
+  if (st?.hits) useHabits.getState().mergeNightHits(st.hits);
 }
 
 let started = false;
@@ -202,7 +255,7 @@ export function startWidgetBridge(): void {
   started = true;
 
   // Apply any taps made on the widget, pull steps/screen time, then publish.
-  const catchUp = () => void reconcile().then(syncSensors).then(mirror);
+  const catchUp = () => void reconcile().then(syncSensors).then(syncNightHits).then(mirror);
   catchUp();
   // Steps keep changing while the app is open.
   setInterval(() => {

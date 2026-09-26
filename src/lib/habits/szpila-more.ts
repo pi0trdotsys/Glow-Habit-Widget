@@ -132,6 +132,9 @@ export const MORE_HARD: Partial<Record<Category, MoreLines>> = {
   generic: {
     nag: [
       "„{name}” czeka, a ty czekasz na cud. Cudu nie będzie, kurwa.",
+      "Mrrr. „{name}” dalej niezrobione. Nawet ja, kot, mam więcej ambicji, a śpię 16 godzin na dobę.",
+      "Patrzę na ciebie jak kot na pusty talerz. „{name}”. Teraz, kurwa.",
+      "Zrzucę ci zaraz kubek ze stołu, jak nie zrobisz „{name}”. Serio.",
       "„{name}”. Niezrobione. Znowu. Ja pierdolę, ile można.",
       "Jutro mówisz? Jutro to twoje ulubione kłamstwo. „{name}”, dziś.",
       "„{name}” się samo nie zrobi, a ja się sam nie zamknę. Wybieraj.",
@@ -151,6 +154,10 @@ export const MORE_HARD: Partial<Record<Category, MoreLines>> = {
       "Nocne scrollowanie robi ci z mózgu galaretę. Zaznacz, że dziś odpuszczasz, kurwa.",
       "Ekran świeci ci w ryj o drugiej w nocy, a rano płacz, że zmęczenie. Potwierdź, że nie dziś.",
       "Bez potwierdzenia uznaję, że znowu leżysz z telefonem na twarzy do trzeciej. Zaznacz albo spierdalaj spać.",
+      "Łóżko jest do spania, a nie do scrollowania rolek do trzeciej, kurwa. Odłóż telefon na drugi koniec pokoju.",
+      "Znowu leżysz w łóżku z ekranem pół metra od ryja? Potwierdź, że dziś bez scrollowania pod kołdrą.",
+      "Telefon w łóżku to przepis na zombie o 7 rano. Zaznacz, że dziś odpuszczasz, do chuja.",
+      "Kciuk ci się zaraz zrośnie z ekranem od tego scrollowania w pościeli. Potwierdź, że nie dziś.",
     ],
     praise: [
       "Wieczór bez telefonu. Twoje oczy dziś odpoczną, a ja nie wierzę własnym czujnikom.",
@@ -299,6 +306,8 @@ export const MORE_RAGE: Partial<Record<Category, string[]>> = {
 };
 
 export const MORE_ALL_DONE = [
+  "Mrrr. Wszystko zrobione. Idę spać na twojej klawiaturze, zasłużyłem.",
+  "Komplet. Mruczę z niechęcią, ale mruczę.",
   "Wszystko odhaczone. Kurwa, nie wiem, co mam teraz robić ze swoim życiem.",
   "Komplet. Idź świętować, tylko nie fast foodem, bo zaraz wracam.",
   "Zero zaległości. Czuję się jak bezrobotny, dzięki, kurwa.",
@@ -316,3 +325,52 @@ export const MORE_CAUGHT = [
   "Po {after} miało być spanie, a jest {m} minut scrollowania. Wpadka zapisana, idź spać, do chuja.",
   "Nocny patrol melduje: {m} minut ekranu po {after}. Rano nie płacz, że zmęczenie.",
 ];
+
+/**
+ * Vulgar but motivating lines added to EVERY habit (hard level): the insult is
+ * the push, the point is to get it done. {name} = the habit.
+ */
+export const MOTIVATE = {
+  build: [
+    "„{name}” to chwila roboty, a satysfakcja na cały dzień. Rusz dupę, kurwa, dasz radę.",
+    "Nikt nie przyjdzie i nie zrobi „{name}” za ciebie. Ale ty możesz, kurwa. Teraz.",
+    "Jutrzejsze ty podziękuje za „{name}”. Dzisiejsze ty ma przestać pierdolić i zacząć.",
+    "Małe kroki, kurwa. Zrób chociaż kawałek „{name}”, reszta pójdzie sama.",
+    "Motywacja przychodzi w trakcie, nie przed. Zacznij „{name}”, a się rozkręcisz.",
+    "Masz w sobie więcej, niż pokazujesz. Udowodnij to przy „{name}”, do chuja.",
+    "Leń w tobie krzyczy „nie”. Powiedz mu, żeby spierdalał, i zrób „{name}”.",
+    "Seria sama się nie zbuduje. „{name}” dziś, dumny ryj jutro.",
+    "Każde „zrobię później” to mały wstyd. Zamień go w „zrobione” przy „{name}”.",
+    "Dziesięć minut. Tyle trwa scrollowanie jednej głupoty. Daj te minuty „{name}”, kurwa.",
+    "Nie musi być idealnie. Musi być zrobione. „{name}”, jazda.",
+    "Wkurwiasz mnie tym odkładaniem, ale wiem, że dasz radę. „{name}”, teraz.",
+    "Zamknij wymówki w szufladzie i otwórz „{name}”. Będę dumny, choć nie powiem tego głośno.",
+    "Twoje przyszłe ciało i mózg patrzą z nadzieją. Nie spierdol tego - „{name}”.",
+    "Zrób „{name}” z czystej złości na mnie. Działa, sprawdzone.",
+    "Najtrudniejszy jest pierwszy ruch. Wstań, kurwa, i zrób pierwszy krok przy „{name}”.",
+    "Ludzie, którzy coś osiągnęli, też im się nie chciało. Po prostu robili. „{name}”, dawaj.",
+    "Jeden dzień bez „{name}” to wymówka. Dwa to nawyk lenistwa. Nie dopuść do tego, do chuja.",
+  ],
+  avoid: [
+    "Każdy czysty dzień to cegła w murze silnej woli. Potwierdź „{name}” i dołóż następną, kurwa.",
+    "Odmówić sobie to też siła. Zaznacz, że dziś „{name}” pod kontrolą.",
+    "Pokusa krzyczy, ale decyzja należy do ciebie. Potwierdź, że dziś czysto z „{name}”.",
+    "Nawyk nie rządzi tobą, kurwa. Potwierdź, że dziś „{name}” odpuszczone.",
+    "Wytrzymać jeden dzień to niewiele. A jednak to właśnie z takich dni robi się zmiana. Zaznacz „{name}”.",
+    "Silna wola to mięsień. Dziś trening przy „{name}” - potwierdź, że dało się wytrzymać.",
+  ],
+  praise: [
+    "Zrobione. Widzisz? Wystarczyło przestać pierdolić i zacząć.",
+    "No i kurwa, pięknie. Jeszcze kilka takich dni i nie poznasz się w lustrze.",
+    "Brawo. Leń w tobie właśnie dostał kopa w dupę.",
+    "Tak się buduje formę, charakter i serię. Tak trzymaj, do chuja.",
+    "Zaliczone. Czuć dumę? Powinno. Ja udaję, że nie czuję.",
+    "Jeden punkt dla ciebie, zero dla wymówek. Oby tak dalej, kurwa.",
+  ],
+  rage: [
+    "Dosyć tego. Wstajesz i robisz „{name}”. Bez dyskusji, bez „za chwilę”, kurwa.",
+    "Stać cię na więcej niż to żałosne odkładanie. Pokaż to teraz przy „{name}”.",
+    "Ostatnie ostrzeżenie: albo „{name}”, albo wieczór z wyrzutami sumienia. Wybór jest prosty.",
+    "Ile jeszcze będę gadać? „{name}”. Teraz. Potem możesz mnie nienawidzić.",
+  ],
+};

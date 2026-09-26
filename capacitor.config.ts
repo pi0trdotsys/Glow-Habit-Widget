@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "app.lovable.glow_habit_widget",
-  appName: "Loop",
+  appName: "Szpila",
   // Static, client-only SPA build produced by `bun run build:cap`.
   webDir: "dist/client",
   android: {
@@ -20,6 +20,11 @@ const config: CapacitorConfig = {
       showSpinner: false,
       splashFullScreen: true,
       splashImmersive: true,
+    },
+    LocalNotifications: {
+      // Status-bar icon: the cat with the pin (res/drawable/ic_stat_szpila.xml), Szpila red.
+      smallIcon: "ic_stat_szpila",
+      iconColor: "#FF4D5E",
     },
   },
 };

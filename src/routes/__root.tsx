@@ -88,16 +88,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Loop - nawyki" },
+      { title: "Szpila - nawyki z pazurem" },
       { name: "description", content: "Buduj dobre nawyki, rzucaj złe. Utrzymaj serię." },
       { name: "theme-color", content: "#0f0f12" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "Loop" },
-      { property: "og:title", content: "Loop - nawyki" },
+      { name: "apple-mobile-web-app-title", content: "Szpila" },
+      { property: "og:title", content: "Szpila - nawyki z pazurem" },
       { property: "og:description", content: "Buduj dobre nawyki, rzucaj złe. Utrzymaj serię." },
       { property: "og:type", content: "website" },
-      { name: "twitter:title", content: "Loop - nawyki" },
+      { name: "twitter:title", content: "Szpila - nawyki z pazurem" },
       { name: "twitter:description", content: "Buduj dobre nawyki, rzucaj złe. Utrzymaj serię." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/5ebe8d17-cac7-4450-bb49-299bedfb8569" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/5ebe8d17-cac7-4450-bb49-299bedfb8569" },
@@ -196,8 +196,13 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <PwaRegister />
       <Outlet />
+      {/* Toasts never trap the UI: swipe left/right (or tap ×) to clear, at most 2 at once. */}
       <Toaster
         position="bottom-center"
+        swipeDirections={["left", "right"]}
+        closeButton
+        visibleToasts={2}
+        duration={3500}
         offset={{ bottom: "calc(env(safe-area-inset-bottom) + 6.5rem)" }}
         mobileOffset={{ bottom: "calc(env(safe-area-inset-bottom) + 6.5rem)" }}
       />

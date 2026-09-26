@@ -7,11 +7,20 @@ import { weeklyReport, kindOf, formatMinute } from "@/lib/habits/utils";
 import { habitInsights, trackedDays, usualMinute } from "@/lib/habits/insights";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { AVOID_COLOR, HABIT_COLOR_VAR } from "@/lib/habits/colors";
+import { MonthsView, TrendView } from "@/components/LongStats";
+import { useState } from "react";
+
+type Tab = "week" | "trend" | "months";
+const TABS: { id: Tab; label: string }[] = [
+  { id: "week", label: "Tydzień" },
+  { id: "trend", label: "90 dni" },
+  { id: "months", label: "Miesiące" },
+];
 
 export const Route = createFileRoute("/report")({
   head: () => ({
     meta: [
-      { title: "Raport tygodnia - Loop" },
+      { title: "Raport - Szpila" },
       { name: "description", content: "Ten tydzień vs zeszły - porównanie do tego samego momentu tygodnia." },
     ],
   }),
@@ -28,10 +37,48 @@ function ReportPage() {
   const tracked = trackedDays(completions);
   const usual = new Map(habits.map((h) => [h.id, usualMinute(h, completions)]));
   const diffScore = Math.round((r.thisWeek.score - r.lastWeek.score) * 10) / 10;
+  const [tab, setTab] = useState<Tab>("week");
+
+  const tabs = (
+    <div className="mx-5 mb-5 grid grid-cols-3 rounded-2xl bg-card p-1" role="tablist">
+      {TABS.map((t) => (
+        <button
+          key={t.id}
+          role="tab"
+          aria-selected={tab === t.id}
+          onClick={() => setTab(t.id)}
+          className="rounded-xl py-2 text-xs font-semibold transition"
+          style={{
+            backgroundColor: tab === t.id ? "var(--background)" : "transparent",
+            color: tab === t.id ? "var(--foreground)" : "var(--muted-foreground)",
+          }}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (tab !== "week") {
+    return (
+      <AppShell>
+        <header className="px-5 pt-10 pb-5">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+            {tab === "trend" ? "ostatnie 90 dni" : "ostatnie 6 miesięcy"}
+          </p>
+          <h1 className="mt-2 font-display text-4xl font-bold tracking-tight">
+            {tab === "trend" ? "Trend z 90 dni" : "Miesiąc do miesiąca"}
+          </h1>
+        </header>
+        {tabs}
+        {tab === "trend" ? <TrendView /> : <MonthsView />}
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
-      <header className="px-5 pt-10 pb-6">
+      <header className="px-5 pt-10 pb-5">
         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{r.windowLabel}</p>
         <h1 className="mt-2 font-display text-4xl font-bold tracking-tight">Tydzień do tygodnia</h1>
         <p className="mt-2 text-xs text-muted-foreground">
@@ -39,25 +86,28 @@ function ReportPage() {
           tydzień temu, do tej samej godziny.
         </p>
       </header>
+      {tabs}
 
       <section className="mx-5 rounded-3xl bg-card p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-lg font-bold leading-tight" style={{ color: deltaColor(r.delta) }}>
-              {verdict(r.delta)}
+              {r.noBaseline ? "Pierwszy tydzień" : verdict(r.delta)}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">
               {fmt(r.thisWeek.score)} z {fmt(r.thisWeek.due)} wykonań · tydzień temu {fmt(r.lastWeek.score)} z{" "}
               {fmt(r.lastWeek.due)}
             </div>
           </div>
-          <DeltaPill delta={r.delta} big />
+          {!r.noBaseline && <DeltaPill delta={r.delta} big />}
         </div>
         <div className="mt-5">
           <WeekBars r={r} />
         </div>
         <p className="mt-4 text-xs text-muted-foreground">
-          {diffScore > 0
+          {r.noBaseline
+            ? "Tydzień temu nie było jeszcze czego porównać. Pełne porównanie pojawi się za tydzień."
+            : diffScore > 0
             ? `Masz o ${fmt(diffScore)} wykonań więcej niż o tej porze tydzień temu.`
             : diffScore < 0
             ? `Brakuje ci ${fmt(-diffScore)} wykonań do wyniku sprzed tygodnia o tej porze.`

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Szpila, the mean cat (krol, smug). Generated from SzpilaAvatar (src/components/Szpila.tsx). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp" android:height="64dp"
+    android:viewportWidth="64" android:viewportHeight="64">
+    <path android:pathData="M10 27 L15 5 L28 18 Z" android:fillColor="#FF262633" android:strokeColor="#FF3B3B4D" android:strokeWidth="1.5" android:strokeLineJoin="round" />
+    <path android:pathData="M54 27 L49 5 L36 18 Z" android:fillColor="#FF262633" android:strokeColor="#FF3B3B4D" android:strokeWidth="1.5" android:strokeLineJoin="round" />
+    <path android:pathData="M14 22 L16 11 L23 17 Z" android:fillColor="#FFFF7D9C" android:fillAlpha="0.7" />
+    <path android:pathData="M50 22 L48 11 L41 17 Z" android:fillColor="#FFFF7D9C" android:fillAlpha="0.7" />
+    <path android:pathData="M8,37 a24,21 0 1,0 48,0 a24,21 0 1,0 -48,0" android:fillColor="#FF262633" android:strokeColor="#FF3B3B4D" android:strokeWidth="1.5" android:strokeLineJoin="round" />
+    <path android:pathData="M17.4,34 a5.6,2.9 0 1,0 11.2,0 a5.6,2.9 0 1,0 -11.2,0" android:fillColor="#FFC6F35E" />
+    <path android:pathData="M21.9,34 a1.1,2.3 0 1,0 2.2,0 a1.1,2.3 0 1,0 -2.2,0" android:fillColor="#FF111111" />
+    <path android:pathData="M35.4,34 a5.6,2.9 0 1,0 11.2,0 a5.6,2.9 0 1,0 -11.2,0" android:fillColor="#FFC6F35E" />
+    <path android:pathData="M39.9,34 a1.1,2.3 0 1,0 2.2,0 a1.1,2.3 0 1,0 -2.2,0" android:fillColor="#FF111111" />
+    <path android:pathData="M17 31.5 Q23 29.5 29 31.5" android:strokeColor="#FF3B3B4D" android:strokeWidth="2" android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M35 31.5 Q41 29.5 47 31.5" android:strokeColor="#FF3B3B4D" android:strokeWidth="2" android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M29.5 41 L34.5 41 L32 43.8 Z" android:fillColor="#FFFF7D9C" />
+    <path android:pathData="M27.5 45.5 Q31 47.5 33.5 45.8 Q37 44.8 40 41.8" android:strokeColor="#FF111111" android:strokeWidth="2" android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M21 18 L22.5 6 L27.5 12 L32 3.5 L36.5 12 L41.5 6 L43 18 Z" android:fillColor="#FFFDBA2F" android:strokeColor="#FFB07D12" android:strokeWidth="1.2" android:strokeLineJoin="round" />
+    <path android:pathData="M30.2,13.5 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0" android:fillColor="#FFFF4D5E" />
+    <path android:pathData="M24.3,14.5 a1.2,1.2 0 1,0 2.4,0 a1.2,1.2 0 1,0 -2.4,0" android:fillColor="#FF55C4FE" />
+    <path android:pathData="M37.3,14.5 a1.2,1.2 0 1,0 2.4,0 a1.2,1.2 0 1,0 -2.4,0" android:fillColor="#FF55C4FE" />
+    <path android:pathData="M20 43 L6 41" android:strokeColor="#FF6B6B80" android:strokeWidth="1" android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M20 45.5 L6 47.5" android:strokeColor="#FF6B6B80" android:strokeWidth="1" android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M44 43 L58 41" android:strokeColor="#FF6B6B80" android:strokeWidth="1" android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M44 45.5 L58 47.5" android:strokeColor="#FF6B6B80" android:strokeWidth="1" android:strokeLineCap="round" android:strokeLineJoin="round" />
+</vector>

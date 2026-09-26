@@ -14,9 +14,9 @@ export default defineConfig({
         devOptions: { enabled: false },
         includeAssets: ["icon-192.png", "icon-512.png"],
         manifest: {
-          name: "Loop — Habit Tracker",
-          short_name: "Loop",
-          description: "Build healthy habits. Keep your streak alive.",
+          name: "Szpila - nawyki z pazurem",
+          short_name: "Szpila",
+          description: "Tracker nawyków z wrednym kotem, który wbija szpile.",
           theme_color: "#0f0f12",
           background_color: "#0f0f12",
           display: "standalone",

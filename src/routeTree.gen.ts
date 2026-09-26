@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WidgetRouteImport } from './routes/widget'
+import { Route as SzpilaRouteImport } from './routes/szpila'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReportRouteImport } from './routes/report'
 import { Route as HabitsRouteImport } from './routes/habits'
@@ -21,6 +22,11 @@ import { Route as HabitsIdRouteImport } from './routes/habits.$id'
 const WidgetRoute = WidgetRouteImport.update({
   id: '/widget',
   path: '/widget',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SzpilaRoute = SzpilaRouteImport.update({
+  id: '/szpila',
+  path: '/szpila',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/habits': typeof HabitsRouteWithChildren
   '/report': typeof ReportRoute
   '/settings': typeof SettingsRoute
+  '/szpila': typeof SzpilaRoute
   '/widget': typeof WidgetRoute
   '/habits/$id': typeof HabitsIdRoute
   '/habits/new': typeof HabitsNewRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/report': typeof ReportRoute
   '/settings': typeof SettingsRoute
+  '/szpila': typeof SzpilaRoute
   '/widget': typeof WidgetRoute
   '/habits/$id': typeof HabitsIdRoute
   '/habits/new': typeof HabitsNewRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/habits': typeof HabitsRouteWithChildren
   '/report': typeof ReportRoute
   '/settings': typeof SettingsRoute
+  '/szpila': typeof SzpilaRoute
   '/widget': typeof WidgetRoute
   '/habits/$id': typeof HabitsIdRoute
   '/habits/new': typeof HabitsNewRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/habits'
     | '/report'
     | '/settings'
+    | '/szpila'
     | '/widget'
     | '/habits/$id'
     | '/habits/new'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
     | '/'
     | '/report'
     | '/settings'
+    | '/szpila'
     | '/widget'
     | '/habits/$id'
     | '/habits/new'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '/habits'
     | '/report'
     | '/settings'
+    | '/szpila'
     | '/widget'
     | '/habits/$id'
     | '/habits/new'
@@ -126,6 +138,7 @@ export interface RootRouteChildren {
   HabitsRoute: typeof HabitsRouteWithChildren
   ReportRoute: typeof ReportRoute
   SettingsRoute: typeof SettingsRoute
+  SzpilaRoute: typeof SzpilaRoute
   WidgetRoute: typeof WidgetRoute
 }
 
@@ -136,6 +149,13 @@ declare module '@tanstack/react-router' {
       path: '/widget'
       fullPath: '/widget'
       preLoaderRoute: typeof WidgetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/szpila': {
+      id: '/szpila'
+      path: '/szpila'
+      fullPath: '/szpila'
+      preLoaderRoute: typeof SzpilaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -210,6 +230,7 @@ const rootRouteChildren: RootRouteChildren = {
   HabitsRoute: HabitsRouteWithChildren,
   ReportRoute: ReportRoute,
   SettingsRoute: SettingsRoute,
+  SzpilaRoute: SzpilaRoute,
   WidgetRoute: WidgetRoute,
 }
 export const routeTree = rootRouteImport

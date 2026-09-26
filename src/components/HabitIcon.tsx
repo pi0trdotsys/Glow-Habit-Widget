@@ -1,6 +1,6 @@
 import type React from "react";
-import * as LucideIcons from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Circle } from "lucide-react";
+import { LUCIDE_HABIT_ICONS } from "./habit-icons";
 
 interface Props {
   name: string;
@@ -40,8 +40,6 @@ export function HabitIcon({ name, className, size = 24, strokeWidth = 2, style }
     );
   }
 
-  const Icon =
-    ((LucideIcons as unknown as Record<string, LucideIcon>)[name] as LucideIcon) ??
-    LucideIcons.Circle;
+  const Icon = LUCIDE_HABIT_ICONS[name] ?? Circle;
   return <Icon className={className} style={style} size={size} strokeWidth={strokeWidth} />;
 }
