@@ -70,7 +70,7 @@ final class BackupStore {
                 if (out == null) throw new IllegalStateException("No output stream");
                 out.write(data);
             }
-            return new Saved(uri, "Pobrane/" + FOLDER + "/" + name);
+            return new Saved(uri, WidgetShared.tr(c, "Pobrane/", "Download/") + FOLDER + "/" + name);
         }
         File dir = new File(c.getExternalFilesDir(null), FOLDER);
         if (!dir.exists() && !dir.mkdirs()) throw new IllegalStateException("Cannot create " + dir);

@@ -1,4 +1,3 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
@@ -8,7 +7,10 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, LazyMotion } from "framer-motion";
+
+// Animation features load after the first paint (keeps ~90 KB out of the startup bundle).
+const loadMotion = () => import("@/lib/motion-features").then((m) => m.default);
 
 import { Capacitor } from "@capacitor/core";
 import appCss from "../styles.css?url";
@@ -20,6 +22,8 @@ import {
   syncNotifications,
 } from "../lib/notifications";
 import { useHabits } from "../lib/habits/store";
+import { useLinesReady } from "../lib/habits/szpila";
+import { L } from "../lib/i18n";
 import { SplashScreen } from "@/components/SplashScreen";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -28,16 +32,21 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Nie ma takiej strony</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">
+          {L("Nie ma takiej strony", "Page not found")}
+        </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Strona, której szukasz, nie istnieje albo została przeniesiona.
+          {L(
+            "Strona, której szukasz, nie istnieje albo została przeniesiona.",
+            "The page you're looking for doesn't exist or has moved.",
+          )}
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Strona główna
+            {L("Strona główna", "Home")}
           </Link>
         </div>
       </div>
@@ -56,10 +65,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          Nie udało się załadować strony
+          {L("Nie udało się załadować strony", "Couldn't load the page")}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Coś poszło nie tak. Spróbuj odświeżyć albo wróć na stronę główną.
+          {L(
+            "Coś poszło nie tak. Spróbuj odświeżyć albo wróć na stronę główną.",
+            "Something went wrong. Try refreshing or head back home.",
+          )}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -69,13 +81,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Spróbuj ponownie
+            {L("Spróbuj ponownie", "Try again")}
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Strona główna
+            {L("Strona główna", "Home")}
           </a>
         </div>
       </div>
@@ -83,44 +95,52 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Szpila - nawyki z pazurem" },
-      { name: "description", content: "Buduj dobre nawyki, rzucaj złe. Utrzymaj serię." },
-      { name: "theme-color", content: "#0f0f12" },
-      { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "Szpila" },
-      { property: "og:title", content: "Szpila - nawyki z pazurem" },
-      { property: "og:description", content: "Buduj dobre nawyki, rzucaj złe. Utrzymaj serię." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:title", content: "Szpila - nawyki z pazurem" },
-      { name: "twitter:description", content: "Buduj dobre nawyki, rzucaj złe. Utrzymaj serię." },
-      {
-        property: "og:image",
-        content:
-          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/5ebe8d17-cac7-4450-bb49-299bedfb8569",
-      },
-      {
-        name: "twitter:image",
-        content:
-          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/5ebe8d17-cac7-4450-bb49-299bedfb8569",
-      },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-      { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
-      { rel: "apple-touch-icon", href: "/icon-192.png" },
-    ],
-  }),
+export const Route = createRootRouteWithContext()({
+  head: () => {
+    // Evaluated on each head() call; during SSR the language is still "pl".
+    const title = L("Szpila - nawyki z pazurem", "Szpila - habits with claws");
+    const description = L(
+      "Buduj dobre nawyki, rzucaj złe. Utrzymaj serię.",
+      "Build good habits, ditch bad ones. Keep the streak.",
+    );
+    return {
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+        { title },
+        { name: "description", content: description },
+        { name: "theme-color", content: "#0f0f12" },
+        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+        { name: "apple-mobile-web-app-title", content: "Szpila" },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+        {
+          property: "og:image",
+          content:
+            "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/5ebe8d17-cac7-4450-bb49-299bedfb8569",
+        },
+        {
+          name: "twitter:image",
+          content:
+            "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/5ebe8d17-cac7-4450-bb49-299bedfb8569",
+        },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+      links: [
+        {
+          rel: "stylesheet",
+          href: appCss,
+        },
+        { rel: "manifest", href: "/manifest.webmanifest" },
+        { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
+        { rel: "apple-touch-icon", href: "/icon-192.png" },
+      ],
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -142,16 +162,28 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const [showSplash, setShowSplash] = useState(true);
+  // A language switch re-mounts the current screen, so every L() is evaluated again.
+  const lang = useHabits((s) => s.language);
+  // ...and once more when the (lazily loaded) English lines arrive.
+  const enReady = useLinesReady((s) => s.en);
 
+  // Background work (widget bridge, notification scheduling) waits until the
+  // splash has faded out, so the first screen and the fade get the main thread.
+  const [booted, setBooted] = useState(false);
   useEffect(() => {
-    // Mirror habit data to the native Android home-screen widget. No-op on web.
-    startWidgetBridge();
+    const t = setTimeout(() => setBooted(true), 3000); // fallback if the exit never reports
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
+    // Mirror habit data to the native Android home-screen widget. No-op on web.
+    if (booted) startWidgetBridge();
+  }, [booted]);
+
+  useEffect(() => {
+    if (!booted) return;
     // Schedule reminders, and reschedule (debounced) whenever habits or
     // notification settings change - keeps per-habit + weekly recap in sync.
     void syncNotifications();
@@ -164,7 +196,7 @@ function RootComponent() {
       if (t) clearTimeout(t);
       unsub();
     };
-  }, []);
+  }, [booted]);
 
   useEffect(() => {
     // The progress notification and Szpila are on by default, so ask for the
@@ -201,9 +233,9 @@ function RootComponent() {
   }, [router]);
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <LazyMotion features={loadMotion} strict>
       <PwaRegister />
-      <Outlet />
+      <Outlet key={`${lang}-${lang === "en" && enReady}`} />
       {/* Toasts never trap the UI: swipe left/right (or tap ×) to clear, at most 2 at once. */}
       <Toaster
         position="bottom-center"
@@ -214,10 +246,10 @@ function RootComponent() {
         offset={{ bottom: "calc(env(safe-area-inset-bottom) + 6.5rem)" }}
         mobileOffset={{ bottom: "calc(env(safe-area-inset-bottom) + 6.5rem)" }}
       />
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={() => setBooted(true)}>
         {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
       </AnimatePresence>
-    </QueryClientProvider>
+    </LazyMotion>
   );
 }
 

@@ -11,11 +11,11 @@
         android:orientation="horizontal" android:gravity="center_vertical"
         android:paddingBottom="8dp">
         <ImageView android:id="@+id/widget2_ring" android:layout_width="56dp"
-            android:layout_height="56dp" android:contentDescription="Progress" />
+            android:layout_height="56dp" android:contentDescription="@string/widget_progress_desc" />
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
             android:layout_weight="1" android:layout_marginStart="12dp" android:orientation="vertical">
             <TextView android:id="@+id/widget2_title" android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:text="Dziś" android:textColor="#f4f5f9"
+                android:layout_height="wrap_content" android:text="@string/widget_today" android:textColor="#f4f5f9"
                 android:textSize="17sp" android:textStyle="bold" />
             <TextView android:id="@+id/widget2_timeleft" android:layout_width="wrap_content"
                 android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text=""
@@ -170,6 +170,6 @@
 
     <TextView android:id="@+id/widget2_empty"
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" android:gravity="center" android:text="Brak zadań na dziś"
+        android:layout_marginTop="8dp" android:gravity="center" android:text="@string/widget_empty"
         android:textColor="#9398a5" android:textSize="13sp" android:visibility="gone" />
 </LinearLayout>

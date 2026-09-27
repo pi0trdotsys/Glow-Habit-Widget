@@ -61,7 +61,7 @@
             android:layout_marginTop="32dp"
             android:background="@drawable/live_block_button"
             android:gravity="center"
-            android:text="😴  Idę spać"
+            android:text="@string/block_sleep"
             android:textColor="#FFFFFF"
             android:textSize="17sp"
             android:textStyle="bold" />
@@ -87,7 +87,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="Przytrzymaj 10 s, jeśli naprawdę musisz"
+                android:text="@string/block_hold"
                 android:textColor="#CCF4F5F9"
                 android:textSize="13sp" />
         </FrameLayout>

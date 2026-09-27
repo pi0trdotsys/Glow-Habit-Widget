@@ -7,6 +7,10 @@ import { Capacitor, registerPlugin } from "@capacitor/core";
 import { useHabits } from "@/lib/habits/store";
 import { todayKey } from "@/lib/habits/utils";
 import { csvFileName, toCsv } from "@/lib/habits/stats";
+import { L, pick } from "@/lib/i18n";
+
+/** Where a browser download lands, for the confirmation message. */
+const downloadsPath = (name: string) => `${L("Pobrane", "Downloads")}/${name}`;
 
 interface BackupPlugin {
   saveBackup(opts: { name: string; json: string; share?: boolean }): Promise<{ location: string }>;
@@ -24,7 +28,7 @@ const Native = registerPlugin<BackupPlugin>("HabitWidget");
 export const BACKUP_PREF_KEY = "loop_backup";
 
 export function backupFileName(d: Date = new Date()): string {
-  return `szpila-kopia-${todayKey(d)}.json`; // local date, not UTC
+  return `${pick("szpila-kopia", "szpila-backup")}-${todayKey(d)}.json`; // local date, not UTC
 }
 
 /** Save a backup. Returns a human-readable location for the confirmation message. */
@@ -42,7 +46,7 @@ export async function saveBackup(share = false): Promise<string> {
   a.download = name;
   a.click();
   URL.revokeObjectURL(url);
-  return `Pobrane/${name}`;
+  return downloadsPath(name);
 }
 
 /** Full history as CSV (UTF-8 with BOM so Excel shows Polish letters). Returns the location. */
@@ -60,7 +64,7 @@ export async function exportCsv(share = false): Promise<string> {
   a.download = name;
   a.click();
   URL.revokeObjectURL(url);
-  return `Pobrane/${name}`;
+  return downloadsPath(name);
 }
 
 /** Restore from a picked file. Returns the number of habits restored; throws a readable error. */
@@ -70,7 +74,9 @@ export async function restoreBackup(file: File): Promise<number> {
     return useHabits.getState().importData(text);
   } catch (e) {
     throw new Error(
-      e instanceof SyntaxError ? "Plik nie jest poprawnym JSON-em." : (e as Error).message,
+      e instanceof SyntaxError
+        ? L("Plik nie jest poprawnym JSON-em.", "The file is not valid JSON.")
+        : (e as Error).message,
     );
   }
 }

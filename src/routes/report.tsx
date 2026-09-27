@@ -9,28 +9,33 @@ import { MonthCalendar } from "@/components/MonthCalendar";
 import { AVOID_COLOR, HABIT_COLOR_VAR } from "@/lib/habits/colors";
 import { MonthsView, TrendView } from "@/components/LongStats";
 import { useState } from "react";
+import { L, isEn } from "@/lib/i18n";
 
 type Tab = "week" | "trend" | "months";
-const TABS: { id: Tab; label: string }[] = [
-  { id: "week", label: "Tydzień" },
-  { id: "trend", label: "90 dni" },
-  { id: "months", label: "Miesiące" },
+const tabList = (): { id: Tab; label: string }[] => [
+  { id: "week", label: L("Tydzień", "Week") },
+  { id: "trend", label: L("90 dni", "90 days") },
+  { id: "months", label: L("Miesiące", "Months") },
 ];
 
 export const Route = createFileRoute("/report")({
   head: () => ({
     meta: [
-      { title: "Raport - Szpila" },
+      { title: L("Raport - Szpila", "Report - Szpila") },
       {
         name: "description",
-        content: "Ten tydzień vs zeszły - porównanie do tego samego momentu tygodnia.",
+        content: L(
+          "Ten tydzień vs zeszły - porównanie do tego samego momentu tygodnia.",
+          "This week vs last - compared up to the same point in the week.",
+        ),
       },
     ],
   }),
   component: ReportPage,
 });
 
-const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1).replace(".", ","));
+const fmt = (n: number) =>
+  Number.isInteger(n) ? String(n) : isEn() ? n.toFixed(1) : n.toFixed(1).replace(".", ",");
 
 function ReportPage() {
   const habits = useHabits((s) => s.habits);
@@ -44,7 +49,7 @@ function ReportPage() {
 
   const tabs = (
     <div className="mx-5 mb-5 grid grid-cols-3 rounded-2xl bg-card p-1" role="tablist">
-      {TABS.map((t) => (
+      {tabList().map((t) => (
         <button
           key={t.id}
           role="tab"
@@ -67,10 +72,14 @@ function ReportPage() {
       <AppShell>
         <header className="px-5 pt-10 pb-5">
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            {tab === "trend" ? "ostatnie 90 dni" : "ostatnie 6 miesięcy"}
+            {tab === "trend"
+              ? L("ostatnie 90 dni", "last 90 days")
+              : L("ostatnie 6 miesięcy", "last 6 months")}
           </p>
           <h1 className="mt-2 font-display text-4xl font-bold tracking-tight">
-            {tab === "trend" ? "Trend z 90 dni" : "Miesiąc do miesiąca"}
+            {tab === "trend"
+              ? L("Trend z 90 dni", "90-day trend")
+              : L("Miesiąc do miesiąca", "Month over month")}
           </h1>
         </header>
         {tabs}
@@ -83,10 +92,14 @@ function ReportPage() {
     <AppShell>
       <header className="px-5 pt-10 pb-5">
         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{r.windowLabel}</p>
-        <h1 className="mt-2 font-display text-4xl font-bold tracking-tight">Tydzień do tygodnia</h1>
+        <h1 className="mt-2 font-display text-4xl font-bold tracking-tight">
+          {L("Tydzień do tygodnia", "Week over week")}
+        </h1>
         <p className="mt-2 text-xs text-muted-foreground">
-          Porównanie tylko do tego samego momentu tygodnia - dzisiejszy dzień liczy się tak samo jak
-          ten sam dzień tydzień temu, do tej samej godziny.
+          {L(
+            "Porównanie tylko do tego samego momentu tygodnia - dzisiejszy dzień liczy się tak samo jak ten sam dzień tydzień temu, do tej samej godziny.",
+            "Compared only up to the same point in the week - today counts just like the same day last week, up to the same hour.",
+          )}
         </p>
       </header>
       {tabs}
@@ -95,11 +108,13 @@ function ReportPage() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-lg font-bold leading-tight" style={{ color: deltaColor(r.delta) }}>
-              {r.noBaseline ? "Pierwszy tydzień" : verdict(r.delta)}
+              {r.noBaseline ? L("Pierwszy tydzień", "First week") : verdict(r.delta)}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">
-              {fmt(r.thisWeek.score)} z {fmt(r.thisWeek.due)} wykonań · tydzień temu{" "}
-              {fmt(r.lastWeek.score)} z {fmt(r.lastWeek.due)}
+              {L(
+                `${fmt(r.thisWeek.score)} z ${fmt(r.thisWeek.due)} wykonań · tydzień temu ${fmt(r.lastWeek.score)} z ${fmt(r.lastWeek.due)}`,
+                `${fmt(r.thisWeek.score)} of ${fmt(r.thisWeek.due)} done · last week ${fmt(r.lastWeek.score)} of ${fmt(r.lastWeek.due)}`,
+              )}
             </div>
           </div>
           {!r.noBaseline && <DeltaPill delta={r.delta} big />}
@@ -109,31 +124,49 @@ function ReportPage() {
         </div>
         <p className="mt-4 text-xs text-muted-foreground">
           {r.noBaseline
-            ? "Tydzień temu nie było jeszcze czego porównać. Pełne porównanie pojawi się za tydzień."
+            ? L(
+                "Tydzień temu nie było jeszcze czego porównać. Pełne porównanie pojawi się za tydzień.",
+                "Nothing to compare with last week yet. The full comparison shows up in a week.",
+              )
             : diffScore > 0
-              ? `Masz o ${fmt(diffScore)} wykonań więcej niż o tej porze tydzień temu.`
+              ? L(
+                  `Masz o ${fmt(diffScore)} wykonań więcej niż o tej porze tydzień temu.`,
+                  `You're ${fmt(diffScore)} ahead of this time last week.`,
+                )
               : diffScore < 0
-                ? `Brakuje ci ${fmt(-diffScore)} wykonań do wyniku sprzed tygodnia o tej porze.`
-                : "Dokładnie tyle samo wykonań co o tej porze tydzień temu."}
+                ? L(
+                    `Brakuje ci ${fmt(-diffScore)} wykonań do wyniku sprzed tygodnia o tej porze.`,
+                    `You're ${fmt(-diffScore)} behind where you were this time last week.`,
+                  )
+                : L(
+                    "Dokładnie tyle samo wykonań co o tej porze tydzień temu.",
+                    "Exactly as much done as this time last week.",
+                  )}
         </p>
       </section>
 
       <section className="mx-5 mt-4 rounded-3xl bg-card p-5">
         <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          Dzień po dniu
+          {L("Dzień po dniu", "Day by day")}
         </h2>
         <WeekDayChart r={r} />
       </section>
 
       <section className="mx-5 mt-4 rounded-3xl bg-card p-5">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          Powiązania między nawykami
+          {L("Powiązania między nawykami", "Habit connections")}
         </h2>
         {insights.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             {tracked < 14
-              ? `Zbieram dane (${tracked} z ok. 14 dni). Potem pokażę, co wpływa na co, np. czy telefon do późna psuje kroki następnego dnia.`
-              : "Na razie nie widać wyraźnych zależności między twoimi nawykami."}
+              ? L(
+                  `Zbieram dane (${tracked} z ok. 14 dni). Potem pokażę, co wpływa na co, np. czy telefon do późna psuje kroki następnego dnia.`,
+                  `Collecting data (${tracked} of ~14 days). Then I'll show what affects what, e.g. whether late-night phone time wrecks the next day's steps.`,
+                )
+              : L(
+                  "Na razie nie widać wyraźnych zależności między twoimi nawykami.",
+                  "No clear links between your habits so far.",
+                )}
           </p>
         ) : (
           <ul className="space-y-2.5">
@@ -149,21 +182,21 @@ function ReportPage() {
 
       <section className="mx-5 mt-4 rounded-3xl bg-card p-5">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          Miesiąc
+          {L("Miesiąc", "Month")}
         </h2>
         <MonthCalendar />
       </section>
 
       <section className="mt-8 px-5">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          Zadania · ten tydzień vs tydzień temu
+          {L("Zadania · ten tydzień vs tydzień temu", "Habits · this week vs last week")}
         </h2>
         {habits.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             <Link to="/habits/new" className="underline">
-              Dodaj zadanie
+              {L("Dodaj zadanie", "Add a habit")}
             </Link>
-            , żeby zacząć śledzić.
+            {L(", żeby zacząć śledzić.", " to start tracking.")}
           </p>
         ) : (
           <ul className="space-y-2">
@@ -200,10 +233,12 @@ function ReportPage() {
                         />
                       </div>
                       <div className="mt-1 text-[11px] text-muted-foreground">
-                        {fmt(p.this)}/{fmt(p.dueThis)} teraz · {fmt(p.last)}/{fmt(p.dueLast)}{" "}
-                        tydzień temu
+                        {L(
+                          `${fmt(p.this)}/${fmt(p.dueThis)} teraz · ${fmt(p.last)}/${fmt(p.dueLast)} tydzień temu`,
+                          `${fmt(p.this)}/${fmt(p.dueThis)} now · ${fmt(p.last)}/${fmt(p.dueLast)} last week`,
+                        )}
                         {usual.get(p.habit.id) != null &&
-                          ` · zwykle ok. ${formatMinute(usual.get(p.habit.id)!)}`}
+                          ` · ${L("zwykle ok. ", "usually ~")}${formatMinute(usual.get(p.habit.id)!)}`}
                       </div>
                     </div>
                     <span

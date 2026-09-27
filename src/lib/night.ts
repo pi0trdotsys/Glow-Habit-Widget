@@ -7,6 +7,7 @@
 import type { TauntLevel } from "@/lib/habits/store";
 import type { NightReport } from "@/lib/sensors";
 import { formatMinute } from "@/lib/habits/utils";
+import { L, pick } from "@/lib/i18n";
 
 const BILL: Record<TauntLevel, { bad: string[]; good: string[] }> = {
   hard: {
@@ -37,12 +38,41 @@ const BILL: Record<TauntLevel, { bad: string[]; good: string[] }> = {
   },
 };
 
+const BILL_EN: Record<TauntLevel, { bad: string[]; good: string[] }> = {
+  hard: {
+    bad: [
+      "{social} minutes of social media after midnight. That's what your sleep cost. Worth it? It wasn't.",
+      "Times you went back to that shit overnight: {visits}. Tonight the phone stays out of bed.",
+      "Phone down at {asleep}. And then you wonder why you're a zombie in the morning.",
+      "{apps}. The algorithms feasted and your sleep got fucked. Bravo.",
+      "Night bill: {social} min of scrolling. You'll pay for it today in focus and mood.",
+      "All that scrolling after midnight and you remember none of it. Tonight it goes down before 12.",
+    ],
+    good: [
+      "Zero social media after midnight. I don't believe it, but respect. Do it again tonight.",
+      "A clean night. The algorithm cried and the bed was finally used for sleeping. As it should be.",
+      "Phone down at {asleep} and no scrolling. The cat is proud. A little.",
+      "A night without TikTok and Instagram. Maybe you'll amount to something after all.",
+    ],
+  },
+  soft: {
+    bad: [
+      "{social} min on social media after midnight. Try putting the phone down earlier tonight.",
+      "Phone down around {asleep}. Shorter night = harder day. Better tonight!",
+    ],
+    good: [
+      "A clean night - zero social media after midnight. Great!",
+      "Phone down at {asleep}. Nice work!",
+    ],
+  },
+};
+
 export function billLines(
   level: TauntLevel,
   userName: string | null,
 ): { bad: string[]; good: string[] } {
-  const u = (l: string) => l.replaceAll("{u}", userName || "ty");
-  const b = BILL[level];
+  const u = (l: string) => l.replaceAll("{u}", userName || L("ty", "you"));
+  const b = pick(BILL, BILL_EN)[level];
   return { bad: b.bad.map(u), good: b.good.map(u) };
 }
 

@@ -47,7 +47,8 @@ public class NotifierReceiver extends BroadcastReceiver {
             if (habitId != null) WidgetShared.settleYesterday(context, habitId, "slip");
             HabitNotifier.afterAction(context, intent);
         } else if (LiveGuard.ACTION_START.equals(action)) {
-            // exact alarm at the window start: allowed to start the foreground service
+            // exact alarm at the window start (bedtime or midnight): may start the foreground service
+            LiveGuard.maybeBedtimeReminder(context);
             LiveGuard.ensure(context);
             LiveGuard.scheduleStart(context);
         } else if (LiveGuard.ACTION_SNOOZE.equals(action)) {

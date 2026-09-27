@@ -17,6 +17,7 @@ import {
   todayKey,
   unitLabel,
 } from "./utils";
+import { isEn } from "@/lib/i18n";
 
 export interface Insight {
   text: string;
@@ -46,6 +47,11 @@ function isBad(h: Habit, idx: Idx, d: Date, now: Date): boolean {
 }
 
 function badPhrase(h: Habit, lag: number): string {
+  if (isEn()) {
+    if (kindOf(h) === "avoid")
+      return lag ? `The day after a slip with “${h.name}”` : `On days with a “${h.name}” slip`;
+    return lag ? `The day after missing “${h.name}”` : `On days without “${h.name}”`;
+  }
   if (kindOf(h) === "avoid")
     return lag ? `Dzień po wpadce z „${h.name}”` : `W dni z wpadką „${h.name}”`;
   return lag ? `Dzień po niezaliczonym „${h.name}”` : `W dni bez „${h.name}”`;
@@ -55,12 +61,19 @@ function effectPhrase(h: Habit, bad: number, good: number): string {
   const diff = Math.round(Math.abs(bad - good));
   const b = Math.round(bad);
   const g = Math.round(good);
+  const less = bad < good;
   if (kindOf(h) === "build" && goalOf(h).type !== "check") {
     const unit = unitLabel(h, g);
-    return `„${h.name}” średnio ${fmtNum(b)} zamiast ${fmtNum(g)} ${unit} (o ${fmtNum(diff)} ${unitLabel(h, diff)} ${bad < good ? "mniej" : "więcej"})`;
+    if (isEn())
+      return `“${h.name}” averages ${fmtNum(b)} instead of ${fmtNum(g)} ${unit} (${fmtNum(diff)} ${unitLabel(h, diff)} ${less ? "fewer" : "more"})`;
+    return `„${h.name}” średnio ${fmtNum(b)} zamiast ${fmtNum(g)} ${unit} (o ${fmtNum(diff)} ${unitLabel(h, diff)} ${less ? "mniej" : "więcej"})`;
+  }
+  if (isEn()) {
+    const what = kindOf(h) === "avoid" ? `clean from “${h.name}”` : `“${h.name}” done`;
+    return `${what} on ${b}% of days instead of ${g}% (${diff} pts ${less ? "less often" : "more often"})`;
   }
   const what = kindOf(h) === "avoid" ? `czyste dni z „${h.name}”` : `„${h.name}” zaliczone`;
-  return `${what} w ${b}% dni zamiast ${g}% (o ${diff} pkt ${bad < good ? "rzadziej" : "częściej"})`;
+  return `${what} w ${b}% dni zamiast ${g}% (o ${diff} pkt ${less ? "rzadziej" : "częściej"})`;
 }
 
 export function habitInsights(

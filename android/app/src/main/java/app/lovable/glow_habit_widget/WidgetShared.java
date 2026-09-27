@@ -62,6 +62,16 @@ final class WidgetShared {
         }
     }
 
+    /** The app language chosen in the web app (snapshot "lang"): "pl" (default) or "en". */
+    static boolean en(Context c) {
+        return "en".equals(state(c).optString("lang", "pl"));
+    }
+
+    /** Inline translation for native texts: the Polish or the English variant. */
+    static String tr(Context c, String pl, String en) {
+        return en(c) ? en : pl;
+    }
+
     static JSONArray habits(Context c) {
         JSONArray a = state(c).optJSONArray("habits");
         return a != null ? a : new JSONArray();
@@ -243,12 +253,26 @@ final class WidgetShared {
 
     /** "teraz", "za 20 min", "o 17:30", "zaległe od 13:00". */
     static String whenLabel(JSONObject h) {
-        int at = nextMinute(h);
-        int d = at - nowMinute();
-        if (d <= 0 && d > -30) return "teraz";
-        if (d <= -30) return "zaległe od " + fmtMinute(at);
-        if (d < 60) return "za " + d + " min";
-        return "o " + fmtMinute(at);
+        return whenLabel(h, false);
+    }
+
+    /** whenLabel in the app language ("now", "in 20 min", "at 17:30", "overdue since 13:00"). */
+    static String whenLabel(JSONObject h, boolean en) {
+        return whenLabel(nextMinute(h), nowMinute(), en);
+    }
+
+    /** Pure: label for a unit due at `at` when it's `now` (minutes of day). */
+    static String whenLabel(int at, int now, boolean en) {
+        int d = at - now;
+        if (d <= 0 && d > -30) return en ? "now" : "teraz";
+        if (d <= -30) return (en ? "overdue since " : "zaległe od ") + fmtMinute(at);
+        if (d < 60) return en ? "in " + d + " min" : "za " + d + " min";
+        return (en ? "at " : "o ") + fmtMinute(at);
+    }
+
+    /** Due now or overdue (whenLabel "teraz" / "zaległe od ..."). */
+    static boolean isDueNow(JSONObject h) {
+        return nextMinute(h) - nowMinute() <= 0;
     }
 
     static String pick(JSONArray arr) {
@@ -311,19 +335,43 @@ final class WidgetShared {
         return state(c).optString("userName", "");
     }
 
-    /** "5h 23m do końca dnia"; computed natively so it's always current. */
+    /** "5 h 23 min do końca dnia"; computed natively so it's always current. */
     static String timeLeft() {
+        return timeLeft(false);
+    }
+
+    /** timeLeft in the app language ("5 h 23 min left today"). */
+    static String timeLeft(boolean en) {
         Calendar now = Calendar.getInstance();
         Calendar eod = (Calendar) now.clone();
         eod.set(Calendar.HOUR_OF_DAY, 23);
         eod.set(Calendar.MINUTE, 59);
         eod.set(Calendar.SECOND, 59);
-        long ms = eod.getTimeInMillis() - now.getTimeInMillis();
+        return timeLeft(eod.getTimeInMillis() - now.getTimeInMillis(), en);
+    }
+
+    /** Pure: `ms` until the end of the day as text. */
+    static String timeLeft(long ms, boolean en) {
         if (ms < 0) ms = 0;
         long h = ms / 3600000L;
         long m = (ms % 3600000L) / 60000L;
-        if (h > 0) return h + " h " + m + " min do końca dnia";
-        return m + " min do końca dnia";
+        String span = h > 0 ? h + " h " + m + " min" : m + " min";
+        return span + (en ? " left today" : " do końca dnia");
+    }
+
+    /**
+     * Creates the notification channel, or re-creates it when its name/description
+     * changed (e.g. the app language switched) - re-creating with the same id only
+     * updates name and description, the user's channel settings stay.
+     */
+    @androidx.annotation.RequiresApi(26)
+    static void upsertChannel(android.app.NotificationManager nm, android.app.NotificationChannel ch) {
+        android.app.NotificationChannel old = nm.getNotificationChannel(ch.getId());
+        if (old != null && String.valueOf(ch.getName()).equals(String.valueOf(old.getName()))
+                && String.valueOf(ch.getDescription()).equals(String.valueOf(old.getDescription()))) {
+            return;
+        }
+        nm.createNotificationChannel(ch);
     }
 
     /** Edits matching rows; returns the op to queue for the app, or null to skip that row. */

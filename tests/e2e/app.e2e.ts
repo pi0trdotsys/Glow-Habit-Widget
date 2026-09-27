@@ -20,6 +20,8 @@ const state = {
   state: {
     seeded: true,
     userName: "Test",
+    // Headless Edge reports English - the Polish checks below need Polish.
+    language: "pl",
     autoBackup: true,
     habits: [
       H("water", {
@@ -93,7 +95,12 @@ const page = await launch(preload);
 console.log("Szpila E2E");
 
 await check("splash is gone in under ~1.3 s", async () => {
+  // Warm-up visit: the first request to the local test server measures a cold
+  // browser cache, not the app (on the phone the files come from the APK).
   await page.goto("/");
+  await page.waitFor(splashVisible, 3000);
+  await page.waitFor(`!(${splashVisible})`, 5000);
+  await page.goto("/?measure");
   await page.waitFor(splashVisible, 3000);
   const ms = await page.waitFor(`!(${splashVisible})`, 3000);
   assert(ms < 1300, `splash took ${ms} ms`);
@@ -297,6 +304,83 @@ await check("CSV export produces a file (web: download + toast)", async () => {
   assert(csv.startsWith("data;zadanie;rodzaj"), "bad CSV header");
   assert(csv.includes(";Picie wody;do zrobienia;8;"), "missing rows");
   await page.waitFor(`document.body.innerText.includes("szpila-historia-")`);
+});
+
+// ---------------------------------------------------------------- English
+
+const POLISH_LETTERS = /[ąćęłńóśźż]/i;
+/** Visible text of the page (toasts left over from the Polish part excluded). */
+const pageText = `(() => { const t = document.querySelector("[data-sonner-toaster]"); if (t) t.style.display = "none"; const x = document.body.innerText; if (t) t.style.display = ""; return x; })()`;
+
+async function noPolish(where: string): Promise<void> {
+  const text = await page.eval<string>(pageText);
+  const hit = text.split("\n").find((l) => POLISH_LETTERS.test(l));
+  assert(!hit, `${where}: Polish text left: "${hit}"`);
+}
+
+await check(
+  "Settings: switching to English translates the app and the default habits",
+  async () => {
+    await page.eval(`(${byText("a", "Ustawienia")}).click()`);
+    await page.waitFor(`location.pathname === "/settings"`);
+    await page.eval(`document.querySelector('[data-lang="en"]').click()`);
+    await page.waitFor(`document.body.innerText.includes("Language")`);
+    const state = await page.eval<{ language: string; names: string[] }>(
+      `(() => { const s = JSON.parse(localStorage.getItem("loop-habits-v1")).state; return { language: s.language, names: s.habits.map((h) => h.name) }; })()`,
+    );
+    assert(state.language === "en", `language: ${state.language}`);
+    assert(
+      state.names.includes("Drink water") && state.names.includes("Scrolling in bed"),
+      `names: ${state.names}`,
+    );
+    const nav = await page.eval<string>(`document.querySelector("nav").innerText`);
+    assert(
+      /Today/.test(nav) && /Habits/.test(nav) && /Report/.test(nav) && /Settings/.test(nav),
+      `nav: ${nav}`,
+    );
+    await noPolish("Settings");
+  },
+);
+
+await check("English: Today, Habits, Report tabs, Szpila - no Polish left", async () => {
+  for (const [label, path, ready] of [
+    ["Today", "/", "done"],
+    ["Habits", "/habits", "Drink water"],
+    ["Report", "/report", "Week"],
+    ["Szpila", "/szpila", "in form"],
+  ] as const) {
+    await page.eval(`(${byText("a", label)}).click()`);
+    await page.waitFor(`location.pathname === ${JSON.stringify(path)}`);
+    await page.waitFor(`document.body.innerText.includes(${JSON.stringify(ready)})`);
+    await noPolish(label);
+  }
+  await page.eval(`(${byText("a", "Report")}).click()`);
+  await page.waitFor(`location.pathname === "/report"`);
+  for (const tab of ["90 days", "Months"]) {
+    await page.eval(`(${byText("button", tab)}).click()`);
+    await sleep(400);
+    await noPolish(`Report / ${tab}`);
+  }
+});
+
+await check("English: forbidden habit sheet and Szpila's jab", async () => {
+  await page.eval(`(${byText("a", "Today")}).click()`);
+  await page.waitFor(`location.pathname === "/"`);
+  await page.eval(`(${byText("button", "Fast food")}).click()`);
+  await page.waitFor(`!!(${byText("button", "Slip")})`);
+  await noPolish("avoid sheet");
+  assert(await page.eval<boolean>("window.__loopBack()"), "back not consumed");
+});
+
+await check("first launch: the language can be picked before the name", async () => {
+  await page.eval(
+    `(() => { const d = JSON.parse(localStorage.getItem("loop-habits-v1")); d.state.userName = null; d.state.language = "pl"; localStorage.setItem("loop-habits-v1", JSON.stringify(d)); })()`,
+  );
+  await page.goto("/");
+  await page.waitFor(`document.body.innerText.includes("Witaj w Szpili")`, 6000);
+  await page.eval(`document.querySelector('[role="radiogroup"] [data-lang="en"]').click()`);
+  await page.waitFor(`document.body.innerText.includes("Welcome to Szpila")`);
+  await page.waitFor(`JSON.parse(localStorage.getItem("loop-habits-v1")).state.language === "en"`);
 });
 
 page.close();

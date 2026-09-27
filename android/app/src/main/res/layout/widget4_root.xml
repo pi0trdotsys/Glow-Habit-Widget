@@ -19,7 +19,7 @@
         <ImageView android:id="@+id/szpila_cat"
             android:layout_width="match_parent" android:layout_height="match_parent"
             android:src="@drawable/ic_szpila_smug"
-            android:contentDescription="Szpila - dotknij po kolejną szpilę" />
+            android:contentDescription="@string/widget_szpila_cat_desc" />
         <ImageView android:id="@+id/szpila_cond"
             android:layout_width="match_parent" android:layout_height="match_parent"
             android:visibility="gone"
@@ -38,7 +38,7 @@
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="1dp"
             android:maxLines="3" android:ellipsize="end"
-            android:text="Mrrr. Otwórz Szpilę, a zacznę się czepiać."
+            android:text="@string/widget_szpila_placeholder"
             android:textColor="#f4f5f9" android:textSize="12sp" android:lineSpacingMultiplier="1.05" />
     </LinearLayout>
 </LinearLayout>

@@ -13,6 +13,10 @@ import { exportCsv } from "@/lib/backup";
 import { DeltaPill, deltaColor } from "@/components/WeekCompare";
 import { SZPILA_EMOJI } from "@/lib/habits/szpila";
 import { NightList } from "@/components/NightBill";
+import { L, intlLocale } from "@/lib/i18n";
+
+/** English "day"/"days" (the Polish copy here always says "dni"). */
+const enDays = (n: number) => (n === 1 ? "day" : "days");
 
 const H = 140;
 const W = 320;
@@ -46,12 +50,19 @@ export function TrendView() {
             <div className="text-3xl font-bold tabular-nums">
               {sum.avg == null ? "-" : `${sum.avg}%`}
             </div>
-            <div className="text-xs text-muted-foreground">średnio z {sum.tracked} dni</div>
+            <div className="text-xs text-muted-foreground">
+              {L(
+                `średnio z ${sum.tracked} dni`,
+                `average over ${sum.tracked} ${enDays(sum.tracked)}`,
+              )}
+            </div>
           </div>
           {sum.change != null && (
             <div className="text-right">
               <DeltaPill delta={sum.change} />
-              <div className="mt-1 text-[11px] text-muted-foreground">30 dni vs 30 wcześniej</div>
+              <div className="mt-1 text-[11px] text-muted-foreground">
+                {L("30 dni vs 30 wcześniej", "30 days vs previous 30")}
+              </div>
             </div>
           )}
         </div>
@@ -60,7 +71,7 @@ export function TrendView() {
           viewBox={`0 0 ${W} ${H + 18}`}
           className="mt-4 w-full touch-none select-none"
           role="img"
-          aria-label="Trend z 90 dni"
+          aria-label={L("Trend z 90 dni", "90-day trend")}
           onPointerMove={(e) => pickAt(e)}
           onPointerDown={(e) => pickAt(e)}
         >
@@ -112,7 +123,7 @@ export function TrendView() {
               fontSize="9"
               fill="var(--muted-foreground)"
             >
-              {i === 89 ? "dziś" : `-${90 - (i + 1)} d`}
+              {i === 89 ? L("dziś", "today") : `-${90 - (i + 1)} d`}
             </text>
           ))}
         </svg>
@@ -122,54 +133,54 @@ export function TrendView() {
               className="inline-block h-2 w-2 rounded-sm"
               style={{ backgroundColor: "var(--primary)" }}
             />{" "}
-            dzień w formie (≥80%)
+            {L("dzień w formie (≥80%)", "day in form (≥80%)")}
           </span>
           <span className="flex items-center gap-1.5">
             <span
               className="inline-block h-0.5 w-3 rounded"
               style={{ backgroundColor: "var(--avoid)" }}
             />{" "}
-            średnia 7 dni
+            {L("średnia 7 dni", "7-day average")}
           </span>
         </div>
         {shown && (
           <p className="mt-3 text-xs">
             <span className="font-semibold">
-              {shown.date.toLocaleDateString("pl-PL", {
+              {shown.date.toLocaleDateString(intlLocale(), {
                 weekday: "short",
                 day: "numeric",
                 month: "short",
               })}
             </span>
             {": "}
-            {shown.pct == null ? "brak danych" : `${shown.pct}%`}
-            {shown.avg != null && ` · średnia 7 dni ${shown.avg}%`}
+            {shown.pct == null ? L("brak danych", "no data") : `${shown.pct}%`}
+            {shown.avg != null && ` · ${L("średnia 7 dni", "7-day average")} ${shown.avg}%`}
             {(nightHits[shown.key] ?? 0) > 0 &&
-              ` · ${SZPILA_EMOJI.angry} ${nightHits[shown.key]}× social media w nocy`}
+              ` · ${SZPILA_EMOJI.angry} ${nightHits[shown.key]}× ${L("social media w nocy", "social media at night")}`}
           </p>
         )}
       </section>
 
       <section className="mx-5 mt-4 grid grid-cols-2 gap-3">
         <Stat
-          label="Najlepszy dzień"
+          label={L("Najlepszy dzień", "Best day")}
           value={sum.best ? `${sum.best.pct}%` : "-"}
-          hint={sum.best?.date.toLocaleDateString("pl-PL", { day: "numeric", month: "short" })}
+          hint={sum.best?.date.toLocaleDateString(intlLocale(), { day: "numeric", month: "short" })}
         />
         <Stat
-          label="Dni w formie"
+          label={L("Dni w formie", "Days in form")}
           value={String(series.filter((p) => (p.pct ?? 0) >= 80).length)}
-          hint={`z ${sum.tracked} śledzonych`}
+          hint={L(`z ${sum.tracked} śledzonych`, `of ${sum.tracked} tracked`)}
         />
         <Stat
-          label="Noce z social mediami"
+          label={L("Noce z social mediami", "Social media nights")}
           value={String(nights)}
-          hint="po północy, z ostatnich 90"
+          hint={L("po północy, z ostatnich 90", "after midnight, last 90")}
         />
         <Stat
-          label="Kompletne dni"
+          label={L("Kompletne dni", "Perfect days")}
           value={String(series.filter((p) => p.pct === 100).length)}
-          hint="100% zadań"
+          hint={L("100% zadań", "100% of habits")}
         />
       </section>
       <NightList />
@@ -202,30 +213,46 @@ export function MonthsView() {
             >
               {cap(
                 cmp.delta == null
-                  ? `${cmp.thisMonth.label}: pierwszy miesiąc`
+                  ? L(
+                      `${cmp.thisMonth.label}: pierwszy miesiąc`,
+                      `${cmp.thisMonth.label}: first month`,
+                    )
                   : cmp.delta > 0
-                    ? `${cmp.thisMonth.label} lepszy niż ${cmp.lastMonth.label}`
+                    ? L(
+                        `${cmp.thisMonth.label} lepszy niż ${cmp.lastMonth.label}`,
+                        `${cmp.thisMonth.label} beats ${cmp.lastMonth.label}`,
+                      )
                     : cmp.delta < 0
-                      ? `${cmp.thisMonth.label} gorszy niż ${cmp.lastMonth.label}`
-                      : `${cmp.thisMonth.label} jak ${cmp.lastMonth.label}`,
+                      ? L(
+                          `${cmp.thisMonth.label} gorszy niż ${cmp.lastMonth.label}`,
+                          `${cmp.thisMonth.label} is behind ${cmp.lastMonth.label}`,
+                        )
+                      : L(
+                          `${cmp.thisMonth.label} jak ${cmp.lastMonth.label}`,
+                          `${cmp.thisMonth.label} same as ${cmp.lastMonth.label}`,
+                        ),
               )}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">
-              Dni 1-{cmp.upTo}: {cmp.thisMonth.pct ?? "-"}% teraz · {cmp.lastMonth.pct ?? "-"}% w
-              zeszłym miesiącu
+              {L(
+                `Dni 1-${cmp.upTo}: ${cmp.thisMonth.pct ?? "-"}% teraz · ${cmp.lastMonth.pct ?? "-"}% w zeszłym miesiącu`,
+                `Days 1-${cmp.upTo}: ${cmp.thisMonth.pct ?? "-"}% now · ${cmp.lastMonth.pct ?? "-"}% last month`,
+              )}
             </div>
           </div>
           {cmp.delta != null && <DeltaPill delta={cmp.delta} big />}
         </div>
         <p className="mt-3 text-[11px] text-muted-foreground">
-          Porównanie tylko do tego samego dnia miesiąca - połowa września vs połowa sierpnia, a nie
-          cały sierpień.
+          {L(
+            "Porównanie tylko do tego samego dnia miesiąca - połowa września vs połowa sierpnia, a nie cały sierpień.",
+            "Compared only up to the same day of the month - mid-September vs mid-August, not all of August.",
+          )}
         </p>
       </section>
 
       <section className="mx-5 mt-4 rounded-3xl bg-card p-5">
         <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          Ostatnie 6 miesięcy
+          {L("Ostatnie 6 miesięcy", "Last 6 months")}
         </h2>
         <div className="flex h-40 items-end gap-2">
           {months.map((m) => (
@@ -265,11 +292,16 @@ export function MonthsView() {
                 <span>
                   {cap(m.long)}
                   {m.current && (
-                    <span className="text-[11px] text-muted-foreground"> (w toku)</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {L(" (w toku)", " (in progress)")}
+                    </span>
                   )}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {m.pct}% · {m.forma} dni w formie · {m.days} dni danych
+                  {L(
+                    `${m.pct}% · ${m.forma} dni w formie · ${m.days} dni danych`,
+                    `${m.pct}% · ${m.forma} ${enDays(m.forma)} in form · ${m.days} ${enDays(m.days)} of data`,
+                  )}
                 </span>
               </li>
             ))}
@@ -297,7 +329,7 @@ function CsvActions() {
   const run = async (share: boolean) => {
     try {
       const where = await exportCsv(share);
-      if (!share) toast(`Zapisano: ${where}`);
+      if (!share) toast(`${L("Zapisano", "Saved")}: ${where}`);
     } catch (e) {
       toast((e as Error).message);
     }
@@ -308,12 +340,12 @@ function CsvActions() {
         onClick={() => void run(false)}
         className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-card p-3 text-sm font-medium"
       >
-        <FileSpreadsheet size={16} /> Eksport CSV
+        <FileSpreadsheet size={16} /> {L("Eksport CSV", "Export CSV")}
       </button>
       <button
         onClick={() => void run(true)}
         className="flex items-center justify-center gap-2 rounded-2xl bg-card px-4 py-3 text-sm font-medium"
-        aria-label="Udostępnij CSV"
+        aria-label={L("Udostępnij CSV", "Share CSV")}
       >
         <Share2 size={16} />
       </button>

@@ -18,6 +18,7 @@ import type { LocalNotificationSchema } from "@capacitor/local-notifications";
 import { useHabits } from "@/lib/habits/store";
 import { formatMinute, kindOf, planDay, weeklyReport } from "@/lib/habits/utils";
 import { SZPILA_EMOJI, SZPILA_NAME, szpilaNow } from "@/lib/habits/szpila";
+import { isEn, L } from "@/lib/i18n";
 
 export type PermissionState = "granted" | "denied" | "default" | "unsupported";
 
@@ -77,15 +78,40 @@ function parseTime(t: string | null | undefined): { hour: number; minute: number
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+/** Notification titles and the daily check-in text (evaluated at call time - the language can change). */
+const T = {
+  daily: () => L("Pora sprawdzić dzisiejsze zadania.", "Time to check today's habits."),
+  reminder: () => L("Przypomnienie", "Reminder"),
+  weekly: () => L("Podsumowanie tygodnia", "Weekly recap"),
+  boost: () => L("Tydzień do tygodnia", "Week vs week"),
+};
+
+/** "Piotr, " prefix, or nothing without a name. */
+const whoPrefix = (userName: string | null | undefined) => (userName ? `${userName}, ` : "");
+
+/** Capitalise the first letter when there is no name in front. */
+const cap = (who: string, s: string) => (who ? s : s.charAt(0).toUpperCase() + s.slice(1));
+
 /** Weekly-recap body comparing this week to last week over the same window. */
 function weeklyReportBody(): string {
   const { habits, completions, userName } = useHabits.getState();
-  const who = userName ? `${userName}, ` : "";
+  const who = whoPrefix(userName);
   if (habits.length === 0) {
-    return `${who}otwórz Szpilę i dodaj zadania, żeby zacząć tydzień z przytupem.`;
+    return isEn()
+      ? `${who}${cap(who, "open Szpila and add some habits to start the week strong.")}`
+      : `${who}otwórz Szpilę i dodaj zadania, żeby zacząć tydzień z przytupem.`;
   }
   const r = weeklyReport(habits, completions);
   const d = r.delta;
+  if (isEn()) {
+    const trend =
+      d > 0
+        ? `you're ${d} pts ahead of last week - keep it up!`
+        : d === 0
+          ? "you're neck and neck with last week - can you pull ahead?"
+          : `last week was ${Math.abs(d)} pts better - time to catch up!`;
+    return `${who}${cap(who, trend)} Tap to see the report.`;
+  }
   const trend =
     d > 0
       ? `jesteś ${d} pkt przed zeszłym tygodniem - tak trzymaj!`
@@ -101,14 +127,34 @@ function weeklyReportBody(): string {
  */
 function boostBody(slot: number): string {
   const { habits, completions, userName } = useHabits.getState();
-  const who = userName ? `${userName}, ` : "";
+  const who = whoPrefix(userName);
   if (habits.length === 0) {
-    return `${who}dodaj zadanie i zacznij budować serię już dziś. 🌱`;
+    return isEn()
+      ? `${who}${cap(who, "add a habit and start building a streak today. 🌱")}`
+      : `${who}dodaj zadanie i zacznij budować serię już dziś. 🌱`;
   }
   const r = weeklyReport(habits, completions);
   const d = r.delta;
-  const upDown = d > 0 ? `+${d} pkt 🚀` : d < 0 ? `${d} pkt` : "remis";
 
+  if (isEn()) {
+    const upDown = d > 0 ? `+${d} pts 🚀` : d < 0 ? `${d} pts` : "a tie";
+    if (slot === 0) {
+      return `${who}${cap(who, `this week ${r.thisWeek.rate}%, last week by now ${r.lastWeek.rate}% (${upDown}).`)} ${
+        d >= 0 ? "Keep going! 🔥" : "A few taps and you'll catch up 💪"
+      }`;
+    }
+    const diff = Math.round(r.thisWeek.score - r.lastWeek.score);
+    const countLine =
+      diff > 0
+        ? `${diff} more than a week ago by now 🎉`
+        : diff < 0
+          ? `${Math.abs(diff)} fewer than a week ago by now - catch up! 💪`
+          : "exactly as many as a week ago by now";
+    const done = Math.round(r.thisWeek.score);
+    return `${who}${cap(who, `${done} done this week, ${countLine}`)}`;
+  }
+
+  const upDown = d > 0 ? `+${d} pkt 🚀` : d < 0 ? `${d} pkt` : "remis";
   if (slot === 0) {
     return `${who}ten tydzień ${r.thisWeek.rate}%, zeszły o tej porze ${r.lastWeek.rate}% (${upDown}). ${
       d >= 0 ? "Jedziesz dalej! 🔥" : "Kilka kliknięć i odrobisz 💪"
@@ -126,6 +172,8 @@ function boostBody(slot: number): string {
 
 function reminderBody(habitId: string, name: string): string {
   const h = useHabits.getState().habits.find((x) => x.id === habitId);
+  if (isEn())
+    return h && kindOf(h) === "avoid" ? `Confirm a day without: ${name}` : `Time for: ${name}`;
   return h && kindOf(h) === "avoid" ? `Potwierdź, że dziś bez: ${name}` : `Pora na: ${name}`;
 }
 
@@ -178,7 +226,7 @@ async function syncNative(): Promise<void> {
     schedule.push({
       id: ID_DAILY,
       title: "Szpila",
-      body: "Pora sprawdzić dzisiejsze zadania.",
+      body: T.daily(),
       schedule: { on: { hour, minute } },
     });
   }
@@ -188,7 +236,7 @@ async function syncNative(): Promise<void> {
     const { hour, minute } = parseTime(h.reminder);
     schedule.push({
       id: habitNotifId(h.id),
-      title: "Przypomnienie",
+      title: T.reminder(),
       body: reminderBody(h.id, h.name),
       schedule: { on: { hour, minute } },
       extra: { habitId: h.id },
@@ -201,7 +249,7 @@ async function syncNative(): Promise<void> {
     const weekday = (((notifications.reportDay % 7) + 7) % 7) + 1;
     schedule.push({
       id: ID_WEEKLY,
-      title: "Podsumowanie tygodnia",
+      title: T.weekly(),
       body: weeklyReportBody(),
       schedule: { on: { weekday, hour, minute } },
       extra: { route: "/report" },
@@ -213,7 +261,7 @@ async function syncNative(): Promise<void> {
     BOOST_TIMES.forEach((t, i) => {
       schedule.push({
         id: boostIds[i],
-        title: "Tydzień do tygodnia",
+        title: T.boost(),
         body: boostBody(i),
         schedule: { on: { hour: t.hour, minute: t.minute } },
         extra: { route: "/report" },
@@ -256,11 +304,11 @@ function webTick(): void {
   };
 
   if (notifications.enabled && notifications.time === hhmm) {
-    fire("daily", "Szpila", "Pora sprawdzić dzisiejsze zadania.");
+    fire("daily", "Szpila", T.daily());
   }
   for (const h of habits) {
     if (h.reminder && h.reminder === hhmm) {
-      fire(`habit-${h.id}`, "Przypomnienie", reminderBody(h.id, h.name));
+      fire(`habit-${h.id}`, T.reminder(), reminderBody(h.id, h.name));
     }
   }
   if (
@@ -268,12 +316,12 @@ function webTick(): void {
     notifications.reportTime === hhmm &&
     now.getDay() === notifications.reportDay
   ) {
-    fire("weekly", "Podsumowanie tygodnia", weeklyReportBody());
+    fire("weekly", T.weekly(), weeklyReportBody());
   }
   if (notifications.boosts) {
     BOOST_TIMES.forEach((t, i) => {
       if (`${pad(t.hour)}:${pad(t.minute)}` === hhmm) {
-        fire(`boost-${i}`, "Tydzień do tygodnia", boostBody(i));
+        fire(`boost-${i}`, T.boost(), boostBody(i));
       }
     });
   }

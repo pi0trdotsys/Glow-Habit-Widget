@@ -55,8 +55,10 @@ public class HabitWidget2Provider extends AppWidgetProvider {
         int n = Math.min(habits.length(), MAX_CELLS); // every row gets a cell; `total` only drives the ring
 
         rv.setImageViewBitmap(R.id.widget2_ring, WidgetShared.progressRing(context, done, total));
-        rv.setTextViewText(R.id.widget2_title, total > 0 ? "Dziś" : "Loop");
-        rv.setTextViewText(R.id.widget2_timeleft, total > 0 ? WidgetShared.timeLeft() : "");
+        boolean en = WidgetShared.en(context);
+        rv.setTextViewText(R.id.widget2_title, total > 0 ? (en ? "Today" : "Dziś") : "Loop");
+        rv.setTextViewText(R.id.widget2_timeleft, total > 0 ? WidgetShared.timeLeft(en) : "");
+        rv.setTextViewText(R.id.widget2_empty, en ? "No habits for today" : "Brak zadań na dziś");
 
         PendingIntent openPi = WidgetShared.openAppIntent(context, 1);
         if (openPi != null) rv.setOnClickPendingIntent(R.id.widget2_header, openPi);

@@ -32,7 +32,7 @@ describe("night guard (Szpila na żywo)", () => {
       // only known placeholders survive (resolved natively)
       for (const pool of Object.values(lines))
         for (const l of pool)
-          expect(l.replace(/\{(app|time|m|count)\}/g, "")).not.toMatch(/\{\w+\}/);
+          expect(l.replace(/\{(app|time|m|count|left|deadline)\}/g, "")).not.toMatch(/\{\w+\}/);
     }
     expect(liveLines("hard", "Piotr").generic.some((l) => l.includes("Piotr"))).toBe(true);
   });

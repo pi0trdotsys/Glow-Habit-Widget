@@ -14,7 +14,7 @@
         android:layout_width="48dp" android:layout_height="48dp">
         <ImageView android:id="@+id/next_ring"
             android:layout_width="match_parent" android:layout_height="match_parent"
-            android:contentDescription="Postęp zadania" />
+            android:contentDescription="@string/widget_next_progress_desc" />
         <ImageView android:id="@+id/next_icon"
             android:layout_width="22dp" android:layout_height="22dp"
             android:layout_gravity="center" android:contentDescription="" />

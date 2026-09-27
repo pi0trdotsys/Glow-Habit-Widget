@@ -25,9 +25,10 @@ import {
   todayKey,
   unitLabel,
 } from "@/lib/habits/utils";
+import { L } from "@/lib/i18n";
 
 export const Route = createFileRoute("/habits/$id")({
-  head: () => ({ meta: [{ title: "Zadanie - Szpila" }] }),
+  head: () => ({ meta: [{ title: L("Zadanie - Szpila", "Habit - Szpila") }] }),
   component: HabitDetail,
 });
 
@@ -46,7 +47,9 @@ function HabitDetail() {
   if (!habit) {
     return (
       <AppShell>
-        <div className="p-8 text-center text-muted-foreground">Nie znaleziono zadania.</div>
+        <div className="p-8 text-center text-muted-foreground">
+          {L("Nie znaleziono zadania.", "Habit not found.")}
+        </div>
       </AppShell>
     );
   }
@@ -89,7 +92,7 @@ function HabitDetail() {
         <button
           onClick={() => navigate({ to: "/habits" })}
           className="grid h-10 w-10 place-items-center rounded-full bg-card"
-          aria-label="Wstecz"
+          aria-label={L("Wstecz", "Back")}
         >
           <ChevronLeft size={18} />
         </button>
@@ -97,19 +100,26 @@ function HabitDetail() {
           <button
             onClick={() => setEditing(true)}
             className="grid h-10 w-10 place-items-center rounded-full bg-card"
-            aria-label="Edytuj"
+            aria-label={L("Edytuj", "Edit")}
           >
             <Pencil size={17} />
           </button>
           <button
             onClick={() => {
-              if (confirm(`Usunąć „${habit.name}”? Historia też zniknie.`)) {
+              if (
+                confirm(
+                  L(
+                    `Usunąć „${habit.name}”? Historia też zniknie.`,
+                    `Delete “${habit.name}”? Its history goes with it.`,
+                  ),
+                )
+              ) {
                 removeHabit(habit.id);
                 navigate({ to: "/habits" });
               }
             }}
             className="grid h-10 w-10 place-items-center rounded-full bg-card text-destructive"
-            aria-label="Usuń"
+            aria-label={L("Usuń", "Delete")}
           >
             <Trash2 size={18} />
           </button>
@@ -133,7 +143,7 @@ function HabitDetail() {
         </div>
         <h1 className="text-center font-display text-3xl font-bold">{habit.name}</h1>
         <p className="text-xs text-muted-foreground">
-          {avoid && <span style={{ color }}>Zakazane · </span>}
+          {avoid && <span style={{ color }}>{L("Zakazane · ", "Forbidden · ")}</span>}
           {goalLabel(habit)} · {scheduleLabel(habit)}
           {habit.reminder && (
             <>
@@ -144,11 +154,13 @@ function HabitDetail() {
         </p>
         {usual != null && (
           <p className="text-xs text-muted-foreground">
-            🕒 Zwykle robisz to ok. {formatMinute(usual)}
+            🕒 {L("Zwykle robisz to ok.", "You usually do it around")} {formatMinute(usual)}
           </p>
         )}
         {usual == null && habit.source === "steps" && (
-          <p className="text-xs text-muted-foreground">👣 Kroki pobierane z Health Connect</p>
+          <p className="text-xs text-muted-foreground">
+            👣 {L("Kroki pobierane z Health Connect", "Steps pulled from Health Connect")}
+          </p>
         )}
       </div>
 
@@ -166,22 +178,32 @@ function HabitDetail() {
 
       <div className="mt-3 grid grid-cols-2 gap-3 px-5">
         <Stat
-          label={avoid ? "Seria czystych dni" : "Obecna seria"}
+          label={
+            avoid ? L("Seria czystych dni", "Clean streak") : L("Obecna seria", "Current streak")
+          }
           value={`${streak} d`}
           accent={color}
         />
-        <Stat label="Najdłuższa seria" value={`${longest} d`} accent={color} />
         <Stat
-          label={avoid ? "Czyste dni w tyg." : "Zaliczone w tyg."}
+          label={L("Najdłuższa seria", "Longest streak")}
+          value={`${longest} d`}
+          accent={color}
+        />
+        <Stat
+          label={
+            avoid
+              ? L("Czyste dni w tyg.", "Clean days this wk")
+              : L("Zaliczone w tyg.", "Done this wk")
+          }
           value={`${week}`}
           accent={color}
         />
-        <Stat label="Skuteczność 30 dni" value={`${rate}%`} accent={color} />
+        <Stat label={L("Skuteczność 30 dni", "30-day success")} value={`${rate}%`} accent={color} />
       </div>
 
       <section className="mt-8 px-5">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          Ostatnie 12 tygodni · dotknij, by zmienić
+          {L("Ostatnie 12 tygodni · dotknij, by zmienić", "Last 12 weeks · tap to change")}
         </h2>
         <div
           className="grid grid-flow-col gap-1 rounded-2xl bg-card p-3"
@@ -212,15 +234,23 @@ function HabitDetail() {
                   outlineOffset: d.date === todayK ? "1px" : undefined,
                 }}
                 title={d.date}
-                aria-label={`${d.date} ${d.done ? "zaliczone" : "niezaliczone"}`}
+                aria-label={`${d.date} ${
+                  d.done ? L("zaliczone", "done") : L("niezaliczone", "not done")
+                }`}
               />
             );
           })}
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
           {avoid
-            ? "Czerwone = czysty dzień, szare = wpadka (niepotwierdzony dzień też). Dotknij, by przełączyć."
-            : "Im mocniejszy kolor, tym bliżej celu. Dotknij dnia, by zaliczyć go w całości lub wyczyścić."}
+            ? L(
+                "Czerwone = czysty dzień, szare = wpadka (niepotwierdzony dzień też). Dotknij, by przełączyć.",
+                "Red = clean day, grey = slip (unconfirmed days too). Tap to flip.",
+              )
+            : L(
+                "Im mocniejszy kolor, tym bliżej celu. Dotknij dnia, by zaliczyć go w całości lub wyczyścić.",
+                "The stronger the color, the closer to the goal. Tap a day to mark it fully done or clear it.",
+              )}
         </p>
       </section>
     </AppShell>
@@ -239,14 +269,16 @@ function AmountEditor({ habit, amount, color }: { habit: Habit; amount: number; 
   return (
     <div className="rounded-2xl bg-card p-4">
       <div className="flex items-baseline justify-between">
-        <span className="text-xs uppercase tracking-wider text-muted-foreground">Dziś</span>
+        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+          {L("Dziś", "Today")}
+        </span>
         <span className="text-xs text-muted-foreground">{pct}%</span>
       </div>
       <div className="mt-2 flex items-center justify-between gap-3">
         <button
           onClick={() => set(amount - g.step)}
           className="grid h-11 w-11 place-items-center rounded-full bg-background"
-          aria-label="Odejmij"
+          aria-label={L("Odejmij", "Subtract")}
         >
           <Minus size={18} />
         </button>
@@ -270,7 +302,7 @@ function AmountEditor({ habit, amount, color }: { habit: Habit; amount: number; 
           onClick={() => set(amount + g.step)}
           className="grid h-11 w-11 place-items-center rounded-full"
           style={{ backgroundColor: color, color: "var(--background)" }}
-          aria-label="Dodaj"
+          aria-label={L("Dodaj", "Add")}
         >
           <Plus size={18} />
         </button>

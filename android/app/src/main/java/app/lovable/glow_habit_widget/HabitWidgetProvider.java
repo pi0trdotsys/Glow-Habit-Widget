@@ -25,6 +25,7 @@ public class HabitWidgetProvider extends AppWidgetProvider {
         RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget_root);
         rv.setTextViewText(R.id.widget_title, headerTitle(context));
         rv.setTextViewText(R.id.widget_subtitle, headerSubtitle(context));
+        rv.setTextViewText(R.id.widget_empty, WidgetShared.tr(context, "Brak zadań na dziś", "No habits for today"));
 
         Intent open = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
         if (open != null) {
@@ -60,12 +61,13 @@ public class HabitWidgetProvider extends AppWidgetProvider {
     private static String headerTitle(Context context) {
         int total = WidgetShared.countedTotal(context);
         if (total == 0) return "Loop";
-        return WidgetShared.doneCount(context) + " / " + total + " dziś";
+        return WidgetShared.doneCount(context) + " / " + total + WidgetShared.tr(context, " dziś", " today");
     }
 
     private static String headerSubtitle(Context context) {
         String name = WidgetShared.userName(context);
-        return name.isEmpty() ? "Dzisiejsze zadania" : ("Cześć, " + name);
+        return name.isEmpty() ? WidgetShared.tr(context, "Dzisiejsze zadania", "Today's habits")
+            : WidgetShared.tr(context, "Cześć, ", "Hi, ") + name;
     }
 
     @Override

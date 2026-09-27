@@ -1,11 +1,4 @@
-import {
-  addDays,
-  differenceInCalendarDays,
-  format,
-  parseISO,
-  startOfMonth,
-  startOfWeek,
-} from "date-fns";
+import { addDays, differenceInCalendarDays, parseISO, startOfMonth, startOfWeek } from "date-fns";
 import type {
   Completion,
   Habit,
@@ -15,9 +8,13 @@ import type {
   LimitPeriod,
   TimeOfDay,
 } from "./types";
+import { intlLocale, isEn, L, pick } from "@/lib/i18n";
 
+/** Local calendar day "yyyy-MM-dd". Hand-rolled: it runs in every hot loop (date-fns format is ~20x slower). */
 export function todayKey(d: Date = new Date()): string {
-  return format(d, "yyyy-MM-dd");
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  return `${d.getFullYear()}-${m < 10 ? "0" : ""}${m}-${day < 10 ? "0" : ""}${day}`;
 }
 
 /** Minutes since local midnight. */
@@ -41,8 +38,22 @@ export function plural(n: number, one: string, few: string, many: string): strin
   return many;
 }
 
-export const daysLabel = (n: number) => `${n} ${plural(n, "dzień", "dni", "dni")}`;
-export const timesLabel = (n: number) => `${n} ${plural(n, "raz", "razy", "razy")}`;
+/** English plural: enPlural(3, "day", "days"). */
+function enPlural(n: number, one: string, many: string): string {
+  return Math.abs(n) === 1 ? one : many;
+}
+
+/** "3 dni" / "3 days". */
+export const daysLabel = (n: number) =>
+  isEn() ? `${n} ${enPlural(n, "day", "days")}` : `${n} ${plural(n, "dzień", "dni", "dni")}`;
+
+/** "2 razy" / "twice". */
+export const timesLabel = (n: number) => {
+  if (!isEn()) return `${n} ${plural(n, "raz", "razy", "razy")}`;
+  if (n === 1) return "once";
+  if (n === 2) return "twice";
+  return `${n} times`;
+};
 
 // ---------------------------------------------------------------------------
 // Habit shape helpers (older saves lack kind/goal/limit)
@@ -89,13 +100,55 @@ const UNIT_FORMS: [string, string, string][] = [
   ["kawa", "kawy", "kaw"],
   ["owoc", "owoce", "owoców"],
   ["porcja", "porcje", "porcji"],
+  ["słówko", "słówka", "słówek"],
+  ["zadanie", "zadania", "zadań"],
 ];
 
-/** [1, 2-4, 5+] forms of a count unit (unknown units stay as typed). */
+/**
+ * English units as [singular, plural, plural] - the same [1, 2-4, 5+] shape as
+ * the Polish table, so the Polish plural rule (and the native widgets) pick
+ * the right English form too (1 -> singular, anything else -> plural).
+ */
+const UNIT_FORMS_EN: [string, string, string][] = [
+  ["time", "times", "times"],
+  ["glass", "glasses", "glasses"],
+  ["step", "steps", "steps"],
+  ["page", "pages", "pages"],
+  ["minute", "minutes", "minutes"],
+  ["hour", "hours", "hours"],
+  ["liter", "liters", "liters"],
+  ["litre", "litres", "litres"],
+  ["pill", "pills", "pills"],
+  ["capsule", "capsules", "capsules"],
+  ["push-up", "push-ups", "push-ups"],
+  ["squat", "squats", "squats"],
+  ["rep", "reps", "reps"],
+  ["set", "sets", "sets"],
+  ["word", "words", "words"],
+  ["lesson", "lessons", "lessons"],
+  ["coffee", "coffees", "coffees"],
+  ["fruit", "fruits", "fruits"],
+  ["serving", "servings", "servings"],
+  ["task", "tasks", "tasks"],
+  ["cup", "cups", "cups"],
+  ["km", "km", "km"],
+];
+
+/**
+ * [1, 2-4, 5+] forms of a count unit, found by any of their forms. Units keep
+ * their own language (Polish habits have Polish units, English ones English
+ * units - see seed-names.ts); unknown units stay as typed, except that in
+ * English a plain "laps"-style word gets its singular by dropping the "s".
+ */
 export function unitForms(unit: string | undefined): [string, string, string] {
   const u = unit?.trim() ?? "";
-  if (!u) return UNIT_FORMS[0];
-  return UNIT_FORMS.find((f) => f.includes(u.toLowerCase())) ?? [u, u, u];
+  if (!u) return isEn() ? UNIT_FORMS_EN[0] : UNIT_FORMS[0];
+  const low = u.toLowerCase();
+  const known =
+    UNIT_FORMS.find((f) => f.includes(low)) ?? UNIT_FORMS_EN.find((f) => f.includes(low));
+  if (known) return known;
+  if (isEn() && /^[a-z-]*[a-rt-z]s$/i.test(u)) return [u.slice(0, -1), u, u];
+  return [u, u, u];
 }
 
 export function unitLabel(h: Habit, n: number): string {
@@ -112,32 +165,45 @@ export function amountText(h: Habit, amount: number): string {
   return `${fmtNum(amount)}/${fmtNum(g.target)} ${unitLabel(h, g.target)}`;
 }
 
+/** Big numbers grouped ("12 000" / "12,000"); decimal comma in Polish, dot in English. */
 export function fmtNum(n: number): string {
-  return n >= 10000 ? n.toLocaleString("pl-PL") : String(n);
+  if (n >= 10000) return n.toLocaleString(intlLocale());
+  const s = String(n);
+  return isEn() ? s : s.replace(".", ",");
 }
 
 export function scheduleLabel(h: Habit): string {
   const s = h.schedule;
-  if (s.type === "daily") return "Codziennie";
+  const daily = L("Codziennie", "Every day");
+  if (s.type === "daily") return daily;
   if (s.type === "weekdays") {
     const n = s.days?.length ?? 0;
-    return n === 7 ? "Codziennie" : `${n} ${plural(n, "dzień", "dni", "dni")} w tygodniu`;
+    if (n === 7) return daily;
+    return isEn()
+      ? `${daysLabel(n)} a week`
+      : `${n} ${plural(n, "dzień", "dni", "dni")} w tygodniu`;
   }
-  return `${timesLabel(s.target ?? 1)} w tygodniu`;
+  return `${timesLabel(s.target ?? 1)} ${L("w tygodniu", "a week")}`;
 }
 
 export function limitLabel(l: HabitLimit): string {
-  if (l.times <= 0) return "Całkowity zakaz";
-  const per = l.period === "day" ? "dziennie" : l.period === "week" ? "w tygodniu" : "w miesiącu";
+  if (l.times <= 0) return L("Całkowity zakaz", "Total ban");
+  const per =
+    l.period === "day"
+      ? L("dziennie", "a day")
+      : l.period === "week"
+        ? L("w tygodniu", "a week")
+        : L("w miesiącu", "a month");
   return `Max ${timesLabel(l.times)} ${per}`;
 }
 
 export function goalLabel(h: Habit): string {
   if (kindOf(h) === "avoid") return limitLabel(limitOf(h));
   const g = goalOf(h);
-  if (g.type === "check") return "Raz dziennie";
-  if (g.type === "minutes") return `${g.target} min dziennie`;
-  return `${fmtNum(g.target)} ${unitLabel(h, g.target)} dziennie`;
+  if (g.type === "check") return L("Raz dziennie", "Once a day");
+  const perDay = L("dziennie", "a day");
+  if (g.type === "minutes") return `${g.target} min ${perDay}`;
+  return `${fmtNum(g.target)} ${unitLabel(h, g.target)} ${perDay}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -464,7 +530,8 @@ export interface WeeklyReport {
   }[];
 }
 
-const DAY_SHORT = ["pon", "wt", "śr", "czw", "pt", "sob", "nd"];
+const DAY_SHORT_PL = ["pon", "wt", "śr", "czw", "pt", "sob", "nd"];
+const DAY_SHORT_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function dayWindow(
   h: Habit,
@@ -493,6 +560,7 @@ export function weeklyReport(
   now: Date = new Date(),
 ): WeeklyReport {
   const idx = indexEntries(completions);
+  const DAY_SHORT = pick(DAY_SHORT_PL, DAY_SHORT_EN);
   const startThis = startOfWeek(now, { weekStartsOn: 1 });
   const startLast = addDays(startThis, -7);
   const todayIdx = differenceInCalendarDays(now, startThis); // 0..6
@@ -561,10 +629,11 @@ export function weeklyReport(
 
   const rateT = dT === 0 ? 0 : Math.round((Math.min(sT, dT) / dT) * 100);
   const rateL = dL === 0 ? 0 : Math.round((Math.min(sL, dL) / dL) * 100);
+  const until = `${L("do", "until")} ${formatMinute(cutoff)}`;
   const windowLabel =
     todayIdx === 0
-      ? `poniedziałek do ${formatMinute(cutoff)}`
-      : `${DAY_SHORT[0]}–${DAY_SHORT[todayIdx]} do ${formatMinute(cutoff)}`;
+      ? `${L("poniedziałek", "Monday")} ${until}`
+      : `${DAY_SHORT[0]}–${DAY_SHORT[todayIdx]} ${until}`;
   return {
     thisWeek: { score: round1(sT), due: round1(dT), rate: rateT, done: round1(sT) },
     lastWeek: { score: round1(sL), due: round1(dL), rate: rateL, done: round1(sL) },
@@ -792,9 +861,9 @@ export function todayProgress(
 
 export function greetingFor(date: Date = new Date()): string {
   const h = date.getHours();
-  if (h < 5) return "Jeszcze nie śpisz";
-  if (h < 12) return "Dzień dobry";
-  if (h < 18) return "Cześć";
-  if (h < 22) return "Dobry wieczór";
-  return "Dobranoc";
+  if (h < 5) return L("Jeszcze nie śpisz", "Still up");
+  if (h < 12) return L("Dzień dobry", "Good morning");
+  if (h < 18) return L("Cześć", "Hi");
+  if (h < 22) return L("Dobry wieczór", "Good evening");
+  return L("Dobranoc", "Good night");
 }

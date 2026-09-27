@@ -9,8 +9,14 @@ import { AVOID_COLOR } from "@/lib/habits/colors";
 import { avoidStatus, limitOf, limitLabel, slipsInPeriod, todayKey } from "@/lib/habits/utils";
 import { SZPILA_EMOJI, slipFor } from "@/lib/habits/szpila";
 import { DEFAULT_LATE_AFTER, DEFAULT_LATE_LIMIT } from "@/lib/sensors";
+import { L } from "@/lib/i18n";
 
-const PERIOD_LABEL = { day: "dziś", week: "w tym tygodniu", month: "w tym miesiącu" } as const;
+const periodLabel = (p: "day" | "week" | "month") =>
+  ({
+    day: L("dziś", "today"),
+    week: L("w tym tygodniu", "this week"),
+    month: L("w tym miesiącu", "this month"),
+  })[p];
 
 /** Red card for a forbidden habit: confirm a clean day, or own up to a slip. */
 export function AvoidCard({ habit }: { habit: Habit }) {
@@ -34,7 +40,7 @@ export function AvoidCard({ habit }: { habit: Habit }) {
     const { notifications, userName } = useHabits.getState();
     toast(`${SZPILA_EMOJI.angry} ${slipFor(habit, notifications.tauntLevel, userName)}`, {
       action: {
-        label: "Cofnij",
+        label: L("Cofnij", "Undo"),
         onClick: () => setAvoid(habit.id, key, prev === "clean" ? "clean" : null),
       },
     });
@@ -76,7 +82,7 @@ export function AvoidCard({ habit }: { habit: Habit }) {
                     fontWeight: over ? 600 : undefined,
                   }}
                 >
-                  wykorzystane {used}/{limit.times} {PERIOD_LABEL[limit.period]}
+                  {L("wykorzystane", "used")} {used}/{limit.times} {periodLabel(limit.period)}
                 </span>
               </>
             )}
@@ -95,7 +101,8 @@ export function AvoidCard({ habit }: { habit: Habit }) {
               : { backgroundColor: "var(--background)", color: "var(--foreground)" }
           }
         >
-          <Check size={16} strokeWidth={2.6} /> {status === "clean" ? "Czysto ✓" : "Dziś czysto"}
+          <Check size={16} strokeWidth={2.6} />{" "}
+          {status === "clean" ? L("Czysto ✓", "Clean ✓") : L("Dziś czysto", "Clean today")}
         </button>
         <button
           type="button"
@@ -107,17 +114,23 @@ export function AvoidCard({ habit }: { habit: Habit }) {
               : { backgroundColor: "var(--background)", color: "var(--muted-foreground)" }
           }
         >
-          <X size={16} strokeWidth={2.6} /> {status === "slip" ? "Wpadka" : "Była wpadka"}
+          <X size={16} strokeWidth={2.6} />{" "}
+          {status === "slip" ? L("Wpadka", "Slip") : L("Była wpadka", "I slipped")}
         </button>
       </div>
       {status === "pending" && habit.source === "screen" ? (
         <p className="mt-2 text-[11px] text-muted-foreground">
-          📱 Ocena automatyczna: po {habit.lateAfter ?? DEFAULT_LATE_AFTER} liczę czas ekranu
-          (tolerancja {habit.lateLimit ?? DEFAULT_LATE_LIMIT} min). Przyciski nadpisują ocenę.
+          {L(
+            `📱 Ocena automatyczna: po ${habit.lateAfter ?? DEFAULT_LATE_AFTER} liczę czas ekranu (tolerancja ${habit.lateLimit ?? DEFAULT_LATE_LIMIT} min). Przyciski nadpisują ocenę.`,
+            `📱 Auto-check: after ${habit.lateAfter ?? DEFAULT_LATE_AFTER} I count screen time (${habit.lateLimit ?? DEFAULT_LATE_LIMIT} min allowed). The buttons override it.`,
+          )}
         </p>
       ) : status === "pending" ? (
         <p className="mt-2 text-[11px]" style={{ color: AVOID_COLOR }}>
-          Bez potwierdzenia do północy dzień liczy się jako wpadka.
+          {L(
+            "Bez potwierdzenia do północy dzień liczy się jako wpadka.",
+            "Not confirmed by midnight? The day counts as a slip.",
+          )}
         </p>
       ) : null}
     </div>

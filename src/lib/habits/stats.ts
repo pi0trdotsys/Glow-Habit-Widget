@@ -21,6 +21,7 @@ import {
   todayKey,
   unitLabel,
 } from "./utils";
+import { pick } from "@/lib/i18n";
 
 export interface DayPoint {
   key: string;
@@ -79,8 +80,49 @@ export function trendSummary(series: DayPoint[]): TrendSummary {
   };
 }
 
-const MONTHS = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
-const MONTHS_LONG = [
+const MONTHS_PL = [
+  "sty",
+  "lut",
+  "mar",
+  "kwi",
+  "maj",
+  "cze",
+  "lip",
+  "sie",
+  "wrz",
+  "paź",
+  "lis",
+  "gru",
+];
+const MONTHS_EN = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+const MONTHS_LONG_EN = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+const MONTHS_LONG_PL = [
   "styczeń",
   "luty",
   "marzec",
@@ -94,6 +136,11 @@ const MONTHS_LONG = [
   "listopad",
   "grudzień",
 ];
+
+/** Short month name ("sty" / "Jan") for the current language. */
+const monthShort = (m: number) => pick(MONTHS_PL, MONTHS_EN)[m];
+/** Full month name ("styczeń" / "January") for the current language. */
+const monthLong = (m: number) => pick(MONTHS_LONG_PL, MONTHS_LONG_EN)[m];
 
 export interface MonthStat {
   key: string; // "2026-09"
@@ -144,8 +191,8 @@ export function monthStats(
     const a = monthAvg(habits, idx, m, getDaysInMonth(m), now);
     out.push({
       key: todayKey(m).slice(0, 7),
-      label: MONTHS[m.getMonth()],
-      long: MONTHS_LONG[m.getMonth()],
+      label: monthShort(m.getMonth()),
+      long: monthLong(m.getMonth()),
       ...a,
       current: i === 0,
     });
@@ -175,8 +222,8 @@ export function monthCompare(
   const a = monthAvg(habits, idx, thisStart, upTo, now);
   const b = monthAvg(habits, idx, lastStart, Math.min(upTo, getDaysInMonth(lastStart)), now);
   return {
-    thisMonth: { label: MONTHS_LONG[thisStart.getMonth()], pct: a.pct, days: a.days },
-    lastMonth: { label: MONTHS_LONG[lastStart.getMonth()], pct: b.pct, days: b.days },
+    thisMonth: { label: monthLong(thisStart.getMonth()), pct: a.pct, days: a.days },
+    lastMonth: { label: monthLong(lastStart.getMonth()), pct: b.pct, days: b.days },
     delta: a.pct != null && b.pct != null ? a.pct - b.pct : null,
     upTo,
   };
@@ -186,7 +233,7 @@ export function monthCompare(
 // CSV
 // ---------------------------------------------------------------------------
 
-const CSV_HEADER = [
+const CSV_HEADER_PL = [
   "data",
   "zadanie",
   "rodzaj",
@@ -197,6 +244,42 @@ const CSV_HEADER = [
   "procent",
   "social_w_nocy",
 ];
+
+const CSV_HEADER_EN = [
+  "date",
+  "habit",
+  "kind",
+  "target",
+  "unit",
+  "result",
+  "status",
+  "percent",
+  "social_at_night",
+];
+
+/** CSV words per language: Polish (the original) or English. */
+function csvWords() {
+  return pick(
+    {
+      header: CSV_HEADER_PL,
+      avoid: { clean: "czysto", slip: "wpadka", pending: "do potwierdzenia" },
+      done: "zrobione",
+      partly: "częściowo",
+      no: "nie",
+      kindAvoid: "zakazane",
+      kindBuild: "do zrobienia",
+    },
+    {
+      header: CSV_HEADER_EN,
+      avoid: { clean: "clean", slip: "slip", pending: "pending" },
+      done: "done",
+      partly: "partly",
+      no: "no",
+      kindAvoid: "forbidden",
+      kindBuild: "to do",
+    },
+  );
+}
 
 function cell(v: string | number): string {
   const s = String(v);
@@ -222,7 +305,8 @@ export function toCsv(
   const [y, m, d] = first.split("-").map(Number);
   const start = new Date(y, m - 1, d);
   const total = Math.min(3650, differenceInCalendarDays(now, start));
-  const rows = [CSV_HEADER.join(";")];
+  const w = csvWords();
+  const rows = [w.header.join(";")];
   for (let i = 0; i <= total; i++) {
     const date = addDays(start, i);
     const key = todayKey(date);
@@ -231,23 +315,16 @@ export function toCsv(
       const avoid = kindOf(h) === "avoid";
       const g = goalOf(h);
       const score = dayScore(h, idx, date, now);
-      const status = avoid
-        ? { clean: "czysto", slip: "wpadka", pending: "do potwierdzenia" }[
-            avoidStatus(h, idx, date, now)
-          ]
-        : score >= 1
-          ? "zrobione"
-          : score > 0
-            ? "częściowo"
-            : "nie";
+      const avoidSt = avoid ? avoidStatus(h, idx, date, now) : null;
+      const status = avoidSt ? w.avoid[avoidSt] : score >= 1 ? w.done : score > 0 ? w.partly : w.no;
       rows.push(
         [
           key,
           h.name,
-          avoid ? "zakazane" : "do zrobienia",
+          avoid ? w.kindAvoid : w.kindBuild,
           avoid ? 0 : g.target,
           avoid ? "" : g.type === "minutes" ? "min" : g.type === "check" ? "" : unitLabel(h, 5),
-          avoid ? (status === "wpadka" ? 1 : 0) : amountOn(h, idx, date),
+          avoid ? (avoidSt === "slip" ? 1 : 0) : amountOn(h, idx, date),
           status,
           String(Math.round(score * 100)),
           h.source === "screen" ? (nightHits[key] ?? 0) : "",
@@ -260,4 +337,5 @@ export function toCsv(
   return rows.join("\r\n") + "\r\n";
 }
 
-export const csvFileName = (now: Date = new Date()) => `szpila-historia-${todayKey(now)}.csv`;
+export const csvFileName = (now: Date = new Date()) =>
+  `${pick("szpila-historia", "szpila-history")}-${todayKey(now)}.csv`;

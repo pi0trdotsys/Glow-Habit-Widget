@@ -2,8 +2,8 @@
 <resources>
     <string name="app_name">Szpila</string>
     <string name="title_activity_main">Szpila</string>
-    <string name="package_name">app.lovable.glow_habit_widget</string>
-    <string name="custom_url_scheme">app.lovable.glow_habit_widget</string>
+    <string name="package_name" translatable="false">app.lovable.glow_habit_widget</string>
+    <string name="custom_url_scheme" translatable="false">app.lovable.glow_habit_widget</string>
     <string name="widget_list_label">Szpila - lista</string>
     <string name="widget_icons_label">Szpila - ikony</string>
     <string name="widget_next_label">Szpila - następne zadanie</string>
@@ -12,4 +12,14 @@
     <string name="widget_icons_desc">Dzisiejsze zadania z ikonami, pierścieniem postępu i czasem do końca dnia.</string>
     <string name="widget_next_desc">1×1: co zrobić teraz. Sam wybiera następne zadanie na podstawie pory dnia i postępu.</string>
     <string name="widget_szpila_desc">4×1: wredny kot Szpila wbija szpile o zadaniach do zrobienia. Bez zakazanych - bezpieczny na ekran główny.</string>
+    <!-- Layout defaults (the widgets overwrite them from code in the app language) -->
+    <string name="widget_today_habits">Dzisiejsze zadania</string>
+    <string name="widget_empty">Brak zadań na dziś</string>
+    <string name="widget_today">Dziś</string>
+    <string name="widget_progress_desc">Postęp</string>
+    <string name="widget_next_progress_desc">Postęp zadania</string>
+    <string name="widget_szpila_cat_desc">Szpila - dotknij po kolejną szpilę</string>
+    <string name="widget_szpila_placeholder">Mrrr. Otwórz Szpilę, a zacznę się czepiać.</string>
+    <string name="block_sleep">😴  Idę spać</string>
+    <string name="block_hold">Przytrzymaj 10 s, jeśli naprawdę musisz</string>
 </resources>

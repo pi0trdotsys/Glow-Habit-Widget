@@ -6,6 +6,7 @@ import { formatMinute, todayKey } from "@/lib/habits/utils";
 import { badNight, billComment } from "@/lib/night";
 import { SZPILA_EMOJI } from "@/lib/habits/szpila";
 import type { NightReport } from "@/lib/sensors";
+import { L, intlLocale } from "@/lib/i18n";
 
 const DISMISS_KEY = "szpila-bill-dismissed";
 
@@ -40,7 +41,7 @@ export function NightBillCard({ now = new Date() }: { now?: Date }) {
       }}
     >
       <button
-        aria-label="Zamknij rachunek za noc"
+        aria-label={L("Zamknij rachunek za noc", "Close the night bill")}
         className="absolute right-2 top-2 rounded-full p-1 text-muted-foreground"
         onClick={() => {
           try {
@@ -57,7 +58,7 @@ export function NightBillCard({ now = new Date() }: { now?: Date }) {
         className="text-xs font-semibold"
         style={{ color: bad ? "var(--avoid)" : "var(--primary)" }}
       >
-        🧾 Rachunek za noc
+        🧾 {L("Rachunek za noc", "Night bill")}
       </div>
       <NightFacts r={r} />
       <p className="mt-2 text-[13px] leading-snug">
@@ -85,12 +86,19 @@ export function NightFacts({ r }: { r: NightReport }) {
         </div>
       ) : (
         <div className="mt-1.5 text-[11px] text-muted-foreground">
-          Zero social mediów po północy.
+          {L("Zero social mediów po północy.", "Zero social media after midnight.")}
         </div>
       )}
       <div className="mt-2 flex gap-4 text-[11px] text-muted-foreground">
-        <span>📱 {r.screen ?? 0} min po północy</span>
-        {r.asleep != null && r.asleep >= 0 && <span>🌙 odłożony ok. {formatMinute(r.asleep)}</span>}
+        <span>
+          📱 {r.screen ?? 0} {L("min po północy", "min after midnight")}
+        </span>
+        {r.asleep != null && r.asleep >= 0 && (
+          <span>
+            🌙{" "}
+            {L(`odłożony ok. ${formatMinute(r.asleep)}`, `phone down ~${formatMinute(r.asleep)}`)}
+          </span>
+        )}
       </div>
     </>
   );
@@ -106,25 +114,25 @@ export function NightList({ max = 7 }: { max?: number }) {
   return (
     <section className="mx-5 mt-4 rounded-3xl bg-card p-5" data-night-list>
       <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-        Ostatnie noce
+        {L("Ostatnie noce", "Recent nights")}
       </h2>
       <ul className="divide-y divide-border">
         {nights.map((r) => (
           <li key={r.date} className="py-2.5">
             <div className="flex items-baseline justify-between">
               <span className="text-sm font-medium">
-                {new Date(`${r.date}T12:00:00`).toLocaleDateString("pl-PL", {
+                {new Date(`${r.date}T12:00:00`).toLocaleDateString(intlLocale(), {
                   weekday: "short",
                   day: "numeric",
                   month: "short",
                 })}{" "}
-                → noc
+                {L("→ noc", "→ night")}
               </span>
               <span
                 className="text-xs font-semibold"
                 style={{ color: badNight(r) ? "var(--avoid)" : "var(--primary)" }}
               >
-                {badNight(r) ? `${r.social} min social` : "czysto"}
+                {badNight(r) ? `${r.social} min social` : L("czysto", "clean")}
               </span>
             </div>
             <NightFacts r={r} />

@@ -3,11 +3,17 @@ import { Capacitor } from "@capacitor/core";
 import { Siren } from "lucide-react";
 import { Toggle } from "@/components/HabitForm";
 import { useHabits } from "@/lib/habits/store";
-import { liveStatus, openOverlaySettings, type LiveStatus } from "@/lib/live";
+import { liveStatus, minutesTo, openOverlaySettings, type LiveStatus } from "@/lib/live";
+
+const toMin = (t: string) => {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + (m || 0);
+};
 import { openUsageSettings } from "@/lib/sensors";
 import { refreshNative } from "@/lib/widget/bridge";
 import { todayKey } from "@/lib/habits/utils";
 import { addDays } from "date-fns";
+import { L } from "@/lib/i18n";
 
 /** Settings: "Szpila na żywo" - the night guard for social media (Android). */
 export function LiveGuardCard() {
@@ -31,6 +37,8 @@ export function LiveGuardCard() {
   const night = todayKey(now.getHours() < 12 ? addDays(now, -1) : now);
   const tonight = st?.hits[night] ?? 0;
 
+  const bedLead = minutesTo(toMin(notif.bedtimeAt), toMin(notif.liveFrom));
+
   const update = (patch: Partial<typeof notif>) => {
     setNotifications({ ...notif, ...patch });
     refreshNative();
@@ -41,37 +49,67 @@ export function LiveGuardCard() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Siren size={18} style={{ color: "var(--avoid)" }} />
-          <span className="font-medium">Szpila na żywo (noc)</span>
+          <span className="font-medium">{L("Szpila na żywo (noc)", "Night guard")}</span>
         </div>
         <Toggle checked={notif.live} onChange={(on) => update({ live: on })} />
       </div>
       <p className="mt-2 text-[11px] text-muted-foreground">
-        Gdy w nocy otworzysz social media, Szpila wyskakuje od razu, a nie dopiero rano w ocenie.
-        Siedzisz dalej - co 5 min dostajesz ostrzejszą szpilę.
-        {st?.running ? " Teraz czuwa." : ""}
-        {tonight > 0 ? ` Tej nocy: ${tonight}× social media.` : ""}
+        {L(
+          "Gdy w nocy otworzysz social media, Szpila wyskakuje od razu, a nie dopiero rano w ocenie. Siedzisz dalej - co 5 min dostajesz ostrzejszą szpilę.",
+          "Open social media at night and Szpila pops up right away, not in tomorrow's review. Keep scrolling and every 5 min you get a sharper jab.",
+        )}
+        {st?.running ? L(" Teraz czuwa.", " On watch now.") : ""}
+        {tonight > 0
+          ? L(` Tej nocy: ${tonight}× social media.`, ` Tonight: ${tonight}× social media.`)
+          : ""}
       </p>
       {!granted && (
         <div
           className="mt-3 flex items-center justify-between gap-3 rounded-xl p-3"
           style={{ backgroundColor: "color-mix(in oklab, var(--avoid) 14%, transparent)" }}
         >
-          <span className="text-[11px]">Wymaga „dostępu do danych o użyciu”.</span>
+          <span className="text-[11px]">
+            {L("Wymaga „dostępu do danych o użyciu”.", "Needs “usage access”.")}
+          </span>
           <button
             onClick={() => void openUsageSettings()}
             className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold"
             style={{ backgroundColor: "var(--avoid)", color: "var(--primary-foreground)" }}
           >
-            Otwórz
+            {L("Otwórz", "Open")}
           </button>
         </div>
       )}
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
         <div className="min-w-0">
-          <div className="text-sm font-medium">Blokada po 3. szpili</div>
+          <div className="text-sm font-medium">{L("Tryb przed snem", "Bedtime mode")}</div>
           <div className="text-[11px] text-muted-foreground">
-            Dalej siedzisz? Pełnoekranowy kot zasłania aplikację: „Idę spać” albo przytrzymaj 10 s,
-            jeśli naprawdę musisz.
+            {L(
+              `O tej porze Szpila przypomina „odłóż telefon za ${bedLead} min” i od razu zaczyna pilnować social mediów, odliczając do ${notif.liveFrom}.`,
+              `At this time Szpila says “put the phone down in ${bedLead} min” and starts watching social media right away, counting down to ${notif.liveFrom}.`,
+            )}
+          </div>
+        </div>
+        <Toggle checked={notif.bedtime} onChange={(on) => update({ bedtime: on })} />
+      </div>
+      {notif.bedtime && (
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">
+            {L("Przypomnienie o", "Reminder at")}
+          </span>
+          <TimeField value={notif.bedtimeAt} onChange={(v) => update({ bedtimeAt: v })} />
+        </div>
+      )}
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
+        <div className="min-w-0">
+          <div className="text-sm font-medium">
+            {L("Blokada po 3. szpili", "Lock after the 3rd jab")}
+          </div>
+          <div className="text-[11px] text-muted-foreground">
+            {L(
+              "Dalej siedzisz? Pełnoekranowy kot zasłania aplikację: „Idę spać” albo przytrzymaj 10 s, jeśli naprawdę musisz.",
+              "Still at it? A full-screen cat covers the app: tap “Going to bed” or hold for 10 s if you really must.",
+            )}
           </div>
         </div>
         <Toggle checked={notif.liveBlock} onChange={(on) => update({ liveBlock: on })} />
@@ -82,19 +120,24 @@ export function LiveGuardCard() {
           style={{ backgroundColor: "color-mix(in oklab, var(--avoid) 14%, transparent)" }}
         >
           <span className="text-[11px]">
-            Blokada wymaga zgody „Wyświetlanie nad innymi aplikacjami”.
+            {L(
+              "Blokada wymaga zgody „Wyświetlanie nad innymi aplikacjami”.",
+              "The lock needs the “Display over other apps” permission.",
+            )}
           </span>
           <button
             onClick={() => void openOverlaySettings()}
             className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold"
             style={{ backgroundColor: "var(--avoid)", color: "var(--primary-foreground)" }}
           >
-            Zezwól
+            {L("Zezwól", "Allow")}
           </button>
         </div>
       )}
       <div className="mt-3 flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">Czuwa od - do</span>
+        <span className="text-xs text-muted-foreground">
+          {L("Czuwa od - do", "On watch from - to")}
+        </span>
         <div className="flex items-center gap-2">
           <TimeField
             value={notif.liveFrom}
@@ -111,7 +154,9 @@ export function LiveGuardCard() {
       </div>
       {installed.length > 0 && (
         <>
-          <div className="mt-4 text-xs text-muted-foreground">Pilnowane aplikacje</div>
+          <div className="mt-4 text-xs text-muted-foreground">
+            {L("Pilnowane aplikacje", "Watched apps")}
+          </div>
           <div className="mt-2 flex flex-wrap gap-2">
             {installed.map((a) => {
               const on = !notif.liveOff.includes(a.pkg);

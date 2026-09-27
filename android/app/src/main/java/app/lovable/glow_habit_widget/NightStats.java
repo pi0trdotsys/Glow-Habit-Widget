@@ -250,6 +250,11 @@ final class NightStats {
 
     /** "3× Instagram (22 min) · 1× YouTube (25 min)". */
     static String appsLine(JSONArray apps) {
+        return appsLine(apps, false);
+    }
+
+    /** appsLine in the app language - "3× Instagram (22 min)" reads the same in English. */
+    static String appsLine(JSONArray apps, boolean en) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; apps != null && i < apps.length(); i++) {
             JSONObject a = apps.optJSONObject(i);

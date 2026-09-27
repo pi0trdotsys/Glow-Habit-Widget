@@ -10,6 +10,8 @@ import {
 import { Ban, Sparkles } from "lucide-react";
 import { HabitIcon } from "./HabitIcon";
 import { AVOID_COLOR, HABIT_COLOR_VAR, HABIT_COLORS, HABIT_ICONS } from "@/lib/habits/colors";
+import { translateName, translateUnit } from "@/lib/habits/seed-names";
+import { getLang, L, pick } from "@/lib/i18n";
 import type {
   GoalType,
   HabitSource,
@@ -23,29 +25,41 @@ import type {
 
 export type HabitDraft = Omit<Habit, "id" | "createdAt">;
 
-// Mon-first display; values are JS getDay() (0 = Sunday).
-const DAYS = [
-  { label: "Pn", v: 1 },
-  { label: "Wt", v: 2 },
-  { label: "Śr", v: 3 },
-  { label: "Cz", v: 4 },
-  { label: "Pt", v: 5 },
-  { label: "Sb", v: 6 },
-  { label: "Nd", v: 0 },
+// Mon-first display; values are JS getDay() (0 = Sunday). Functions, so the
+// labels follow the current language.
+const DAYS = () => [
+  { label: L("Pn", "Mo"), v: 1 },
+  { label: L("Wt", "Tu"), v: 2 },
+  { label: L("Śr", "We"), v: 3 },
+  { label: L("Cz", "Th"), v: 4 },
+  { label: L("Pt", "Fr"), v: 5 },
+  { label: L("Sb", "Sa"), v: 6 },
+  { label: L("Nd", "Su"), v: 0 },
 ];
 
-const COLOR_NAMES: Record<HabitColor, string> = {
-  mint: "miętowy",
-  coral: "koralowy",
-  amber: "bursztynowy",
-  violet: "fioletowy",
-  sky: "błękitny",
-  rose: "różowy",
-  lime: "limonkowy",
-  sand: "piaskowy",
-};
+const COLOR_NAMES = (): Record<HabitColor, string> => ({
+  mint: L("miętowy", "mint"),
+  coral: L("koralowy", "coral"),
+  amber: L("bursztynowy", "amber"),
+  violet: L("fioletowy", "violet"),
+  sky: L("błękitny", "sky blue"),
+  rose: L("różowy", "pink"),
+  lime: L("limonkowy", "lime"),
+  sand: L("piaskowy", "sand"),
+});
 
-/** One-tap starting points, tuned so the planner and Szpila recognise them. */
+const periodLabel = (p: LimitPeriod) =>
+  p === "day"
+    ? L("dziennie", "per day")
+    : p === "week"
+      ? L("w tygodniu", "per week")
+      : L("w miesiącu", "per month");
+
+/**
+ * One-tap starting points, tuned so the planner and Szpila recognise them.
+ * Names/units are kept in Polish here; every one has an English pair in
+ * seed-names.ts (NAME_PAIRS / UNIT_PAIRS), picked at render/apply time.
+ */
 const A = (
   name: string,
   icon: string,
@@ -155,7 +169,7 @@ export function HabitForm({
   initial,
   onSave,
   onCancel,
-  saveLabel = "Zapisz",
+  saveLabel = L("Zapisz", "Save"),
   disabledReason,
 }: Props) {
   const [kind, setKind] = useState<HabitKind>(initial?.kind ?? "build");
@@ -184,9 +198,11 @@ export function HabitForm({
   const accent = avoid ? AVOID_COLOR : HABIT_COLOR_VAR[color];
   const canSave = name.trim().length > 0 && !disabledReason;
 
+  const lang = getLang();
+  const colorNames = COLOR_NAMES();
   const applyTemplate = (t: HabitDraft) => {
     setKind(t.kind ?? "build");
-    setName(t.name);
+    setName(translateName(t.name, lang));
     setIcon(t.icon);
     setColor(t.color);
     setType(t.schedule.type);
@@ -195,7 +211,7 @@ export function HabitForm({
     if (t.goal) {
       setGoalTarget(t.goal.target);
       setGoalStep(t.goal.step ?? 1);
-      setGoalUnit(t.goal.unit ?? "");
+      setGoalUnit(t.goal.unit ? translateUnit(t.goal.unit, lang) : "");
     }
     setLimitTimes(t.limit?.times ?? 0);
     setLimitPeriod(t.limit?.period ?? "week");
@@ -242,7 +258,7 @@ export function HabitForm({
     <>
       <header className="flex items-center justify-between px-5 pt-8 pb-4">
         <button onClick={onCancel} className="rounded-full bg-card px-4 py-2 text-sm font-medium">
-          Anuluj
+          {L("Anuluj", "Cancel")}
         </button>
         <button
           onClick={save}
@@ -271,18 +287,23 @@ export function HabitForm({
               }}
             >
               {k === "avoid" ? <Ban size={15} /> : <Sparkles size={15} />}
-              {k === "avoid" ? "Nie chcę robić" : "Chcę robić"}
+              {k === "avoid"
+                ? L("Nie chcę robić", "I don't want to do")
+                : L("Chcę robić", "I want to do")}
             </button>
           ))}
         </div>
         {avoid && (
           <p className="mt-2 text-center text-[11px]" style={{ color: AVOID_COLOR }}>
-            Każdego dnia potwierdzasz „dziś czysto”. Brak potwierdzenia = wpadka.
+            {L(
+              "Każdego dnia potwierdzasz „dziś czysto”. Brak potwierdzenia = wpadka.",
+              "Every day you confirm “clean today”. No confirmation = slip.",
+            )}
           </p>
         )}
 
         {!initial && (
-          <Section title="Szablony">
+          <Section title={L("Szablony", "Templates")}>
             <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
               {TEMPLATES.filter((t) => (t.kind ?? "build") === kind).map((t) => (
                 <button
@@ -295,7 +316,7 @@ export function HabitForm({
                     size={14}
                     style={{ color: t.kind === "avoid" ? AVOID_COLOR : HABIT_COLOR_VAR[t.color] }}
                   />
-                  {t.name}
+                  {translateName(t.name, lang)}
                 </button>
               ))}
             </div>
@@ -320,7 +341,11 @@ export function HabitForm({
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder={avoid ? "Czego nie chcesz robić?" : "Nazwa zadania"}
+            placeholder={
+              avoid
+                ? L("Czego nie chcesz robić?", "What don't you want to do?")
+                : L("Nazwa zadania", "Habit name")
+            }
             className="w-full rounded-2xl bg-card px-4 py-3 text-center text-lg font-medium outline-none placeholder:text-muted-foreground/60 focus:ring-2 focus:ring-ring"
             maxLength={40}
           />
@@ -346,20 +371,21 @@ export function HabitForm({
                     onClick={() => setLimitPeriod(p)}
                     accent={AVOID_COLOR}
                   >
-                    {p === "day" ? "dziennie" : p === "week" ? "w tygodniu" : "w miesiącu"}
+                    {periodLabel(p)}
                   </Chip>
                 ))}
               </div>
               <p className="mt-3 text-center text-[11px] text-muted-foreground">
                 {limitTimes === 0
-                  ? "Całkowity zakaz - każda wpadka się liczy."
-                  : `Dozwolone ${limitTimes} ${limitTimes === 1 ? "raz" : "razy"} ${
-                      limitPeriod === "day"
-                        ? "dziennie"
-                        : limitPeriod === "week"
-                          ? "w tygodniu"
-                          : "w miesiącu"
-                    }. Powyżej - Szpila się nie hamuje.`}
+                  ? L("Całkowity zakaz - każda wpadka się liczy.", "Total ban - every slip counts.")
+                  : pick(
+                      `Dozwolone ${limitTimes} ${limitTimes === 1 ? "raz" : "razy"} ${periodLabel(
+                        limitPeriod,
+                      )}. Powyżej - Szpila się nie hamuje.`,
+                      `Allowed ${limitTimes} ${limitTimes === 1 ? "time" : "times"} ${periodLabel(
+                        limitPeriod,
+                      )}. Go over and Szpila won't hold back.`,
+                    )}
               </p>
             </div>
             {isNative && (
@@ -376,31 +402,41 @@ export function HabitForm({
             )}
           </Section>
         ) : (
-          <Section title="Cel dzienny">
+          <Section title={L("Cel dzienny", "Daily goal")}>
             <div className="grid grid-cols-3 gap-2">
               {(["check", "count", "minutes"] as const).map((g) => (
                 <Chip key={g} on={goalType === g} onClick={() => setGoalType(g)}>
-                  {g === "check" ? "Raz" : g === "count" ? "Ile razy" : "Ile minut"}
+                  {g === "check"
+                    ? L("Raz", "Once")
+                    : g === "count"
+                      ? L("Ile razy", "How many")
+                      : L("Ile minut", "Minutes")}
                 </Chip>
               ))}
             </div>
             {goalType !== "check" && (
               <div className="mt-3 space-y-3 rounded-2xl bg-card p-4">
-                <Row label={goalType === "minutes" ? "Minut dziennie" : "Ile dziennie"}>
+                <Row
+                  label={
+                    goalType === "minutes"
+                      ? L("Minut dziennie", "Minutes a day")
+                      : L("Ile dziennie", "How many a day")
+                  }
+                >
                   <NumberInput value={goalTarget} onChange={setGoalTarget} max={100000} />
                 </Row>
                 {goalType === "count" && (
-                  <Row label="Jednostka">
+                  <Row label={L("Jednostka", "Unit")}>
                     <input
                       value={goalUnit}
                       onChange={(e) => setGoalUnit(e.target.value)}
-                      placeholder="np. szklanek, kroków"
+                      placeholder={L("np. szklanek, kroków", "e.g. glasses, steps")}
                       maxLength={16}
                       className="w-40 rounded-xl border border-border bg-background px-3 py-1.5 text-right text-sm outline-none"
                     />
                   </Row>
                 )}
-                <Row label="Jedno przytrzymanie dodaje">
+                <Row label={L("Jedno przytrzymanie dodaje", "One long-press adds")}>
                   <NumberInput
                     value={goalStep}
                     onChange={setGoalStep}
@@ -408,16 +444,30 @@ export function HabitForm({
                   />
                 </Row>
                 <p className="text-[11px] text-muted-foreground">
-                  Przytrzymaj kafelek, by dodać {goalStep}{" "}
-                  {goalType === "minutes" ? "min" : goalUnit || "raz(y)"}. Dokładną ilość wpiszesz
-                  na stronie zadania.
+                  {pick(
+                    <>
+                      Przytrzymaj kafelek, by dodać {goalStep}{" "}
+                      {goalType === "minutes" ? "min" : goalUnit || "raz(y)"}. Dokładną ilość
+                      wpiszesz na stronie zadania.
+                    </>,
+                    <>
+                      Long-press the tile to add {goalStep}{" "}
+                      {goalType === "minutes" ? "min" : goalUnit || "time(s)"}. Enter the exact
+                      amount on the habit&apos;s page.
+                    </>,
+                  )}
                 </p>
                 {isNative && goalType === "count" && (
                   <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
                     <div>
-                      <div className="text-sm font-medium">Kroki z Health Connect</div>
+                      <div className="text-sm font-medium">
+                        {L("Kroki z Health Connect", "Steps from Health Connect")}
+                      </div>
                       <div className="text-[11px] text-muted-foreground">
-                        Ilość uzupełnia się sama z Google Fit / Samsung Health / Mi Fitness.
+                        {L(
+                          "Ilość uzupełnia się sama z Google Fit / Samsung Health / Mi Fitness.",
+                          "Fills in by itself from Google Fit / Samsung Health / Mi Fitness.",
+                        )}
                       </div>
                     </div>
                     <Toggle
@@ -426,11 +476,21 @@ export function HabitForm({
                         if (!on) return setSource(undefined);
                         const s = await requestSteps();
                         if (!s.available)
-                          return alert("Health Connect jest niedostępny na tym telefonie.");
+                          return alert(
+                            L(
+                              "Health Connect jest niedostępny na tym telefonie.",
+                              "Health Connect isn't available on this phone.",
+                            ),
+                          );
                         if (!s.granted)
-                          return alert("Bez zgody na odczyt kroków nie da się ich pobierać.");
+                          return alert(
+                            L(
+                              "Bez zgody na odczyt kroków nie da się ich pobierać.",
+                              "No permission to read steps, no steps. Simple as that.",
+                            ),
+                          );
                         setSource("steps");
-                        if (!goalUnit) setGoalUnit("kroków");
+                        if (!goalUnit) setGoalUnit(L("kroków", "steps"));
                         if (goalStep === 1 && goalTarget >= 1000) setGoalStep(1000);
                       }}
                     />
@@ -442,7 +502,7 @@ export function HabitForm({
         )}
 
         {!avoid && (
-          <Section title="Kolor">
+          <Section title={L("Kolor", "Color")}>
             <div className="flex flex-wrap gap-3">
               {HABIT_COLORS.map((c) => (
                 <button
@@ -454,14 +514,14 @@ export function HabitForm({
                     outline: color === c ? "3px solid var(--foreground)" : "none",
                     outlineOffset: 2,
                   }}
-                  aria-label={COLOR_NAMES[c]}
+                  aria-label={colorNames[c]}
                 />
               ))}
             </div>
           </Section>
         )}
 
-        <Section title="Ikona">
+        <Section title={L("Ikona", "Icon")}>
           <div className="grid grid-cols-6 gap-2">
             {HABIT_ICONS.map((i) => (
               <button
@@ -479,7 +539,7 @@ export function HabitForm({
           </div>
         </Section>
 
-        <Section title="Harmonogram">
+        <Section title={L("Harmonogram", "Schedule")}>
           <div className="grid grid-cols-3 gap-2">
             {(["daily", "weekdays", "timesPerWeek"] as const).map((t) => (
               <Chip
@@ -488,14 +548,18 @@ export function HabitForm({
                 onClick={() => setType(t)}
                 accent={avoid ? AVOID_COLOR : undefined}
               >
-                {t === "daily" ? "Codziennie" : t === "weekdays" ? "Wybrane dni" : "X / tydzień"}
+                {t === "daily"
+                  ? L("Codziennie", "Daily")
+                  : t === "weekdays"
+                    ? L("Wybrane dni", "Pick days")
+                    : L("X / tydzień", "X / week")}
               </Chip>
             ))}
           </div>
 
           {type === "weekdays" && (
             <div className="mt-3 flex justify-between">
-              {DAYS.map(({ label, v }) => {
+              {DAYS().map(({ label, v }) => {
                 const on = days.includes(v);
                 return (
                   <button
@@ -529,7 +593,7 @@ export function HabitForm({
           )}
         </Section>
 
-        <Section title="Pora dnia">
+        <Section title={L("Pora dnia", "Time of day")}>
           <div className="grid grid-cols-4 gap-2">
             {(["morning", "midday", "evening", "anytime"] as const).map((t) => (
               <Chip
@@ -539,30 +603,34 @@ export function HabitForm({
                 accent={avoid ? AVOID_COLOR : undefined}
               >
                 {t === "morning"
-                  ? "Rano"
+                  ? L("Rano", "Morning")
                   : t === "midday"
-                    ? "W dzień"
+                    ? L("W dzień", "Daytime")
                     : t === "evening"
-                      ? "Wieczór"
-                      : "Obojętnie"}
+                      ? L("Wieczór", "Evening")
+                      : L("Obojętnie", "Anytime")}
               </Chip>
             ))}
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Na tej podstawie widżet „Następne zadanie” i plan dnia podpowiadają, co robić teraz.
-            „Obojętnie” = aplikacja uczy się, kiedy zwykle to robisz.
+            {L(
+              "Na tej podstawie widżet „Następne zadanie” i plan dnia podpowiadają, co robić teraz. „Obojętnie” = aplikacja uczy się, kiedy zwykle to robisz.",
+              "The “Next habit” widget and the day plan use this to suggest what to do now. “Anytime” = the app learns when you usually do it.",
+            )}
           </p>
         </Section>
 
-        <Section title="Przypomnienie">
+        <Section title={L("Przypomnienie", "Reminder")}>
           <div className="rounded-2xl bg-card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Przypominaj codziennie</span>
+              <span className="text-sm font-medium">
+                {L("Przypominaj codziennie", "Remind me daily")}
+              </span>
               <Toggle checked={reminderOn} onChange={setReminderOn} />
             </div>
             {reminderOn && (
               <div className="mt-3 flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Godzina</span>
+                <span className="text-xs text-muted-foreground">{L("Godzina", "Time")}</span>
                 <input
                   type="time"
                   value={reminderTime}
@@ -572,7 +640,10 @@ export function HabitForm({
               </div>
             )}
             <p className="mt-2 text-[11px] text-muted-foreground">
-              Powiadomienie o tej godzinie każdego dnia. Włącz powiadomienia w Ustawieniach.
+              {L(
+                "Powiadomienie o tej godzinie każdego dnia. Włącz powiadomienia w Ustawieniach.",
+                "A notification at this time every day. Turn on notifications in Settings.",
+              )}
             </p>
           </div>
         </Section>
@@ -745,17 +816,21 @@ function ScreenSourceBox({
     <div className="mt-3 rounded-2xl bg-card p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="text-sm font-medium">Oceniaj z czasu ekranu</div>
+          <div className="text-sm font-medium">
+            {L("Oceniaj z czasu ekranu", "Judge by screen time")}
+          </div>
           <div className="text-[11px] text-muted-foreground">
-            Bez klikania i bez domyślnego zaznaczenia: nocne scrollowanie dłuższe niż tolerancja =
-            wpadka, spokojna noc = czysto (o 5:00). Do tego czasu dzień jest nierozstrzygnięty.
+            {L(
+              "Bez klikania i bez domyślnego zaznaczenia: nocne scrollowanie dłuższe niż tolerancja = wpadka, spokojna noc = czysto (o 5:00). Do tego czasu dzień jest nierozstrzygnięty.",
+              "No tapping, no default tick: late-night scrolling longer than the tolerance = slip, a quiet night = clean (at 5:00). Until then the day is undecided.",
+            )}
           </div>
         </div>
         <Toggle checked={on} onChange={onToggle} />
       </div>
       {on && (
         <div className="mt-3 space-y-3 border-t border-border pt-3">
-          <Row label="Późno, czyli po">
+          <Row label={L("Późno, czyli po", "Late means after")}>
             <input
               type="time"
               value={lateAfter}
@@ -764,19 +839,34 @@ function ScreenSourceBox({
             />
           </Row>
           <p className="text-[11px] text-muted-foreground">
-            Godzina przed 5:00 (np. 00:00) oznacza tę noc po północy - liczy się noc z dnia na
-            dzień.
+            {L(
+              "Godzina przed 5:00 (np. 00:00) oznacza tę noc po północy - liczy się noc z dnia na dzień.",
+              "A time before 5:00 (e.g. 00:00) means that night after midnight - it's the night from one day into the next that counts.",
+            )}
           </p>
-          <Row label="Tolerancja (minut)">
+          <Row label={L("Tolerancja (minut)", "Tolerance (minutes)")}>
             <NumberInput value={lateLimit} onChange={setLateLimit} max={240} />
           </Row>
           <div>
-            <div className="mb-2 text-xs text-muted-foreground">Co się liczy</div>
+            <div className="mb-2 text-xs text-muted-foreground">
+              {L("Co się liczy", "What counts")}
+            </div>
             <div className="grid grid-cols-2 gap-2">
               {(
                 [
-                  ["social", "Tylko social media", "Budzik, muzyka czy podcast nie są wpadką"],
-                  ["screen", "Cały czas ekranu", "Każda minuta z włączonym ekranem"],
+                  [
+                    "social",
+                    L("Tylko social media", "Social media only"),
+                    L(
+                      "Budzik, muzyka czy podcast nie są wpadką",
+                      "Alarms, music or podcasts aren't a slip",
+                    ),
+                  ],
+                  [
+                    "screen",
+                    L("Cały czas ekranu", "All screen time"),
+                    L("Każda minuta z włączonym ekranem", "Every minute with the screen on"),
+                  ],
                 ] as const
               ).map(([id, label, hint]) => (
                 <button
@@ -802,8 +892,10 @@ function ScreenSourceBox({
             </div>
             {lateBasis === "social" && (
               <p className="mt-2 text-[11px] text-muted-foreground">
-                Social media = TikTok, Instagram, Facebook, YouTube, X, Reddit, Snapchat, Pinterest,
-                Twitch, LinkedIn, Threads (oprócz wyłączonych w „Szpila na żywo”).
+                {L(
+                  "Social media = TikTok, Instagram, Facebook, YouTube, X, Reddit, Snapchat, Pinterest, Twitch, LinkedIn, Threads (oprócz wyłączonych w „Szpila na żywo”).",
+                  "Social media = TikTok, Instagram, Facebook, YouTube, X, Reddit, Snapchat, Pinterest, Twitch, LinkedIn, Threads (except the ones turned off in “Night guard”).",
+                )}
               </p>
             )}
           </div>
@@ -813,10 +905,14 @@ function ScreenSourceBox({
               className="w-full rounded-xl py-2 text-sm font-semibold"
               style={{ backgroundColor: AVOID_COLOR, color: "var(--primary-foreground)" }}
             >
-              Przyznaj „dostęp do danych o użyciu”
+              {L("Przyznaj „dostęp do danych o użyciu”", "Grant “usage access”")}
             </button>
           )}
-          {granted && <p className="text-[11px] text-muted-foreground">Dostęp przyznany ✓</p>}
+          {granted && (
+            <p className="text-[11px] text-muted-foreground">
+              {L("Dostęp przyznany ✓", "Access granted ✓")}
+            </p>
+          )}
         </div>
       )}
     </div>

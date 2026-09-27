@@ -40,6 +40,8 @@ import { liveState, liveStatus } from "@/lib/live";
 import { billLines } from "@/lib/night";
 import { catCondition } from "@/lib/habits/gamification";
 import { lateBasisOf } from "@/lib/sensors";
+import { getLang } from "@/lib/i18n";
+import { useLinesReady } from "@/lib/habits/szpila";
 
 const STATE_KEY = "widget_state";
 const PENDING_KEY = "widget_pending";
@@ -185,6 +187,8 @@ export function buildState() {
     live: liveState(notifications, level, userName, szpila.humor),
     // Unlocked look of the cat (widget drawables ic_szpila_<face>_<mood>).
     face: szpila.face,
+    // App language for native texts (WidgetShared.tr).
+    lang: getLang(),
     // "Kot w domu": groomed / normal / neglected (widget overlay + mood).
     cat: catCondition(habits, completions, today),
     // Morning "rachunek za noc" comments (HabitNotifier.billText).
@@ -263,6 +267,9 @@ export function startWidgetBridge(): void {
   setInterval(() => {
     if (document.visibilityState === "visible") void syncSensors();
   }, 5 * 60_000);
+
+  // Native texts need the English lines too once they've loaded.
+  useLinesReady.subscribe(() => void mirror());
 
   // Keep the widget in sync with every store change (debounced).
   let t: ReturnType<typeof setTimeout> | undefined;

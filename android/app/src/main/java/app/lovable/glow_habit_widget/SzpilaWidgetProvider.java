@@ -51,8 +51,13 @@ public class SzpilaWidgetProvider extends AppWidgetProvider {
     }
 
     static String title(String cond, int mood) {
+        return title(cond, mood, false);
+    }
+
+    static String title(String cond, int mood, boolean en) {
         String emoji = mood == 1 ? HabitNotifier.EMOJI_ANGRY : mood == 2 ? HabitNotifier.EMOJI_IMPRESSED : HabitNotifier.EMOJI_NORMAL;
-        String state = "neglected".equals(cond) ? "  ·  zaniedbany i obrażony" : "groomed".equals(cond) ? "  ·  zadbany ✨" : "";
+        String state = "neglected".equals(cond) ? (en ? "  ·  neglected and offended" : "  ·  zaniedbany i obrażony")
+            : "groomed".equals(cond) ? (en ? "  ·  well-groomed ✨" : "  ·  zadbany ✨") : "";
         return "SZPILA  " + emoji + state;
     }
 
@@ -85,7 +90,7 @@ public class SzpilaWidgetProvider extends AppWidgetProvider {
         } else {
             rv.setViewVisibility(R.id.szpila_cond, View.GONE);
         }
-        rv.setTextViewText(R.id.szpila_title, title(cond, mood));
+        rv.setTextViewText(R.id.szpila_title, title(cond, mood, WidgetShared.en(context)));
 
         Intent reroll = new Intent(context, SzpilaWidgetProvider.class);
         reroll.setAction(ACTION_REROLL);
@@ -127,7 +132,8 @@ public class SzpilaWidgetProvider extends AppWidgetProvider {
         String habitId = p.getString("habit", null);
         long at = p.getLong("at", 0);
         boolean fresh = System.currentTimeMillis() - at < STICK_MS
-            && WidgetShared.today().equals(p.getString("date", ""));
+            && WidgetShared.today().equals(p.getString("date", ""))
+            && p.getBoolean("en", false) == WidgetShared.en(c); // language switch = new jab
         boolean stillPending = habitId == null ? plan.isEmpty() : containsId(plan, habitId);
         if (fresh && stillPending && p.contains("text")) {
             JSONObject h = habitId == null ? null : WidgetShared.row(c, habitId);
@@ -149,12 +155,14 @@ public class SzpilaWidgetProvider extends AppWidgetProvider {
         String habitId = null;
         int mood;
         JSONObject target = null;
+        boolean en = WidgetShared.en(c);
         if (WidgetShared.habits(c).length() == 0) {
-            raw = "Mrrr. Dodaj zadania w Loop, a zacznę się czepiać.";
+            raw = en ? "Mrrr. Add some habits in the app and I'll start picking on you."
+                : "Mrrr. Dodaj zadania w Loop, a zacznę się czepiać.";
             mood = 0;
         } else if (plan.isEmpty()) {
             raw = WidgetShared.pick(WidgetShared.state(c).optJSONArray("allDone"));
-            if (raw.isEmpty()) raw = "Wszystko zrobione. Nie mam się do czego przyczepić.";
+            if (raw.isEmpty()) raw = en ? "All done. Nothing left to pick on." : "Wszystko zrobione. Nie mam się do czego przyczepić.";
             mood = 2;
         } else {
             // Mostly the most urgent task, sometimes one of the next two for variety.
@@ -165,10 +173,11 @@ public class SzpilaWidgetProvider extends AppWidgetProvider {
             JSONArray pool = mood == 1 ? target.optJSONArray("rage") : target.optJSONArray("nag");
             if (pool == null || pool.length() == 0) pool = target.optJSONArray("nag");
             raw = WidgetShared.pick(pool);
-            if (raw.isEmpty()) raw = "„" + target.optString("name") + "” czeka.";
+            if (raw.isEmpty()) raw = en ? "“" + target.optString("name") + "” is waiting." : "„" + target.optString("name") + "” czeka.";
         }
         c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putString("text", raw)
+            .putBoolean("en", en)
             .putString("habit", habitId)
             .putInt("mood", mood)
             .putLong("at", System.currentTimeMillis())

@@ -93,7 +93,7 @@ public class LiveGuardService extends Service {
         public void run() {
             Context c = LiveGuardService.this;
             int now = WidgetShared.nowMinute();
-            if (!LiveGuard.enabled(c) || !LiveGuard.inWindow(now, LiveGuard.from(c), LiveGuard.until(c))) {
+            if (!LiveGuard.enabled(c) || !LiveGuard.inWindow(now, LiveGuard.start(c), LiveGuard.until(c))) {
                 stopForeground(true);
                 stopSelf();
                 return;
@@ -143,11 +143,17 @@ public class LiveGuardService extends Service {
         String label = app != null ? app[1] : "social media";
         JSONObject lines = LiveGuard.settings(c).optJSONObject("lines");
         String text = lines != null ? WidgetShared.pick(lines.optJSONArray("block")) : "";
-        if (text.isEmpty()) text = "Dość. {m} minut na {app} o {time}. Odkładasz telefon.";
+        boolean en = WidgetShared.en(c);
+        if (text.isEmpty()) {
+            text = en ? "Enough. {m} minutes on {app} at {time}. Phone down."
+                : "Dość. {m} minut na {app} o {time}. Odkładasz telefon.";
+        }
         int m = tracker.minutesIn(nowMs);
         String time = WidgetShared.fmtMinute(WidgetShared.nowMinute());
         text = LiveGuard.fill(text, label, m, time, 0);
-        String sub = m + " min na " + label + " · " + time + " · po " + LiveGuard.BLOCK_AFTER + " szpilach czas na blokadę";
+        String sub = en
+            ? m + " min on " + label + " · " + time + " · after " + LiveGuard.BLOCK_AFTER + " jabs it's block time"
+            : m + " min na " + label + " · " + time + " · po " + LiveGuard.BLOCK_AFTER + " szpilach czas na blokadę";
         int cat = SzpilaWidgetProvider.catDrawable(WidgetShared.state(c).optString("face"), 1);
         boolean ok = LiveBlock.show(c, "SZPILA  " + HabitNotifier.EMOJI_ANGRY, text, sub, cat, new LiveBlock.Listener() {
             @Override
@@ -179,14 +185,22 @@ public class LiveGuardService extends Service {
         int count = action == LiveGuard.FIRST ? LiveGuard.countHit(c) : LiveGuard.hits(c).optInt(
             LiveGuard.habitDay(WidgetShared.nowMinute(), WidgetShared.today(), WidgetShared.dateKey(1)), 1);
         JSONObject lines = LiveGuard.settings(c).optJSONObject("lines");
+        // Before the deadline (bedtime mode): countdown lines instead of the after-midnight ones.
+        boolean pre = LiveGuard.prePhase(WidgetShared.nowMinute(), LiveGuard.start(c), LiveGuard.from(c));
         String text = "";
         if (lines != null) {
-            JSONArray pool = action == LiveGuard.FIRST ? lines.optJSONArray(key) : lines.optJSONArray("escalate");
+            JSONArray pool = pre ? lines.optJSONArray("pre")
+                : action == LiveGuard.FIRST ? lines.optJSONArray(key) : lines.optJSONArray("escalate");
             if (pool == null || pool.length() == 0) pool = lines.optJSONArray("generic");
             text = WidgetShared.pick(pool);
         }
-        if (text.isEmpty()) text = "Jest {time}, a ty na {app}? Odłóż telefon i idź spać.";
+        boolean en = WidgetShared.en(c);
+        if (text.isEmpty()) {
+            text = en ? "It's {time} and you're on {app}? Put the phone down and go to sleep."
+                : "Jest {time}, a ty na {app}? Odłóż telefon i idź spać.";
+        }
         text = LiveGuard.fill(text, label, tracker.minutesIn(nowMs), WidgetShared.fmtMinute(WidgetShared.nowMinute()), count);
+        text = LiveGuard.fillLeft(text, LiveGuard.minutesTo(WidgetShared.nowMinute(), LiveGuard.from(c)), WidgetShared.fmtMinute(LiveGuard.from(c)));
 
         Intent home = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent sleep = PendingIntent.getActivity(c, 7510, home, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -206,8 +220,8 @@ public class LiveGuardService extends Service {
             .setAutoCancel(true)
             .setTimeoutAfter(90_000)
             .setContentIntent(sleep)
-            .addAction(0, "😴 Idę spać", sleep)
-            .addAction(0, "⏱ Jeszcze " + LiveGuard.ESCALATE_MIN + " min", snoozePi);
+            .addAction(0, en ? "😴 Going to bed" : "😴 Idę spać", sleep)
+            .addAction(0, en ? "⏱ " + LiveGuard.ESCALATE_MIN + " more min" : "⏱ Jeszcze " + LiveGuard.ESCALATE_MIN + " min", snoozePi);
         try {
             NotificationManagerCompat.from(c).notify(ID_LIVE, b.build());
         } catch (SecurityException ignored) {
@@ -220,14 +234,16 @@ public class LiveGuardService extends Service {
             if (LiveGuard.watched(this, pkg) && LiveGuard.installed(this, pkg)) labels.add(LiveGuard.SOCIAL.get(pkg)[1]);
         }
         List<String> list = new ArrayList<>(labels);
+        boolean en = WidgetShared.en(this);
         String watching = list.isEmpty() ? "social media" : String.join(", ", list.subList(0, Math.min(4, list.size())))
-            + (list.size() > 4 ? " i inne" : "");
+            + (list.size() > 4 ? (en ? " and more" : " i inne") : "");
         PendingIntent open = WidgetShared.openAppIntent(this, 7502);
         NotificationCompat.Builder b = new NotificationCompat.Builder(this, CH_GUARD)
             .setSmallIcon(R.drawable.ic_stat_szpila)
             .setColor(WidgetShared.AVOID)
-            .setContentTitle(HabitNotifier.EMOJI_NORMAL + " Szpila czuwa do " + WidgetShared.fmtMinute(LiveGuard.until(this)))
-            .setContentText("Pilnuję: " + watching)
+            .setContentTitle(HabitNotifier.EMOJI_NORMAL + (en ? " Szpila is on guard until " : " Szpila czuwa do ")
+                + WidgetShared.fmtMinute(LiveGuard.until(this)))
+            .setContentText((en ? "Watching: " : "Pilnuję: ") + watching)
             .setOngoing(true)
             .setSilent(true)
             .setShowWhen(false)
@@ -240,19 +256,20 @@ public class LiveGuardService extends Service {
         if (Build.VERSION.SDK_INT < 26) return;
         NotificationManager nm = c.getSystemService(NotificationManager.class);
         if (nm == null) return;
-        if (nm.getNotificationChannel(CH_GUARD) == null) {
-            NotificationChannel ch = new NotificationChannel(CH_GUARD, "Szpila czuwa (noc)", NotificationManager.IMPORTANCE_MIN);
-            ch.setDescription("Ciche powiadomienie, gdy nocny strażnik social mediów jest aktywny");
-            ch.setShowBadge(false);
-            nm.createNotificationChannel(ch);
-        }
-        if (nm.getNotificationChannel(CH_LIVE) == null) {
-            NotificationChannel ch = new NotificationChannel(CH_LIVE, "Szpila na żywo", NotificationManager.IMPORTANCE_HIGH);
-            ch.setDescription("Wyskakuje, gdy po północy otwierasz social media");
-            ch.enableVibration(true);
-            ch.setVibrationPattern(new long[]{0, 180, 90, 180});
-            nm.createNotificationChannel(ch);
-        }
+        // Names follow the app language: upsertChannel re-creates a channel whose name changed.
+        NotificationChannel guard = new NotificationChannel(CH_GUARD,
+            WidgetShared.tr(c, "Szpila czuwa (noc)", "Szpila on guard (night)"), NotificationManager.IMPORTANCE_MIN);
+        guard.setDescription(WidgetShared.tr(c, "Ciche powiadomienie, gdy nocny strażnik social mediów jest aktywny",
+            "Silent notification while the night social media guard is active"));
+        guard.setShowBadge(false);
+        WidgetShared.upsertChannel(nm, guard);
+        NotificationChannel live = new NotificationChannel(CH_LIVE,
+            WidgetShared.tr(c, "Szpila na żywo", "Szpila live"), NotificationManager.IMPORTANCE_HIGH);
+        live.setDescription(WidgetShared.tr(c, "Wyskakuje, gdy po północy otwierasz social media",
+            "Pops up when you open social media after midnight"));
+        live.enableVibration(true);
+        live.setVibrationPattern(new long[]{0, 180, 90, 180});
+        WidgetShared.upsertChannel(nm, live);
     }
 
     private static boolean canNotify(Context c) {

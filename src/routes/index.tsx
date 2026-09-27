@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { addDays, format } from "date-fns";
-import { pl } from "date-fns/locale";
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { L, dateLocale, pick } from "@/lib/i18n";
+import { AnimatePresence, m } from "framer-motion";
 import { Plus, ChevronDown, ChevronRight, Sunrise } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { HabitTile, praiseToast } from "@/components/HabitTile";
@@ -37,8 +37,14 @@ import { useBackHandler } from "@/lib/back";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dziś - Szpila" },
-      { name: "description", content: "Dzisiejsze zadania. Przytrzymaj kafelek, by zaliczyć." },
+      { title: L("Dziś - Szpila", "Today - Szpila") },
+      {
+        name: "description",
+        content: L(
+          "Dzisiejsze zadania. Przytrzymaj kafelek, by zaliczyć.",
+          "Today's habits. Hold a tile to complete it.",
+        ),
+      },
     ],
   }),
   component: TodayPage,
@@ -98,15 +104,15 @@ function TodayPage() {
       <header className="flex items-center justify-between gap-4 px-5 pt-10 pb-4">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            {format(today, "EEEE, d MMMM", { locale: pl })}
+            {format(today, pick("EEEE, d MMMM", "EEEE, MMMM d"), { locale: dateLocale() })}
           </p>
           <h1 className="mt-1.5 truncate font-display text-3xl font-bold tracking-tight">
             {greetingFor(today)}
             {userName ? `, ${userName}` : ""}
           </h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            {progress.done}/{progress.total} zrobione
-            {topStreak > 0 && ` · 🔥 seria ${daysLabel(topStreak)}`}
+            {progress.done}/{progress.total} {L("zrobione", "done")}
+            {topStreak > 0 && ` · 🔥 ${L("seria", "streak")} ${daysLabel(topStreak)}`}
           </p>
         </div>
         <ProgressRing fraction={progress.fraction} />
@@ -124,7 +130,8 @@ function TodayPage() {
               className="mb-2 flex items-center gap-1.5 text-xs font-semibold"
               style={{ color: AVOID_COLOR }}
             >
-              <Sunrise size={14} /> Rozlicz wczoraj · do {formatMinute(AVOID_GRACE_MIN)}
+              <Sunrise size={14} /> {L("Rozlicz wczoraj · do", "Settle yesterday · until")}{" "}
+              {formatMinute(AVOID_GRACE_MIN)}
             </div>
             <AvoidChips habits={settleYesterday} day={yesterday} />
           </section>
@@ -152,7 +159,7 @@ function TodayPage() {
                 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em]"
                 style={{ color: AVOID_COLOR }}
               >
-                Zakazane · dotknij, by potwierdzić
+                {L("Zakazane · dotknij, by potwierdzić", "Forbidden · tap to confirm")}
               </h2>
               <AvoidChips habits={avoid} />
             </section>
@@ -173,7 +180,7 @@ function TodayPage() {
             color: "var(--primary-foreground)",
             boxShadow: "0 10px 30px -10px color-mix(in oklab, var(--primary) 60%, transparent)",
           }}
-          aria-label="Dodaj zadanie"
+          aria-label={L("Dodaj zadanie", "Add habit")}
         >
           <Plus size={26} strokeWidth={2.4} />
         </Link>
@@ -192,7 +199,7 @@ function ProgressRing({ fraction }: { fraction: number }) {
     <div
       className="relative grid shrink-0 place-items-center"
       style={{ width: size, height: size }}
-      aria-label={`Postęp dnia ${pct}%`}
+      aria-label={`${L("Postęp dnia", "Today's progress")} ${pct}%`}
     >
       <svg width={size} height={size} className="absolute inset-0 -rotate-90" aria-hidden>
         <circle
@@ -223,16 +230,17 @@ function ProgressRing({ fraction }: { fraction: number }) {
 
 function whenLabel(item: PlanItem, nowMin: number): string {
   const d = item.at - nowMin;
-  if (d <= 0 && d > -30) return "teraz";
-  if (d <= -30) return `zaległe od ${formatMinute(item.at)}`;
-  if (d < 60) return `za ${d} min`;
-  return `o ${formatMinute(item.at)}`;
+  if (d <= 0 && d > -30) return L("teraz", "now");
+  if (d <= -30)
+    return L(`zaległe od ${formatMinute(item.at)}`, `overdue since ${formatMinute(item.at)}`);
+  if (d < 60) return L(`za ${d} min`, `in ${d} min`);
+  return L(`o ${formatMinute(item.at)}`, `at ${formatMinute(item.at)}`);
 }
 
 function actionLabel(item: PlanItem): string {
-  if (item.avoid) return "Dziś czysto";
+  if (item.avoid) return L("Dziś czysto", "Clean today");
   const g = goalOf(item.habit);
-  if (g.type === "check") return "Zrobione";
+  if (g.type === "check") return L("Zrobione", "Done");
   const step = Math.min(g.step, item.left);
   return `+${step} ${unitLabel(item.habit, step)}`;
 }
@@ -246,7 +254,7 @@ function NowCard({ plan }: { plan: PlanItem[] }) {
   if (!next) {
     return (
       <div className="rounded-2xl bg-card p-4 text-center text-sm text-muted-foreground">
-        Wszystko na dziś zrobione. 🎉
+        {L("Wszystko na dziś zrobione. 🎉", "All done for today. 🎉")}
       </div>
     );
   }
@@ -273,7 +281,7 @@ function NowCard({ plan }: { plan: PlanItem[] }) {
       </Link>
       <div className="min-w-0 flex-1">
         <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Teraz
+          {L("Teraz", "Now")}
         </div>
         <div className="truncate font-semibold">{next.habit.name}</div>
         <div
@@ -323,13 +331,17 @@ function PlanFold({
           disabled={rest.length === 0}
           className="flex items-center gap-1 py-1 text-sm font-medium text-muted-foreground disabled:opacity-50"
         >
-          Plan dnia ({rest.length})
-          <motion.span animate={{ rotate: open ? 180 : 0 }}>
+          {L("Plan dnia", "Day plan")} ({rest.length})
+          <m.span animate={{ rotate: open ? 180 : 0 }}>
             <ChevronDown size={16} />
-          </motion.span>
+          </m.span>
         </button>
         {hasHistory && (
-          <Link to="/report" className="flex items-center gap-0.5" aria-label="Tydzień do tygodnia">
+          <Link
+            to="/report"
+            className="flex items-center gap-0.5"
+            aria-label={L("Tydzień do tygodnia", "Week over week")}
+          >
             <DeltaPill delta={delta} />
             <ChevronRight size={14} className="text-muted-foreground" />
           </Link>
@@ -337,7 +349,7 @@ function PlanFold({
       </div>
       <AnimatePresence initial={false}>
         {open && rest.length > 0 && (
-          <motion.ul
+          <m.ul
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -363,7 +375,7 @@ function PlanFold({
                     style={{ color: p.avoid ? AVOID_COLOR : HABIT_COLOR_VAR[p.habit.color] }}
                   />
                   <span className="min-w-0 flex-1 truncate">
-                    {p.avoid ? `Potwierdź: ${p.habit.name}` : p.habit.name}
+                    {p.avoid ? `${L("Potwierdź", "Confirm")}: ${p.habit.name}` : p.habit.name}
                   </span>
                   {!p.avoid && goalOf(p.habit).type !== "check" && (
                     <span className="shrink-0 text-xs text-muted-foreground">
@@ -373,7 +385,7 @@ function PlanFold({
                 </Link>
               </li>
             ))}
-          </motion.ul>
+          </m.ul>
         )}
       </AnimatePresence>
     </div>
@@ -383,13 +395,15 @@ function PlanFold({
 function EmptyState() {
   return (
     <div className="mx-5 mt-6 rounded-3xl border border-border bg-card p-8 text-center">
-      <p className="text-sm text-muted-foreground">Nie masz jeszcze zadań na dziś.</p>
+      <p className="text-sm text-muted-foreground">
+        {L("Nie masz jeszcze zadań na dziś.", "No habits for today yet.")}
+      </p>
       <Link
         to="/habits/new"
         className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium"
         style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}
       >
-        <Plus size={16} /> Dodaj pierwsze zadanie
+        <Plus size={16} /> {L("Dodaj pierwsze zadanie", "Add your first habit")}
       </Link>
     </div>
   );

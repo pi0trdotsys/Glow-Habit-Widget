@@ -2,9 +2,10 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { HabitForm } from "@/components/HabitForm";
 import { useHabits } from "@/lib/habits/store";
+import { L } from "@/lib/i18n";
 
 export const Route = createFileRoute("/habits/new")({
-  head: () => ({ meta: [{ title: "Nowe zadanie - Szpila" }] }),
+  head: () => ({ meta: [{ title: L("Nowe zadanie - Szpila", "New habit - Szpila") }] }),
   component: NewHabit,
 });
 
@@ -23,7 +24,14 @@ function NewHabit() {
           addHabit(draft);
           navigate({ to: "/" });
         }}
-        disabledReason={count >= MAX_HABITS ? `Osiągnięto limit ${MAX_HABITS} zadań.` : null}
+        disabledReason={
+          count >= MAX_HABITS
+            ? L(
+                `Osiągnięto limit ${MAX_HABITS} zadań.`,
+                `You've hit the limit of ${MAX_HABITS} habits.`,
+              )
+            : null
+        }
       />
     </AppShell>
   );

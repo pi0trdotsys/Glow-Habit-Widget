@@ -3,13 +3,14 @@ import { Home, LayoutGrid, Settings as SettingsIcon, BarChart3, Cat } from "luci
 import { useEffect, type ReactNode } from "react";
 import { useHabits } from "@/lib/habits/store";
 import { NameOnboarding } from "./NameOnboarding";
+import { L } from "@/lib/i18n";
 
 const tabs = [
-  { to: "/", label: "Dziś", icon: Home },
-  { to: "/habits", label: "Zadania", icon: LayoutGrid },
-  { to: "/report", label: "Raport", icon: BarChart3 },
-  { to: "/szpila", label: "Szpila", icon: Cat },
-  { to: "/settings", label: "Ustawienia", icon: SettingsIcon },
+  { to: "/", label: () => L("Dziś", "Today"), icon: Home },
+  { to: "/habits", label: () => L("Zadania", "Habits"), icon: LayoutGrid },
+  { to: "/report", label: () => L("Raport", "Report"), icon: BarChart3 },
+  { to: "/szpila", label: () => "Szpila", icon: Cat },
+  { to: "/settings", label: () => L("Ustawienia", "Settings"), icon: SettingsIcon },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -47,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   }}
                 >
                   <Icon size={20} strokeWidth={active ? 2.4 : 1.8} />
-                  <span>{label}</span>
+                  <span>{label()}</span>
                 </Link>
               </li>
             );

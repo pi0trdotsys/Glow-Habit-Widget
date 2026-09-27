@@ -3,12 +3,19 @@ import { HabitTile } from "@/components/HabitTile";
 import { useHabits } from "@/lib/habits/store";
 import { isDueOn, todayProgress } from "@/lib/habits/utils";
 import { useEffect } from "react";
+import { L } from "@/lib/i18n";
 
 export const Route = createFileRoute("/widget")({
   head: () => ({
     meta: [
-      { title: "Widżet - Szpila" },
-      { name: "description", content: "Szybki widok: przytrzymaj kafelek, by zaliczyć." },
+      { title: L("Widżet - Szpila", "Widget - Szpila") },
+      {
+        name: "description",
+        content: L(
+          "Szybki widok: przytrzymaj kafelek, by zaliczyć.",
+          "Quick view: hold a tile to complete it.",
+        ),
+      },
     ],
   }),
   component: WidgetPage,
@@ -19,6 +26,8 @@ function WidgetPage() {
   useEffect(() => ensureSeeded(), [ensureSeeded]);
   const habits = useHabits((s) => s.habits);
   const completions = useHabits((s) => s.completions);
+  // Not inside AppShell: subscribe so a language switch re-renders the L() texts.
+  useHabits((s) => s.language);
   const today = new Date();
   const due = habits.filter((h) => isDueOn(h, today)).slice(0, 8);
   const progressPercent = todayProgress(habits, completions, today).fraction * 100;
@@ -37,7 +46,7 @@ function WidgetPage() {
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-                  Postęp dnia
+                  {L("Postęp dnia", "Today's progress")}
                 </span>
                 <span className="text-[10px] font-bold text-primary">
                   {Math.round(progressPercent)}%
@@ -53,7 +62,9 @@ function WidgetPage() {
           )}
 
           {due.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">Brak zadań na dziś.</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              {L("Brak zadań na dziś.", "No habits for today.")}
+            </p>
           ) : (
             <div className="grid grid-cols-4 gap-y-6 gap-x-2 justify-items-center">
               {due.map((h) => (

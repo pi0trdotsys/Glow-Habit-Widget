@@ -28,6 +28,7 @@ import {
 } from "@/lib/sensors";
 import { SzpilaAvatar } from "@/components/Szpila";
 import { LiveGuardCard } from "@/components/LiveGuardCard";
+import { LanguageCard } from "@/components/LanguageCard";
 import { Toggle } from "@/components/HabitForm";
 import { AppShell } from "@/components/AppShell";
 import { useHabits } from "@/lib/habits/store";
@@ -40,13 +41,19 @@ import {
   type PermissionState,
 } from "@/lib/notifications";
 import { formatMinute } from "@/lib/habits/utils";
+import { L, pick } from "@/lib/i18n";
 
 export const Route = createFileRoute("/settings")({
-  head: () => ({ meta: [{ title: "Ustawienia - Szpila" }] }),
+  head: () => ({ meta: [{ title: L("Ustawienia - Szpila", "Settings - Szpila") }] }),
   component: SettingsPage,
 });
 
-const DAY_NAMES = ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"];
+/** Weekday names, Sunday first (index = Date.getDay()). */
+const dayNames = () =>
+  pick(
+    ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"],
+    ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+  );
 
 function SettingsPage() {
   const reset = useHabits((s) => s.reset);
@@ -70,7 +77,7 @@ function SettingsPage() {
       p = await requestNotificationPermission();
       setPermission(p);
     }
-    if (p !== "granted") setMsg("Nie zezwolono na powiadomienia.");
+    if (p !== "granted") setMsg(L("Nie zezwolono na powiadomienia.", "Notifications not allowed."));
     return p === "granted";
   };
 
@@ -87,18 +94,30 @@ function SettingsPage() {
   const doExport = async (share: boolean) => {
     try {
       const where = await saveBackup(share);
-      setMsg(`Zapisano kopię: ${where}`);
+      setMsg(L(`Zapisano kopię: ${where}`, `Backup saved: ${where}`));
     } catch (e) {
       setMsg((e as Error).message);
     }
   };
 
   const doImport = async (file: File) => {
-    if (!confirm("Przywrócenie zastąpi obecne zadania i historię danymi z kopii. Kontynuować?"))
+    if (
+      !confirm(
+        L(
+          "Przywrócenie zastąpi obecne zadania i historię danymi z kopii. Kontynuować?",
+          "Restoring replaces your current habits and history with the backup. Continue?",
+        ),
+      )
+    )
       return;
     try {
       const n = await restoreBackup(file);
-      setMsg(`Przywrócono ${n} zadań z kopii.`);
+      setMsg(
+        L(
+          `Przywrócono ${n} zadań z kopii.`,
+          `Restored ${n} ${n === 1 ? "habit" : "habits"} from the backup.`,
+        ),
+      );
     } catch (e) {
       setMsg((e as Error).message);
     }
@@ -107,32 +126,35 @@ function SettingsPage() {
   return (
     <AppShell>
       <header className="px-5 pt-10 pb-6">
-        <h1 className="font-display text-4xl font-bold tracking-tight">Ustawienia</h1>
+        <h1 className="font-display text-4xl font-bold tracking-tight">
+          {L("Ustawienia", "Settings")}
+        </h1>
       </header>
 
       <div className="space-y-3 px-5">
+        <LanguageCard />
         <div className="rounded-2xl bg-card p-4">
           <div className="flex items-center gap-3">
             <User size={18} className="text-primary" />
-            <span className="font-medium">Twoje imię</span>
+            <span className="font-medium">{L("Twoje imię", "Your name")}</span>
           </div>
           <div className="mt-3 flex gap-2">
             <input
               value={nameDraft}
               onChange={(e) => setNameDraft(e.target.value)}
               maxLength={24}
-              placeholder="Twoje imię"
+              placeholder={L("Twoje imię", "Your name")}
               className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
             />
             <button
               onClick={() => {
                 setUserName(nameDraft);
-                setMsg("Zapisano.");
+                setMsg(L("Zapisano.", "Saved."));
               }}
               className="rounded-xl px-4 text-sm font-medium"
               style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}
             >
-              Zapisz
+              {L("Zapisz", "Save")}
             </button>
           </div>
         </div>
@@ -141,7 +163,7 @@ function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Bell size={18} className="text-primary" />
-              <span className="font-medium">Codzienne przypomnienie</span>
+              <span className="font-medium">{L("Codzienne przypomnienie", "Daily reminder")}</span>
             </div>
             <Toggle
               checked={notif.enabled}
@@ -158,7 +180,7 @@ function SettingsPage() {
             />
           </div>
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Godzina</span>
+            <span className="text-xs text-muted-foreground">{L("Godzina", "Time")}</span>
             <input
               type="time"
               value={notif.time}
@@ -169,16 +191,25 @@ function SettingsPage() {
           </div>
           {permission === "denied" && (
             <p className="mt-2 text-[11px] text-destructive">
-              Powiadomienia są zablokowane. Włącz je w ustawieniach systemu.
+              {L(
+                "Powiadomienia są zablokowane. Włącz je w ustawieniach systemu.",
+                "Notifications are blocked. Turn them on in system settings.",
+              )}
             </p>
           )}
           {permission === "unsupported" && (
             <p className="mt-2 text-[11px] text-muted-foreground">
-              Twoja przeglądarka nie obsługuje powiadomień.
+              {L(
+                "Twoja przeglądarka nie obsługuje powiadomień.",
+                "Your browser doesn't support notifications.",
+              )}
             </p>
           )}
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Godzinę dla konkretnego zadania ustawisz w jego edycji.
+            {L(
+              "Godzinę dla konkretnego zadania ustawisz w jego edycji.",
+              "Set a time for a specific habit when editing it.",
+            )}
           </p>
         </div>
 
@@ -186,7 +217,7 @@ function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <CalendarCheck size={18} className="text-primary" />
-              <span className="font-medium">Podsumowanie tygodnia</span>
+              <span className="font-medium">{L("Podsumowanie tygodnia", "Weekly recap")}</span>
             </div>
             <Toggle
               checked={notif.weeklyReport}
@@ -203,7 +234,9 @@ function SettingsPage() {
             />
           </div>
           <div className="mt-3 flex items-center justify-between gap-2">
-            <span className="text-xs text-muted-foreground">Dzień i godzina</span>
+            <span className="text-xs text-muted-foreground">
+              {L("Dzień i godzina", "Day and time")}
+            </span>
             <div className="flex gap-2">
               <select
                 value={notif.reportDay}
@@ -211,7 +244,7 @@ function SettingsPage() {
                 disabled={!notif.weeklyReport}
                 className="rounded-xl border border-border bg-background px-2 py-1.5 text-sm outline-none disabled:opacity-50"
               >
-                {DAY_NAMES.map((d, i) => (
+                {dayNames().map((d, i) => (
                   <option key={i} value={i}>
                     {d}
                   </option>
@@ -227,7 +260,10 @@ function SettingsPage() {
             </div>
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Raz w tygodniu: jak ci idzie w porównaniu z zeszłym tygodniem.
+            {L(
+              "Raz w tygodniu: jak ci idzie w porównaniu z zeszłym tygodniem.",
+              "Once a week: how you're doing compared to last week.",
+            )}
           </p>
         </div>
 
@@ -235,7 +271,7 @@ function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Flame size={18} className="text-primary" />
-              <span className="font-medium">Tydzień do tygodnia</span>
+              <span className="font-medium">{L("Tydzień do tygodnia", "Week vs week")}</span>
             </div>
             <Toggle
               checked={notif.boosts}
@@ -252,7 +288,10 @@ function SettingsPage() {
             />
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            W południe i wieczorem: ten tydzień vs zeszły o tej samej porze.
+            {L(
+              "W południe i wieczorem: ten tydzień vs zeszły o tej samej porze.",
+              "At noon and in the evening: this week vs last week at the same time.",
+            )}
           </p>
         </div>
 
@@ -260,7 +299,9 @@ function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <BarChart3 size={18} className="text-primary" />
-              <span className="font-medium">Postęp dnia w powiadomieniu</span>
+              <span className="font-medium">
+                {L("Postęp dnia w powiadomieniu", "Daily progress notification")}
+              </span>
             </div>
             <Toggle
               checked={notif.progress}
@@ -271,8 +312,10 @@ function SettingsPage() {
             />
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Stałe, ciche powiadomienie z paskiem postępu wykonanych dziś zadań i planem, jak
-            skończyć dzień (Android).
+            {L(
+              "Stałe, ciche powiadomienie z paskiem postępu wykonanych dziś zadań i planem, jak skończyć dzień (Android).",
+              "A persistent, silent notification with a progress bar for today's habits and a plan to finish the day (Android).",
+            )}
           </p>
         </div>
 
@@ -286,7 +329,9 @@ function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <SzpilaAvatar mood="smug" size={28} />
-              <span className="font-medium">Szpila - złośliwy towarzysz</span>
+              <span className="font-medium">
+                {L("Szpila - złośliwy towarzysz", "Szpila - your spiteful sidekick")}
+              </span>
             </div>
             <Toggle
               checked={notif.taunts}
@@ -297,14 +342,24 @@ function SettingsPage() {
             />
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Wbija szpile w ciągu dnia ({tauntWindow(notif.quietTo, notif.quietFrom)}), gdy zadania
-            leżą albo nie potwierdzisz zakazanych. Teksty są dopasowane do konkretnego zadania.
+            {pick(
+              <>
+                Wbija szpile w ciągu dnia ({tauntWindow(notif.quietTo, notif.quietFrom)}), gdy
+                zadania leżą albo nie potwierdzisz zakazanych. Teksty są dopasowane do konkretnego
+                zadania.
+              </>,
+              <>
+                Jabs you during the day ({tauntWindow(notif.quietTo, notif.quietFrom)}) when habits
+                are slacking or you haven&apos;t confirmed your forbidden ones. Every line is
+                tailored to the specific habit.
+              </>,
+            )}
           </p>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {(
               [
-                ["hard", "Wulgarny 🤬"],
-                ["soft", "Łagodny 🙂"],
+                ["hard", L("Wulgarny 🤬", "Foul-mouthed 🤬")],
+                ["soft", L("Łagodny 🙂", "Gentle 🙂")],
               ] as const
             ).map(([v, label]) => (
               <button
@@ -321,7 +376,9 @@ function SettingsPage() {
             ))}
           </div>
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Szpil dziennie</span>
+            <span className="text-xs text-muted-foreground">
+              {L("Szpil dziennie", "Jabs per day")}
+            </span>
             <div className="flex gap-1.5">
               {[3, 5, 8].map((n) => (
                 <button
@@ -346,10 +403,12 @@ function SettingsPage() {
         <div className="rounded-2xl bg-card p-4">
           <div className="flex items-center gap-3">
             <Moon size={18} className="text-primary" />
-            <span className="font-medium">Tryb snu</span>
+            <span className="font-medium">{L("Tryb snu", "Sleep mode")}</span>
           </div>
           <div className="mt-3 flex items-center justify-between gap-2">
-            <span className="text-xs text-muted-foreground">Cisza od - do</span>
+            <span className="text-xs text-muted-foreground">
+              {L("Cisza od - do", "Quiet from - to")}
+            </span>
             <div className="flex items-center gap-2">
               <TimeInput
                 value={notif.quietFrom}
@@ -363,8 +422,10 @@ function SettingsPage() {
             </div>
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            W tych godzinach Szpila milczy, a szpile rozkładają się równo między pobudką a snem.
-            Wyjątek: przyłapanie na telefonie po nocy.
+            {L(
+              "W tych godzinach Szpila milczy, a szpile rozkładają się równo między pobudką a snem. Wyjątek: przyłapanie na telefonie po nocy.",
+              "Szpila stays quiet during these hours, and jabs are spread evenly between wake-up and bedtime. Exception: getting caught on your phone late at night.",
+            )}
           </p>
         </div>
 
@@ -372,7 +433,7 @@ function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <ClipboardCheck size={18} className="text-primary" />
-              <span className="font-medium">Wieczorne rozliczenie</span>
+              <span className="font-medium">{L("Wieczorne rozliczenie", "Evening check-in")}</span>
             </div>
             <Toggle
               checked={notif.review}
@@ -383,7 +444,7 @@ function SettingsPage() {
             />
           </div>
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Godzina</span>
+            <span className="text-xs text-muted-foreground">{L("Godzina", "Time")}</span>
             <TimeInput
               value={notif.reviewAt}
               disabled={!notif.review}
@@ -391,8 +452,10 @@ function SettingsPage() {
             />
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Jedno powiadomienie z przyciskami „Wszystko czysto” / „Wpadka” dla wszystkich
-            niepotwierdzonych zakazanych.
+            {L(
+              "Jedno powiadomienie z przyciskami „Wszystko czysto” / „Wpadka” dla wszystkich niepotwierdzonych zakazanych.",
+              "One notification with “All clean” / “Slip” buttons for all your unconfirmed forbidden habits.",
+            )}
           </p>
         </div>
 
@@ -405,29 +468,33 @@ function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <ShieldCheck size={18} className="text-primary" />
-              <span className="font-medium">Automatyczna kopia codziennie</span>
+              <span className="font-medium">
+                {L("Automatyczna kopia codziennie", "Daily auto-backup")}
+              </span>
             </div>
             <Toggle checked={autoBackup} onChange={setAutoBackup} />
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Raz dziennie zapisuje kopię do Pobrane/Szpila (po jednym pliku na dzień tygodnia, więc
-            masz ostatnie 7 dni). Po reinstalacji przywrócisz ją przyciskiem „Przywróć z pliku”.
-            {lastAuto && ` Ostatnia: ${lastAuto}.`}
+            {L(
+              "Raz dziennie zapisuje kopię do Pobrane/Szpila (po jednym pliku na dzień tygodnia, więc masz ostatnie 7 dni). Po reinstalacji przywrócisz ją przyciskiem „Przywróć z pliku”.",
+              "Saves a backup to Downloads/Szpila once a day (one file per weekday, so you always have the last 7 days). After a reinstall, bring it back with “Restore from file”.",
+            )}
+            {lastAuto && L(` Ostatnia: ${lastAuto}.`, ` Last one: ${lastAuto}.`)}
           </p>
         </div>
         <Action
           icon={<Download size={18} />}
-          label="Zapisz kopię teraz"
+          label={L("Zapisz kopię teraz", "Back up now")}
           onClick={() => void doExport(false)}
         />
         <Action
           icon={<Share2 size={18} />}
-          label="Udostępnij kopię (Dysk, mail…)"
+          label={L("Udostępnij kopię (Dysk, mail…)", "Share backup (Drive, email…)")}
           onClick={() => void doExport(true)}
         />
         <Action
           icon={<Upload size={18} />}
-          label="Przywróć z pliku"
+          label={L("Przywróć z pliku", "Restore from file")}
           onClick={() => fileRef.current?.click()}
         />
         <input
@@ -443,11 +510,18 @@ function SettingsPage() {
         />
         <Action
           icon={<RotateCcw size={18} />}
-          label="Usuń wszystkie dane"
+          label={L("Usuń wszystkie dane", "Delete all data")}
           onClick={() => {
-            if (confirm("Usunąć wszystkie zadania i historię? Tego nie da się cofnąć.")) {
+            if (
+              confirm(
+                L(
+                  "Usunąć wszystkie zadania i historię? Tego nie da się cofnąć.",
+                  "Delete all habits and history? This can't be undone.",
+                ),
+              )
+            ) {
               reset();
-              setMsg("Wyczyszczono.");
+              setMsg(L("Wyczyszczono.", "All cleared."));
             }
           }}
           danger
@@ -455,7 +529,10 @@ function SettingsPage() {
         {msg && <p className="pt-2 text-center text-xs text-muted-foreground">{msg}</p>}
 
         <p className="pt-10 text-center text-xs text-muted-foreground">
-          Szpila · nawyki z pazurem · offline, bez konta
+          {L(
+            "Szpila · nawyki z pazurem · offline, bez konta",
+            "Szpila · habits with claws · offline, no account",
+          )}
         </p>
       </div>
     </AppShell>
@@ -528,24 +605,34 @@ function SensorsCard({ onMessage }: { onMessage: (m: string) => void }) {
 
   return (
     <div className="rounded-2xl bg-card p-4">
-      <div className="font-medium">Automatyczne śledzenie</div>
+      <div className="font-medium">{L("Automatyczne śledzenie", "Auto-tracking")}</div>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        Włącz źródło tutaj, a potem wybierz je w edycji zadania („Kroki z Health Connect” albo
-        „Oceniaj z czasu ekranu”).
+        {L(
+          "Włącz źródło tutaj, a potem wybierz je w edycji zadania („Kroki z Health Connect” albo „Oceniaj z czasu ekranu”).",
+          "Turn a source on here, then pick it when editing a habit (“Steps from Health Connect” or “Judge by screen time”).",
+        )}
       </p>
 
       <div className="mt-3 flex items-center gap-3">
         <Footprints size={18} className="shrink-0 text-primary" />
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium">Kroki z Health Connect</div>
+          <div className="text-sm font-medium">
+            {L("Kroki z Health Connect", "Steps from Health Connect")}
+          </div>
           <div className="text-[11px] text-muted-foreground">
             {steps == null
-              ? "Sprawdzam…"
+              ? L("Sprawdzam…", "Checking…")
               : !steps.available
-                ? "Health Connect niedostępny na tym urządzeniu."
+                ? L(
+                    "Health Connect niedostępny na tym urządzeniu.",
+                    "Health Connect isn't available on this device.",
+                  )
                 : steps.granted
-                  ? `Połączono${steps.background ? "" : " (bez odczytu w tle - widżet odświeży się po otwarciu aplikacji)"} · zadania: ${stepHabits}`
-                  : "Brak zgody na odczyt kroków."}
+                  ? L(
+                      `Połączono${steps.background ? "" : " (bez odczytu w tle - widżet odświeży się po otwarciu aplikacji)"} · zadania: ${stepHabits}`,
+                      `Connected${steps.background ? "" : " (no background reads - the widget refreshes when you open the app)"} · habits: ${stepHabits}`,
+                    )
+                  : L("Brak zgody na odczyt kroków.", "No permission to read steps.")}
           </div>
         </div>
         {steps?.available && !steps.granted && (
@@ -555,13 +642,13 @@ function SensorsCard({ onMessage }: { onMessage: (m: string) => void }) {
               setSteps(s);
               if (s.granted) {
                 await syncSensors();
-                onMessage("Połączono z Health Connect.");
+                onMessage(L("Połączono z Health Connect.", "Connected to Health Connect."));
               }
             }}
             className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold"
             style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}
           >
-            Połącz
+            {L("Połącz", "Connect")}
           </button>
         )}
       </div>
@@ -569,13 +656,21 @@ function SensorsCard({ onMessage }: { onMessage: (m: string) => void }) {
       <div className="mt-4 flex items-center gap-3">
         <PhoneOff size={18} className="shrink-0" style={{ color: "var(--avoid)" }} />
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium">Czas ekranu w nocy</div>
+          <div className="text-sm font-medium">
+            {L("Czas ekranu w nocy", "Late-night screen time")}
+          </div>
           <div className="text-[11px] text-muted-foreground">
             {screen == null
-              ? "Sprawdzam…"
+              ? L("Sprawdzam…", "Checking…")
               : screen
-                ? `Dostęp przyznany · zadania: ${screenHabits}`
-                : "Wymaga „dostępu do danych o użyciu” w ustawieniach systemu."}
+                ? L(
+                    `Dostęp przyznany · zadania: ${screenHabits}`,
+                    `Access granted · habits: ${screenHabits}`,
+                  )
+                : L(
+                    "Wymaga „dostępu do danych o użyciu” w ustawieniach systemu.",
+                    "Needs “usage access” in system settings.",
+                  )}
           </div>
         </div>
         {screen === false && (
@@ -584,7 +679,7 @@ function SensorsCard({ onMessage }: { onMessage: (m: string) => void }) {
             className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold"
             style={{ backgroundColor: "var(--avoid)", color: "var(--primary-foreground)" }}
           >
-            Otwórz
+            {L("Otwórz", "Open")}
           </button>
         )}
       </div>
@@ -603,15 +698,31 @@ function toMinutes(t: string): number {
   return h * 60 + (m || 0);
 }
 
-const WIDGETS: { kind: WidgetKind; name: string; desc: string }[] = [
+/** A function (not a constant) so the labels follow the current language. */
+const widgets = (): { kind: WidgetKind; name: string; desc: string }[] => [
   {
     kind: "szpila",
     name: "Szpila 4×1",
-    desc: "Wredny kot i szpila o twoich zadaniach (bez zakazanych)",
+    desc: L(
+      "Wredny kot i szpila o twoich zadaniach (bez zakazanych)",
+      "A mean cat jabbing you about your habits (no forbidden ones)",
+    ),
   },
-  { kind: "next", name: "Następne zadanie 1×1", desc: "Co zrobić teraz - sam wybiera" },
-  { kind: "icons", name: "Ikony 4×2", desc: "Pierścień postępu, czas do końca dnia" },
-  { kind: "list", name: "Lista 4×2", desc: "Dzisiejsze zadania jako lista" },
+  {
+    kind: "next",
+    name: L("Następne zadanie 1×1", "Next habit 1×1"),
+    desc: L("Co zrobić teraz - sam wybiera", "What to do now - it picks for you"),
+  },
+  {
+    kind: "icons",
+    name: L("Ikony 4×2", "Icons 4×2"),
+    desc: L("Pierścień postępu, czas do końca dnia", "Progress ring, time left in the day"),
+  },
+  {
+    kind: "list",
+    name: L("Lista 4×2", "List 4×2"),
+    desc: L("Dzisiejsze zadania jako lista", "Today's habits as a list"),
+  },
 ];
 
 /** Home-screen widgets with a one-tap "add" (system pin dialog). */
@@ -620,14 +731,18 @@ function WidgetsCard({ onMessage }: { onMessage: (m: string) => void }) {
     <div className="rounded-2xl bg-card p-4">
       <div className="flex items-center gap-3">
         <Smartphone size={18} className="text-primary" />
-        <span className="font-medium">Widżety na ekranie głównym</span>
+        <span className="font-medium">
+          {L("Widżety na ekranie głównym", "Home-screen widgets")}
+        </span>
       </div>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        Dotknij „Dodaj”, a telefon zapyta, gdzie postawić widżet. Możesz też przytrzymać pusty
-        obszar ekranu głównego → Widżety → Szpila.
+        {L(
+          "Dotknij „Dodaj”, a telefon zapyta, gdzie postawić widżet. Możesz też przytrzymać pusty obszar ekranu głównego → Widżety → Szpila.",
+          "Tap “Add” and your phone will ask where to put the widget. You can also long-press an empty spot on the home screen → Widgets → Szpila.",
+        )}
       </p>
       <ul className="mt-3 space-y-2">
-        {WIDGETS.map((w) => (
+        {widgets().map((w) => (
           <li key={w.kind} className="flex items-center gap-3">
             <div className="min-w-0 flex-1">
               <div className="text-sm font-medium">{w.name}</div>
@@ -636,17 +751,25 @@ function WidgetsCard({ onMessage }: { onMessage: (m: string) => void }) {
             <button
               onClick={async () => {
                 if (!Capacitor.isNativePlatform())
-                  return onMessage("Widżety działają w aplikacji na Androida.");
+                  return onMessage(
+                    L(
+                      "Widżety działają w aplikacji na Androida.",
+                      "Widgets work in the Android app.",
+                    ),
+                  );
                 const ok = await pinWidget(w.kind);
                 if (!ok)
                   onMessage(
-                    "Twój launcher nie obsługuje dodawania z aplikacji - dodaj widżet z listy widżetów.",
+                    L(
+                      "Twój launcher nie obsługuje dodawania z aplikacji - dodaj widżet z listy widżetów.",
+                      "Your launcher doesn't support adding from the app - add the widget from the widget list.",
+                    ),
                   );
               }}
               className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold"
               style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}
             >
-              Dodaj
+              {L("Dodaj", "Add")}
             </button>
           </li>
         ))}

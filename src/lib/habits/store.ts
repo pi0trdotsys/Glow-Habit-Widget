@@ -3,7 +3,9 @@ import { persist } from "zustand/middleware";
 import type { Completion, Habit, HabitColor, HabitSchedule } from "./types";
 import type { FaceId, HumorId } from "./gamification";
 import type { NightReport } from "@/lib/sensors";
-import { setHumor } from "./szpila";
+import { loadEnglishLines, setHumor } from "./szpila";
+import { detectLang, getLang, L, setLang, type Lang } from "@/lib/i18n";
+import { translateHabit } from "./seed-names";
 import { goalOf, kindOf, minuteOfDay, todayKey } from "./utils";
 
 export type TauntLevel = "hard" | "soft";
@@ -40,6 +42,9 @@ export interface NotificationSettings {
   liveOff: string[];
   /** After the 3rd jab of a session: full-screen block over the app (needs "draw over other apps"). */
   liveBlock: boolean;
+  /** "Tryb przed snem": at bedtimeAt Szpila says "put the phone down in 30 min" and the guard starts. */
+  bedtime: boolean;
+  bedtimeAt: string;
 }
 
 /** The cat's look + voice (unlocked by forma streaks, see gamification.ts). */
@@ -68,6 +73,8 @@ const defaultNotifications: NotificationSettings = {
   liveUntil: "05:00",
   liveOff: [],
   liveBlock: true,
+  bedtime: true,
+  bedtimeAt: "23:30",
 };
 
 const defaultLook: SzpilaLook = { face: "wredny", humor: "wredny" };
@@ -78,6 +85,10 @@ interface HabitsState {
   seeded: boolean;
   userName: string | null;
   setUserName: (name: string) => void;
+  /** App language (Polish / English), chosen at first launch or in Settings. */
+  language: Lang;
+  /** Switch the language; default habit names (seeds, templates) follow it. */
+  setLanguage: (lang: Lang) => void;
   notifications: NotificationSettings;
   setNotifications: (n: NotificationSettings) => void;
   /** Daily automatic backup to Download/Szpila (Android). */
@@ -226,6 +237,16 @@ export const useHabits = create<HabitsState>()(
       seeded: false,
       userName: null,
       setUserName: (name) => set({ userName: name.trim() || null }),
+      language: detectLang(),
+      setLanguage: (lang) =>
+        set((s) => ({
+          language: lang,
+          habits: s.habits.map((h) => ({
+            ...translateHabit(h, lang),
+            id: h.id,
+            createdAt: h.createdAt,
+          })),
+        })),
       notifications: defaultNotifications,
       setNotifications: (n) => set({ notifications: n }),
       autoBackup: true,
@@ -342,6 +363,7 @@ export const useHabits = create<HabitsState>()(
           nightHits: s.nightHits,
           nightReports: s.nightReports,
           szpila: s.szpila,
+          language: s.language,
           habits: s.habits,
           completions: s.completions,
         });
@@ -363,7 +385,8 @@ export const useHabits = create<HabitsState>()(
             (h) => h && typeof h.id === "string" && typeof h.name === "string" && h.schedule,
           ) &&
           (data.completions == null || Array.isArray(data.completions));
-        if (!valid) throw new Error("To nie jest kopia zapasowa Szpili.");
+        if (!valid)
+          throw new Error(L("To nie jest kopia zapasowa Szpili.", "This is not a Szpila backup."));
         set((s) => ({
           habits: data.habits!,
           completions: (data.completions ?? []).filter(
@@ -389,7 +412,7 @@ export const useHabits = create<HabitsState>()(
       ensureSeeded: () => {
         if (get().seeded) return;
         const created: Habit[] = seedHabits.map((h) => ({
-          ...h,
+          ...translateHabit(h, getLang()),
           id: uid(),
           createdAt: new Date().toISOString(),
         }));
@@ -455,6 +478,14 @@ export const useHabits = create<HabitsState>()(
 
 // Keep Szpila's voice in sync with the chosen humor (also after rehydration).
 setHumor(useHabits.getState().szpila.humor);
-useHabits.subscribe((s) => setHumor(s.szpila.humor));
+setLang(useHabits.getState().language);
+if (getLang() === "en") void loadEnglishLines();
+useHabits.subscribe((s) => {
+  setHumor(s.szpila.humor);
+  if (s.language !== getLang()) {
+    setLang(s.language);
+    if (s.language === "en") void loadEnglishLines();
+  }
+});
 
 export type { Habit, Completion, HabitColor, HabitSchedule };

@@ -32,26 +32,42 @@ export const EXTRA_AVOID: ExtraCategory[] = [
   "procrastination",
 ];
 
-/** Checked before the base rules (more specific wins). */
+/**
+ * Checked before the base rules (more specific wins). Polish and English habit
+ * names (plus icon names); English words use \p{L} lookarounds where a bare
+ * substring would hit unrelated words.
+ */
 export const EXTRA_RULES: [ExtraCategory, RegExp][] = [
-  ["pervert", /zbocze|zbocze[ńn]|perwers|obleś|oble[śs]/],
-  ["porn", /porno|pornograf|p0rn|onani|masturb|eyeoff/],
-  ["meals", /posi[łl]k|niejedz|g[łl]odz|pomijan|nieregularn|utensilscrossed/],
-  ["energy", /energet|red ?bull|monster|tauryn/],
+  [
+    "pervert",
+    /zbocze|zbocze[ńn]|perwers|obleś|oble[śs]|(?<!\p{L})perv|(?<!\p{L})creep(?:y|ing)?(?!\p{L})|(?<!\p{L})lewd|(?<!\p{L})ogl(?:e|es|ing)(?!\p{L})/u,
+  ],
+  ["porn", /porn|p0rn|onani|masturb|eyeoff/u],
+  [
+    "meals",
+    /posi[łl]k|niejedz|g[łl]odz|pomijan|nieregularn|utensilscrossed|(?<!\p{L})meals?(?!\p{L})|skip\w* (?:breakfast|lunch|dinner)/u,
+  ],
+  ["energy", /energet|energy ?drink|red ?bull|monster|tauryn|taurin/u],
   [
     "shopping",
-    /zakup|shopping|allegro|aliexpress|temu\b|wydawan|kupowan|creditcard|shoppingcart|shoppingbag/,
+    /zakup|shopping|allegro|aliexpress|temu\b|wydawan|kupowan|creditcard|shoppingcart|shoppingbag|spending|impulse|(?<!\p{L})buy(?:s|ing)?(?!\p{L})|purchas/u,
   ],
-  ["gambling", /hazard|kasyn|zak[łl]ad|bukmach|ruletk|lotto|dice|coins/],
-  ["binge", /serial|netflix|telewiz|\btv\b|binge|popcorn|ogl[ąa]dan/],
-  ["snooze", /drzemk|budzik|snooze|alarmclockoff/],
-  ["nails", /paznok|obgryz|nail/],
-  ["caffeine", /kaw[aąyę]|kofein|coffee/],
-  ["procrastination", /prokrast|odk[łl]adan|hourglass|lenistw/],
-  ["coding", /program|kodow|\bkod|code|terminal|laptop|github|leetcode|\bdev\b/],
+  [
+    "gambling",
+    /hazard|kasyn|zak[łl]ad|bukmach|ruletk|lotto|dice|coins|gambl|casino|betting|(?<!\p{L})bets?(?!\p{L})|poker|roulette|lottery|slot machine/u,
+  ],
+  [
+    "binge",
+    /serial|netflix|telewiz|\btv\b|binge|popcorn|ogl[ąa]dan|(?<!\p{L})series(?!\p{L})|(?<!\p{L})shows(?!\p{L})|tv show|episode/u,
+  ],
+  ["snooze", /drzemk|budzik|snooz|alarmclockoff|(?<!\p{L})alarm(?!\p{L})/u],
+  ["nails", /paznok|obgryz|nail/u],
+  ["caffeine", /kaw[aąyę]|kofein|coffee|caffein|espresso/u],
+  ["procrastination", /prokrast|procrast|odk[łl]adan|hourglass|lenistw|putting (?:things )?off/u],
+  ["coding", /program|kodow|\bkod|code|coding|terminal|laptop|github|leetcode|\bdev\b/u],
   [
     "language",
-    /j[ęe]zyk|angiel|niemieck|hiszpa|francu|w[łl]osk|duolingo|languages|globe|s[łl][óo]wk|fiszk/,
+    /j[ęe]zyk|angiel|niemieck|hiszpa|francu|w[łl]osk|duolingo|languages?(?!\p{L})|globe|s[łl][óo]wk|fiszk|vocab|flashcard|spanish|german|french|italian|english|japanese/u,
   ],
 ];
 

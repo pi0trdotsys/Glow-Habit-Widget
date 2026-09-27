@@ -7,6 +7,8 @@
 // Placeholders: {name} habit name, {u} user name. {done}/{left}/{target} are
 // resolved at display time - in TS by fill(), natively by WidgetShared.fill()
 // (the widget/notification side re-computes them from the live snapshot).
+// English tables live in szpila-en.ts / szpila-en-extra.ts (same keys) and are
+// picked per call by T(), so a language switch takes effect immediately.
 import type { Completion, Habit } from "./types";
 import type { TauntLevel } from "./store";
 import {
@@ -24,7 +26,9 @@ import {
   EXTRA_SOFT,
   type ExtraCategory,
 } from "./szpila-extra";
+import { create } from "zustand";
 import { addDays } from "date-fns";
+import { L, isEn, plural } from "@/lib/i18n";
 import { humorLines, humorNag, withHumor, type HumorId } from "./gamification";
 import {
   avoidStatus,
@@ -47,7 +51,7 @@ export const SZPILA_NAME = "Szpila";
 /** Szpila is a mean cat: normal jab, angry (escalated / slip), grudgingly impressed. Mirrored in HabitNotifier.java. */
 export const SZPILA_EMOJI = { normal: "😼", angry: "😾", impressed: "😸" } as const;
 
-type BaseCategory =
+export type BaseCategory =
   | "teeth"
   | "water"
   | "steps"
@@ -71,33 +75,64 @@ export type Category = BaseCategory | ExtraCategory;
 
 const isExtra = (c: Category): c is ExtraCategory => c in EXTRA_HARD;
 
-interface Lines {
+export interface Lines {
   nag: string[];
   praise: string[];
   /** Avoid habits only: after a slip. */
   slip?: string[];
 }
 
+// Polish and English habit names (and icon names). English words use \p{L}
+// lookarounds where a bare substring would hit unrelated words.
 const RULES: [Category, RegExp][] = [
-  ["phone", /telefon|phone|p[óo][źz]n|scroll|ekran|smartfon/],
-  ["fastfood", /fast|burger|mcdonald|kfc|frytk|pizza|kebab|[śs]mieciow|junk|utensils/],
-  ["sweets", /s[łl]odycz|cukier|cukierk|czekolad|ciast|cookie|sweet|candy/],
-  ["alcohol", /alkohol|piw|w[óo]dk|wino|drink|beer|wine/],
-  ["smoking", /papieros|palen|fajk|vape|e-pap|smok|cigar/],
-  ["games", /gr[ay]|gaming|gamepad|konsol/],
-  ["social", /social|insta|tiktok|facebook|fb|youtube|rolk|reels/],
-  ["teeth", /z[ęe]b|tooth|brush|nitk|szczotk/],
-  ["water", /wod|water|droplet|glasswater|nawodn/],
-  ["steps", /krok|step|footprint|spacer|walk/],
-  ["reading", /czyt|ksi[ąa][żz]|read|book/],
-  ["gym", /si[łl]own|gym|trening|dumbbell|bieg|run|ruch|activity|[ćc]wicz|bike|rower/],
-  ["meditation", /medyt|meditat|oddech|mindful|sparkles/],
-  ["sleep", /spa[ćc]|sen\b|snu|sleep|bed|[łl][óo][żz]k/],
-  ["pills", /witamin|suplement|pill|lek|tablet/],
-  ["learning", /nauk|j[ęe]zyk|angiel|learn|languages|kurs|graduation|notebook/],
+  ["phone", /telefon|phone|p[óo][źz]n|scroll|ekran|smartfon|screen ?time/u],
+  [
+    "fastfood",
+    /fast|burger|mcdonald|kfc|frytk|(?<!\p{L})fries(?!\p{L})|pizza|kebab|takeaway|takeout|[śs]mieciow|junk|utensils/u,
+  ],
+  [
+    "sweets",
+    /s[łl]odycz|cukier|cukierk|czekolad|ciast|cookie|sweet|candy|sugar|chocolate|dessert/u,
+  ],
+  [
+    "alcohol",
+    /alkohol|alcohol|booze|piw|w[óo]dk|vodka|wino|drink|beer|wine|whisk|(?<!\p{L})drunk/u,
+  ],
+  ["smoking", /papieros|palen|fajk|vape|e-pap|smok|cigar|nicotin/u],
+  ["games", /gr[ay]|gaming|gamepad|konsol|console|(?<!\p{L})games?(?!\p{L})|playstation|xbox/u],
+  ["social", /social|insta|tiktok|facebook|fb|youtube|rolk|reels|twitter|reddit|doomscroll/u],
+  ["teeth", /z[ęe]b|tooth|teeth|brush|floss|nitk|szczotk/u],
+  ["water", /wod|water|droplet|glasswater|nawodn|hydrat/u],
+  ["steps", /krok|step|footprint|spacer|walk/u],
+  ["reading", /czyt|ksi[ąa][żz]|(?<!\p{L})read|book|(?<!\p{L})pages?(?!\p{L})/u],
+  [
+    "gym",
+    /si[łl]own|gym|trening|training|workout|exercis|dumbbell|bieg|run|ruch|(?<!\p{L})move(?!\p{L})|activity|[ćc]wicz|bike|rower|rozci[ąa]g|stretch|yoga|joga|swim|cardio|(?<!\p{L})lift/u,
+  ],
+  ["meditation", /medyt|meditat|oddech|breath|mindful|sparkles/u],
+  ["sleep", /spa[ćc]|sen\b|snu|sleep|bed|[łl][óo][żz]k/u],
+  ["pills", /witamin|vitamin|suplement|supplement|pill|lek|tablet|medic/u],
+  [
+    "learning",
+    /nauk|j[ęe]zyk|angiel|learn|languages|kurs|course|(?<!\p{L})stud(?:y|ies|ying)(?!\p{L})|homework|graduation|notebook/u,
+  ],
 ];
 
-function categoryOf(h: Habit): Category {
+// The rules are big Unicode regexes; a habit's category only changes with its name/icon/kind.
+const categoryCache = new Map<string, Category>();
+
+/** The Szpila category of a habit (exported for tests). */
+export function categoryOf(h: Habit): Category {
+  const cacheKey = `${kindOf(h)}|${h.icon}|${h.name}`;
+  const hit = categoryCache.get(cacheKey);
+  if (hit) return hit;
+  const cat = detectCategory(h);
+  if (categoryCache.size > 500) categoryCache.clear();
+  categoryCache.set(cacheKey, cat);
+  return cat;
+}
+
+function detectCategory(h: Habit): Category {
   const n = `${h.name} ${h.icon}`.toLowerCase();
   const avoid = kindOf(h) === "avoid";
   for (const [cat, re] of EXTRA_RULES) {
@@ -484,6 +519,40 @@ const EMPTY: Record<TauntLevel, string[]> = {
   soft: ["Dodaj pierwsze zadanie, a ja zajmę się resztą."],
 };
 
+// Line tables per language, picked at call time (the language can change at runtime).
+const PL_T = {
+  HARD,
+  SOFT,
+  RAGE_HARD,
+  RAGE_SOFT,
+  CAUGHT,
+  CAUGHT_SOCIAL,
+  ALL_DONE,
+  EVENING,
+  EMPTY,
+  MORE_HARD,
+  MORE_RAGE,
+  MOTIVATE,
+  EXTRA_HARD,
+  EXTRA_SOFT,
+};
+// English tables are a separate chunk, loaded only when the app is in English.
+let EN_T: typeof PL_T | null = null;
+let enLoading: Promise<void> | null = null;
+
+/** Flips to true once the English lines are in (screens re-render on it). */
+export const useLinesReady = create<{ en: boolean }>(() => ({ en: false }));
+
+export function loadEnglishLines(): Promise<void> {
+  enLoading ??= import("./szpila-en-tables").then((m) => {
+    EN_T = m.EN_T as typeof PL_T;
+    useLinesReady.setState({ en: true });
+  });
+  return enLoading;
+}
+
+const T = () => (isEn() && EN_T ? EN_T : PL_T);
+
 // ---------------------------------------------------------------------------
 // API
 // ---------------------------------------------------------------------------
@@ -501,15 +570,16 @@ export function setHumor(humor: HumorId): void {
 export const currentHumor = (): HumorId => activeHumor;
 
 function linesFor(h: Habit, level: TauntLevel): Lines {
+  const t = T();
   const cat = categoryOf(h);
-  if (level === "soft") return isExtra(cat) ? EXTRA_SOFT[cat] : SOFT[cat];
-  const base: Lines = isExtra(cat) ? EXTRA_HARD[cat] : HARD[cat];
-  const more = isExtra(cat) ? {} : (MORE_HARD[cat] ?? {});
-  const motivate = kindOf(h) === "avoid" ? MOTIVATE.avoid : MOTIVATE.build;
+  if (level === "soft") return isExtra(cat) ? t.EXTRA_SOFT[cat] : t.SOFT[cat];
+  const base: Lines = isExtra(cat) ? t.EXTRA_HARD[cat] : t.HARD[cat];
+  const more = isExtra(cat) ? {} : (t.MORE_HARD[cat] ?? {});
+  const motivate = kindOf(h) === "avoid" ? t.MOTIVATE.avoid : t.MOTIVATE.build;
   return {
     nag: withHumor([...base.nag, ...(more.nag ?? []), ...motivate], humorNag(h, activeHumor)),
     praise: withHumor(
-      [...base.praise, ...(more.praise ?? []), ...MOTIVATE.praise],
+      [...base.praise, ...(more.praise ?? []), ...t.MOTIVATE.praise],
       humorLines(activeHumor).praise,
     ),
     slip: base.slip || more.slip ? [...(base.slip ?? []), ...(more.slip ?? [])] : undefined,
@@ -524,7 +594,7 @@ function usable(lines: string[], h: Habit): string[] {
 }
 
 function personal(line: string, h: Habit | null, userName: string | null): string {
-  return line.replaceAll("{name}", h?.name ?? "").replaceAll("{u}", userName || "ty");
+  return line.replaceAll("{name}", h?.name ?? "").replaceAll("{u}", userName || L("ty", "you"));
 }
 
 /** Resolve {done}/{left}/{target} for a build habit's current amount. */
@@ -544,35 +614,29 @@ export function nagLines(h: Habit, level: TauntLevel, userName: string | null): 
 
 /** Escalated lines (3h+ overdue / many jabs) - placeholders left in, like nagLines. */
 export function rageLines(h: Habit, level: TauntLevel, userName: string | null): string[] {
+  const t = T();
   const cat = categoryOf(h);
   const fallback = kindOf(h) === "avoid" ? "avoidGeneric" : "generic";
   const pool =
     level === "hard" && isExtra(cat)
-      ? [...EXTRA_HARD[cat].rage, ...MORE_RAGE[fallback]!]
+      ? [...t.EXTRA_HARD[cat].rage, ...t.MORE_RAGE[fallback]!]
       : level === "hard"
         ? [
-            ...(RAGE_HARD[cat] ?? RAGE_HARD[fallback]!),
-            ...(MORE_RAGE[cat] ?? MORE_RAGE[fallback] ?? []),
+            ...(t.RAGE_HARD[cat] ?? t.RAGE_HARD[fallback]!),
+            ...(t.MORE_RAGE[cat] ?? t.MORE_RAGE[fallback] ?? []),
           ]
-        : RAGE_SOFT;
+        : t.RAGE_SOFT;
   // Build habits also get the motivating rage ("Dosyć tego. Wstajesz i robisz…").
-  const all = level === "hard" && kindOf(h) === "build" ? [...pool, ...MOTIVATE.rage] : pool;
+  const all = level === "hard" && kindOf(h) === "build" ? [...pool, ...t.MOTIVATE.rage] : pool;
   return usable(all, h).map((l) => personal(l, h, userName));
 }
 
 /** "Caught you" lines for screen-judged habits ({m} minutes / {after} time filled natively). */
 export function caughtLines(level: TauntLevel, basis: "social" | "screen" = "screen"): string[] {
-  return basis === "social" ? CAUGHT_SOCIAL[level] : CAUGHT[level];
+  return basis === "social" ? T().CAUGHT_SOCIAL[level] : T().CAUGHT[level];
 }
 
-const slipsWord = (n: number) => plural5w(n, "wpadka", "wpadki", "wpadek");
-
-function plural5w(n: number, one: string, few: string, many: string): string {
-  if (n === 1) return one;
-  const d = n % 10;
-  const dd = n % 100;
-  return d >= 2 && d <= 4 && !(dd >= 12 && dd <= 14) ? few : many;
-}
+const slipsWord = (n: number) => plural(n, ["wpadka", "wpadki", "wpadek"], ["slip", "slips"]);
 
 /**
  * "Memory" lines for repeat offenders: slips of an avoid habit in the last 30
@@ -599,6 +663,25 @@ export function memoryLines(
   }
   const hard = level === "hard";
   let lines: string[] = [];
+  if (isEn()) {
+    const s = slipsWord(bad);
+    if (kindOf(h) === "avoid" && bad >= 2) {
+      lines = hard
+        ? [
+            `That's ${bad} ${s} with “{name}” in 30 days. It's all written down in my book of shame.`,
+            `${bad} ${s} in a month. Your willpower is a myth, like Bigfoot, damn it.`,
+          ]
+        : [`“{name}”: ${bad} ${s} in the last month. You can break the chain today.`];
+    } else if (kindOf(h) === "build" && bad >= 3) {
+      lines = hard
+        ? [
+            `“{name}” skipped ${bad} times in the last week. The consistency of a goldfish.`,
+            `${bad} of the last 7 days without “{name}”. I see a pattern and it's shit.`,
+          ]
+        : [`“{name}” was missed ${bad} times in the last week. Let's get back into the rhythm.`];
+    }
+    return lines.map((l) => personal(l, h, userName));
+  }
   if (kindOf(h) === "avoid" && bad >= 2) {
     lines = hard
       ? [
@@ -646,41 +729,62 @@ export function weeklyRoast(
   }
   const delta = r.delta > 0 ? `+${r.delta}` : `${r.delta}`;
   const parts = [
-    `${who}tydzień: ${r.thisWeek.rate}%${r.noBaseline ? "" : ` (${delta} pkt vs poprzedni)`}.`,
+    L(
+      `${who}tydzień: ${r.thisWeek.rate}%${r.noBaseline ? "" : ` (${delta} pkt vs poprzedni)`}.`,
+      `${userName ? `${userName}, your` : "Your"} week: ${r.thisWeek.rate}%${r.noBaseline ? "" : ` (${delta} pts vs last week)`}.`,
+    ),
   ];
   if (best && worst && best.name !== worst.name) {
     parts.push(
       hard
-        ? `Najlepiej „${best.name}”, najgorzej „${worst.name}” - tam odpierdalasz totalną fuszerkę.`
-        : `Najlepiej szło „${best.name}”, najsłabiej „${worst.name}”.`,
+        ? L(
+            `Najlepiej „${best.name}”, najgorzej „${worst.name}” - tam odpierdalasz totalną fuszerkę.`,
+            `Best: “${best.name}”, worst: “${worst.name}” - that's where you're doing a half-assed job.`,
+          )
+        : L(
+            `Najlepiej szło „${best.name}”, najsłabiej „${worst.name}”.`,
+            `“${best.name}” went best, “${worst.name}” the weakest.`,
+          ),
     );
   }
   if (slips > 0) {
     parts.push(
       hard
-        ? `Wpadek z zakazanymi: ${slips}. Brawo, mistrzu wymówek.`
-        : `Wpadki z zakazanymi: ${slips}.`,
+        ? L(
+            `Wpadek z zakazanymi: ${slips}. Brawo, mistrzu wymówek.`,
+            `Slips with forbidden habits: ${slips}. Bravo, champion of excuses.`,
+          )
+        : L(`Wpadki z zakazanymi: ${slips}.`, `Slips with forbidden habits: ${slips}.`),
     );
   }
   if (!r.noBaseline)
     parts.push(
       r.delta >= 0
         ? hard
-          ? "Lepiej niż tydzień temu. Nie przyzwyczajaj się, będę patrzeć na ręce."
-          : "Lepiej niż tydzień temu - tak trzymaj!"
+          ? L(
+              "Lepiej niż tydzień temu. Nie przyzwyczajaj się, będę patrzeć na ręce.",
+              "Better than last week. Don't get used to it, I'm watching you.",
+            )
+          : L("Lepiej niż tydzień temu - tak trzymaj!", "Better than last week - keep it up!")
         : hard
-          ? "Gorzej niż tydzień temu. Od jutra koniec pierdolenia, bierzemy się do roboty."
-          : "Gorzej niż tydzień temu. Nowy tydzień, nowa szansa.",
+          ? L(
+              "Gorzej niż tydzień temu. Od jutra koniec pierdolenia, bierzemy się do roboty.",
+              "Worse than last week. From tomorrow, no more bullshit - we get to work.",
+            )
+          : L(
+              "Gorzej niż tydzień temu. Nowy tydzień, nowa szansa.",
+              "Worse than last week. New week, new chance.",
+            ),
     );
   return parts.join(" ");
 }
 
 export function allDoneLines(level: TauntLevel): string[] {
-  return ALL_DONE[level];
+  return T().ALL_DONE[level];
 }
 
 export function eveningLines(level: TauntLevel): string[] {
-  return EVENING[level];
+  return T().EVENING[level];
 }
 
 export function praiseFor(h: Habit, level: TauntLevel, userName: string | null): string {
@@ -688,7 +792,8 @@ export function praiseFor(h: Habit, level: TauntLevel, userName: string | null):
 }
 
 export function slipFor(h: Habit, level: TauntLevel, userName: string | null): string {
-  const l = linesFor(h, level).slip ?? (level === "hard" ? HARD : SOFT).avoidGeneric.slip!;
+  const t = T();
+  const l = linesFor(h, level).slip ?? (level === "hard" ? t.HARD : t.SOFT).avoidGeneric.slip!;
   return personal(pick(l), h, userName);
 }
 
@@ -707,7 +812,8 @@ export function szpilaNow(
   userName: string | null,
   seed?: number,
 ): SzpilaSay {
-  if (habits.length === 0) return { text: pick(EMPTY[level], seed), mood: "angry" };
+  const t = T();
+  if (habits.length === 0) return { text: pick(t.EMPTY[level], seed), mood: "angry" };
   const now = new Date();
   // Blown allowance on an avoid habit beats everything else.
   const blown = habits.find(
@@ -716,13 +822,10 @@ export function szpilaNow(
   if (blown && (seed ?? 0) % 3 === 0) {
     return { text: slipFor(blown, level, userName), mood: "angry", habitId: blown.id };
   }
-  if (plan.length === 0) return { text: pick(ALL_DONE[level], seed), mood: "impressed" };
+  if (plan.length === 0) return { text: pick(t.ALL_DONE[level], seed), mood: "impressed" };
   if (now.getHours() >= 20 && plan.length >= 2 && (seed ?? 1) % 2 === 0) {
     return {
-      text: pick(EVENING[level], seed).replaceAll(
-        "{pending}",
-        `${plan.length} ${plural5(plan.length)}`,
-      ),
+      text: pick(t.EVENING[level], seed).replaceAll("{pending}", pendingLabel(plan.length)),
       mood: "angry",
     };
   }
@@ -738,11 +841,7 @@ export function szpilaNow(
   };
 }
 
-function plural5(n: number): string {
-  if (n === 1) return "zadanie";
-  const d = n % 10;
-  const dd = n % 100;
-  return d >= 2 && d <= 4 && !(dd >= 12 && dd <= 14) ? "zadania" : "zadań";
+/** "3 zadania" / "3 tasks" - fills {pending}. */
+export function pendingLabel(n: number): string {
+  return `${n} ${plural(n, ["zadanie", "zadania", "zadań"], ["task", "tasks"])}`;
 }
-
-export const pendingLabel = (n: number) => `${n} ${plural5(n)}`;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Ban } from "lucide-react";
@@ -19,6 +19,7 @@ import {
   todayKey,
 } from "@/lib/habits/utils";
 import { SZPILA_EMOJI, praiseFor } from "@/lib/habits/szpila";
+import { L } from "@/lib/i18n";
 
 interface Props {
   habit: Habit;
@@ -31,7 +32,7 @@ const CELEBRATE_EMOJI = ["🎉", "✨", "💪", "🔥", "🌟", "🙌"];
 export function praiseToast(habit: Habit, undo: () => void) {
   const { notifications, userName } = useHabits.getState();
   toast(`${SZPILA_EMOJI.impressed} ${praiseFor(habit, notifications.tauntLevel, userName)}`, {
-    action: { label: "Cofnij", onClick: undo },
+    action: { label: L("Cofnij", "Undo"), onClick: undo },
   });
 }
 
@@ -61,7 +62,7 @@ export function HabitTile({ habit, compact = false }: Props) {
         const prev = status;
         if (prev === "clean") {
           setAvoid(habit.id, key, null);
-          toast(`↩️ Cofnięto: ${habit.name}`, { duration: 2500 });
+          toast(`↩️ ${L("Cofnięto", "Undone")}: ${habit.name}`, { duration: 2500 });
           return;
         }
         setAvoid(habit.id, key, "clean");
@@ -72,8 +73,11 @@ export function HabitTile({ habit, compact = false }: Props) {
       const before = amount;
       if (done) {
         setAmount(habit.id, key, 0);
-        toast(`↩️ Cofnięto: ${habit.name}`, {
-          action: { label: "Przywróć", onClick: () => setAmount(habit.id, key, before) },
+        toast(`↩️ ${L("Cofnięto", "Undone")}: ${habit.name}`, {
+          action: {
+            label: L("Przywróć", "Restore"),
+            onClick: () => setAmount(habit.id, key, before),
+          },
           duration: 3000,
         });
         return;
@@ -85,7 +89,7 @@ export function HabitTile({ habit, compact = false }: Props) {
         praiseToast(habit, () => setAmount(habit.id, key, before));
       } else {
         toast(`+${g.step} · ${habit.name}: ${amountText(habit, after)}`, {
-          action: { label: "Cofnij", onClick: () => setAmount(habit.id, key, before) },
+          action: { label: L("Cofnij", "Undo"), onClick: () => setAmount(habit.id, key, before) },
           duration: 2500,
         });
       }
@@ -111,24 +115,24 @@ export function HabitTile({ habit, compact = false }: Props) {
 
   const sub = avoid
     ? status === "clean"
-      ? "Dziś czysto ✓"
+      ? L("Dziś czysto ✓", "Clean today ✓")
       : status === "slip"
-        ? "Wpadka ✗"
+        ? L("Wpadka ✗", "Slip ✗")
         : habit.source === "screen"
-          ? "📱 czeka na noc"
-          : "Przytrzymaj = dziś czysto"
+          ? L("📱 czeka na noc", "📱 waiting for the night")
+          : L("Przytrzymaj = dziś czysto", "Hold = clean today")
     : g.type !== "check"
       ? amountText(habit, amount)
       : streak > 0
         ? `🔥 ${daysLabel(streak)}`
-        : "Przytrzymaj, by zaliczyć";
+        : L("Przytrzymaj, by zaliczyć", "Hold to complete");
 
   return (
     <div
       className="relative flex flex-col items-center gap-2 select-none touch-none"
       style={{ WebkitTouchCallout: "none" }}
     >
-      <motion.div
+      <m.div
         {...handlers}
         animate={{ scale: isHolding ? 0.96 : celebrate ? [1, 1.12, 1] : 1 }}
         transition={
@@ -165,7 +169,7 @@ export function HabitTile({ habit, compact = false }: Props) {
           />
         </svg>
 
-        <motion.div
+        <m.div
           animate={{
             backgroundColor: done
               ? `color-mix(in oklab, ${color} 22%, transparent)`
@@ -183,7 +187,7 @@ export function HabitTile({ habit, compact = false }: Props) {
             className={avoid ? "" : "text-foreground"}
             style={avoid ? { color: AVOID_COLOR } : undefined}
           />
-        </motion.div>
+        </m.div>
 
         {avoid && !done && (
           <span
@@ -195,7 +199,7 @@ export function HabitTile({ habit, compact = false }: Props) {
         )}
 
         {(done || status === "slip") && (
-          <motion.span
+          <m.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 500, damping: 18 }}
@@ -206,11 +210,11 @@ export function HabitTile({ habit, compact = false }: Props) {
             }}
           >
             {status === "slip" ? "✗" : "✓"}
-          </motion.span>
+          </m.span>
         )}
 
         {celebrate && <Celebration />}
-      </motion.div>
+      </m.div>
 
       <div className="text-center">
         <div className={`font-medium leading-tight ${compact ? "text-xs" : "text-sm"}`}>
@@ -236,18 +240,18 @@ function Celebration() {
   const dist = 46;
   return (
     <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center">
-      <motion.span
+      <m.span
         className="absolute text-3xl"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: [0, 1.5, 1.1], opacity: [0, 1, 0] }}
         transition={{ duration: 0.9, ease: "easeOut" }}
       >
         🎉
-      </motion.span>
+      </m.span>
       {CELEBRATE_EMOJI.map((e, i) => {
         const ang = (i / CELEBRATE_EMOJI.length) * 2 * Math.PI - Math.PI / 2;
         return (
-          <motion.span
+          <m.span
             key={i}
             className="absolute text-lg"
             initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
@@ -260,7 +264,7 @@ function Celebration() {
             transition={{ duration: 0.9, ease: "easeOut", delay: i * 0.02 }}
           >
             {e}
-          </motion.span>
+          </m.span>
         );
       })}
     </div>

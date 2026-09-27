@@ -45,9 +45,9 @@ public class HabitWidgetPlugin extends Plugin {
                 Intent send = new Intent(Intent.ACTION_SEND);
                 send.setType("application/json");
                 send.putExtra(Intent.EXTRA_STREAM, saved.uri);
-                send.putExtra(Intent.EXTRA_SUBJECT, "Szpila - kopia zapasowa");
+                send.putExtra(Intent.EXTRA_SUBJECT, WidgetShared.tr(getContext(), "Szpila - kopia zapasowa", "Szpila - backup"));
                 send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                Intent chooser = Intent.createChooser(send, "Udostępnij kopię zapasową");
+                Intent chooser = Intent.createChooser(send, WidgetShared.tr(getContext(), "Udostępnij kopię zapasową", "Share backup"));
                 chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 getContext().startActivity(chooser);
             }
@@ -55,7 +55,7 @@ public class HabitWidgetPlugin extends Plugin {
             ret.put("location", saved.location);
             call.resolve(ret);
         } catch (Exception e) {
-            call.reject("Nie udało się zapisać kopii: " + e.getMessage());
+            call.reject(WidgetShared.tr(getContext(), "Nie udało się zapisać kopii: ", "Couldn't save the backup: ") + e.getMessage());
         }
     }
 
@@ -78,7 +78,7 @@ public class HabitWidgetPlugin extends Plugin {
                 send.putExtra(Intent.EXTRA_STREAM, saved.uri);
                 send.putExtra(Intent.EXTRA_SUBJECT, name);
                 send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                Intent chooser = Intent.createChooser(send, "Udostępnij plik");
+                Intent chooser = Intent.createChooser(send, WidgetShared.tr(getContext(), "Udostępnij plik", "Share file"));
                 chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 getContext().startActivity(chooser);
             }
@@ -86,7 +86,7 @@ public class HabitWidgetPlugin extends Plugin {
             ret.put("location", saved.location);
             call.resolve(ret);
         } catch (Exception e) {
-            call.reject("Nie udało się zapisać pliku: " + e.getMessage());
+            call.reject(WidgetShared.tr(getContext(), "Nie udało się zapisać pliku: ", "Couldn't save the file: ") + e.getMessage());
         }
     }
 

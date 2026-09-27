@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Szpila</string>
+    <string name="title_activity_main">Szpila</string>
+    <string name="widget_list_label">Szpila - list</string>
+    <string name="widget_icons_label">Szpila - icons</string>
+    <string name="widget_next_label">Szpila - next habit</string>
+    <string name="widget_szpila_label">Szpila - mean cat</string>
+    <string name="widget_list_desc">Today\'s habits as a simple list with progress.</string>
+    <string name="widget_icons_desc">Today\'s habits with icons, a progress ring and the time left in the day.</string>
+    <string name="widget_next_desc">1×1: what to do now. Picks the next habit by itself, based on the time of day and your progress.</string>
+    <string name="widget_szpila_desc">4×1: Szpila the mean cat jabs you about habits still to do. No forbidden habits - safe for the home screen.</string>
+    <string name="widget_today_habits">Today\'s habits</string>
+    <string name="widget_empty">No habits for today</string>
+    <string name="widget_today">Today</string>
+    <string name="widget_progress_desc">Progress</string>
+    <string name="widget_next_progress_desc">Habit progress</string>
+    <string name="widget_szpila_cat_desc">Szpila - tap for another jab</string>
+    <string name="widget_szpila_placeholder">Mrrr. Open Szpila and I\'ll start picking on you.</string>
+    <string name="block_sleep">😴  Going to bed</string>
+    <string name="block_hold">Hold for 10 s if you really must</string>
+</resources>

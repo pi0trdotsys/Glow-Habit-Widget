@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { addMonths, format } from "date-fns";
-import { pl } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { L, dateLocale, pick } from "@/lib/i18n";
 import { HabitIcon } from "./HabitIcon";
 import { useHabits } from "@/lib/habits/store";
 import { monthGrid } from "@/lib/habits/insights";
@@ -17,7 +17,8 @@ import {
   kindOf,
 } from "@/lib/habits/utils";
 
-const WEEKDAYS = ["Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd"];
+const weekdays = () =>
+  pick(["Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd"], ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]);
 
 /** Month heatmap for all habits at once; tap a day to see what happened. */
 export function MonthCalendar() {
@@ -34,24 +35,24 @@ export function MonthCalendar() {
         <button
           onClick={() => setMonth((m) => addMonths(m, -1))}
           className="grid h-8 w-8 place-items-center rounded-full bg-background"
-          aria-label="Poprzedni miesiąc"
+          aria-label={L("Poprzedni miesiąc", "Previous month")}
         >
           <ChevronLeft size={16} />
         </button>
         <span className="text-sm font-semibold capitalize">
-          {format(month, "LLLL yyyy", { locale: pl })}
+          {format(month, "LLLL yyyy", { locale: dateLocale() })}
         </span>
         <button
           onClick={() => setMonth((m) => addMonths(m, 1))}
           disabled={isCurrent}
           className="grid h-8 w-8 place-items-center rounded-full bg-background disabled:opacity-30"
-          aria-label="Następny miesiąc"
+          aria-label={L("Następny miesiąc", "Next month")}
         >
           <ChevronRight size={16} />
         </button>
       </div>
       <div className="grid grid-cols-7 gap-1.5 text-center text-[10px] text-muted-foreground">
-        {WEEKDAYS.map((d) => (
+        {weekdays().map((d) => (
           <div key={d}>{d}</div>
         ))}
         {grid.map((d) => {
@@ -86,7 +87,7 @@ export function MonthCalendar() {
       {selected && (
         <div className="mt-4 rounded-2xl bg-background p-3">
           <div className="mb-2 text-xs font-semibold capitalize text-muted-foreground">
-            {format(selected, "EEEE, d MMMM", { locale: pl })}
+            {format(selected, pick("EEEE, d MMMM", "EEEE, MMMM d"), { locale: dateLocale() })}
           </div>
           <ul className="space-y-1.5">
             {habits
@@ -97,16 +98,16 @@ export function MonthCalendar() {
                 const st = avoid ? avoidStatus(h, completions, selected) : null;
                 const label = avoid
                   ? st === "clean"
-                    ? "czysto"
+                    ? L("czysto", "clean")
                     : st === "slip"
                       ? s >= 1
-                        ? "wpadka (w limicie)"
-                        : "wpadka"
-                      : "brak potwierdzenia"
+                        ? L("wpadka (w limicie)", "slip (within limit)")
+                        : L("wpadka", "slip")
+                      : L("brak potwierdzenia", "not confirmed")
                   : goalOf(h).type === "check"
                     ? s >= 1
-                      ? "zrobione"
-                      : "nie"
+                      ? L("zrobione", "done")
+                      : L("nie", "no")
                     : amountText(h, amountOn(h, completions, selected));
                 return (
                   <li key={h.id}>

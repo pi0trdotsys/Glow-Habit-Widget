@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Check, X, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { HabitIcon } from "./HabitIcon";
 import { praiseToast } from "./HabitTile";
 import { useHabits } from "@/lib/habits/store";
@@ -18,6 +18,7 @@ import {
 } from "@/lib/habits/utils";
 import { SZPILA_EMOJI, slipFor } from "@/lib/habits/szpila";
 import { useBackHandler } from "@/lib/back";
+import { L } from "@/lib/i18n";
 
 const MARK: Record<AvoidStatus, string> = { pending: "?", clean: "✓", slip: "✗" };
 
@@ -44,7 +45,7 @@ export function AvoidChips({ habits, day = new Date() }: { habits: Habit[]; day?
     } else {
       const { notifications, userName } = useHabits.getState();
       toast(`${SZPILA_EMOJI.angry} ${slipFor(h, notifications.tauntLevel, userName)}`, {
-        action: { label: "Cofnij", onClick: () => setAvoid(h.id, key, undoTo) },
+        action: { label: L("Cofnij", "Undo"), onClick: () => setAvoid(h.id, key, undoTo) },
       });
     }
   };
@@ -103,7 +104,7 @@ export function AvoidChips({ habits, day = new Date() }: { habits: Habit[]; day?
       <AnimatePresence>
         {selected && (
           <>
-            <motion.div
+            <m.div
               key="backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -111,7 +112,7 @@ export function AvoidChips({ habits, day = new Date() }: { habits: Habit[]; day?
               onClick={() => setOpen(null)}
               className="fixed inset-0 z-50 bg-black/50"
             />
-            <motion.div
+            <m.div
               key={selected.id}
               initial={{ y: "110%" }}
               animate={{ y: 0 }}
@@ -140,17 +141,19 @@ export function AvoidChips({ habits, day = new Date() }: { habits: Habit[]; day?
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-semibold">{selected.name}</div>
                     <div className="text-[11px] text-muted-foreground">
-                      {todayKey(day) === todayKey(now) ? "Dziś" : "Wczoraj"} ·{" "}
-                      {limitLabel(limitOf(selected))}
+                      {todayKey(day) === todayKey(now)
+                        ? L("Dziś", "Today")
+                        : L("Wczoraj", "Yesterday")}{" "}
+                      · {limitLabel(limitOf(selected))}
                       {limitOf(selected).times > 0 &&
-                        ` · wykorzystane ${slipsInPeriod(selected, completions, day, now)}/${limitOf(selected).times}`}
+                        ` · ${L("wykorzystane", "used")} ${slipsInPeriod(selected, completions, day, now)}/${limitOf(selected).times}`}
                     </div>
                   </div>
                   <Link
                     to="/habits/$id"
                     params={{ id: selected.id }}
                     className="grid h-9 w-9 place-items-center rounded-full bg-background text-muted-foreground"
-                    aria-label="Szczegóły"
+                    aria-label={L("Szczegóły", "Details")}
                   >
                     <ChevronRight size={16} />
                   </Link>
@@ -162,14 +165,14 @@ export function AvoidChips({ habits, day = new Date() }: { habits: Habit[]; day?
                     className="flex items-center justify-center gap-1.5 rounded-2xl py-3 text-sm font-semibold active:scale-95"
                     style={{ backgroundColor: AVOID_COLOR, color: "var(--background)" }}
                   >
-                    <Check size={17} strokeWidth={2.6} /> Czysto
+                    <Check size={17} strokeWidth={2.6} /> {L("Czysto", "Clean")}
                   </button>
                   <button
                     type="button"
                     onClick={() => answer(selected, "slip")}
                     className="flex items-center justify-center gap-1.5 rounded-2xl bg-background py-3 text-sm font-semibold text-muted-foreground active:scale-95"
                   >
-                    <X size={17} strokeWidth={2.6} /> Wpadka
+                    <X size={17} strokeWidth={2.6} /> {L("Wpadka", "Slip")}
                   </button>
                 </div>
                 {avoidStatus(selected, completions, day, now) !== "pending" && (
@@ -181,11 +184,11 @@ export function AvoidChips({ habits, day = new Date() }: { habits: Habit[]; day?
                     }}
                     className="mt-2 w-full py-1.5 text-xs text-muted-foreground"
                   >
-                    Wyczyść odpowiedź
+                    {L("Wyczyść odpowiedź", "Clear answer")}
                   </button>
                 )}
               </div>
-            </motion.div>
+            </m.div>
           </>
         )}
       </AnimatePresence>

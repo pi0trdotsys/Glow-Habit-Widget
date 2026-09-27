@@ -1,7 +1,8 @@
 import { useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { SZPILA_NAME, type SzpilaSay } from "@/lib/habits/szpila";
 import { useHabits } from "@/lib/habits/store";
+import { L } from "@/lib/i18n";
 import { catCondition, type CatCondition, type FaceId } from "@/lib/habits/gamification";
 
 const DARK = { face: "#262633", edge: "#3b3b4d" };
@@ -283,7 +284,10 @@ export function SzpilaCard({ say, onReroll }: { say: SzpilaSay; onReroll: () => 
           "linear-gradient(135deg, color-mix(in oklab, var(--avoid) 16%, var(--card)), var(--card))",
         border: "1px solid color-mix(in oklab, var(--avoid) 30%, transparent)",
       }}
-      aria-label={`${SZPILA_NAME} mówi. Dotknij, by usłyszeć kolejną szpilę.`}
+      aria-label={L(
+        `${SZPILA_NAME} mówi. Dotknij, by usłyszeć kolejną szpilę.`,
+        `${SZPILA_NAME} says. Tap for another jab.`,
+      )}
     >
       <Face mood={say.mood} size={56} />
       <div className="min-w-0 flex-1">
@@ -294,7 +298,9 @@ export function SzpilaCard({ say, onReroll }: { say: SzpilaSay; onReroll: () => 
           {SZPILA_NAME}
         </div>
         <Line text={say.text} className="mt-1 text-sm leading-snug" />
-        <div className="mt-1.5 text-[10px] text-muted-foreground">Dotknij po kolejną szpilę</div>
+        <div className="mt-1.5 text-[10px] text-muted-foreground">
+          {L("Dotknij po kolejną szpilę", "Tap for another jab")}
+        </div>
       </div>
     </button>
   );
@@ -311,7 +317,7 @@ export function SzpilaBubble({ say, onReroll }: { say: SzpilaSay; onReroll: () =
         background: "color-mix(in oklab, var(--avoid) 9%, var(--card))",
         border: "1px solid color-mix(in oklab, var(--avoid) 22%, transparent)",
       }}
-      aria-label={`${SZPILA_NAME}: ${say.text}. Dotknij po kolejną szpilę.`}
+      aria-label={`${SZPILA_NAME}: ${say.text}. ${L("Dotknij po kolejną szpilę.", "Tap for another jab.")}`}
     >
       <Face mood={say.mood} size={40} />
       <Line text={say.text} className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-snug" />
@@ -324,7 +330,7 @@ function Face({ mood, size }: { mood: SzpilaSay["mood"]; size: number }) {
   const condition = useCatCondition();
   mood = conditionMood(condition, mood);
   return (
-    <motion.div
+    <m.div
       key={mood}
       initial={{ rotate: -10, scale: 0.85 }}
       animate={{ rotate: 0, scale: 1 }}
@@ -332,14 +338,14 @@ function Face({ mood, size }: { mood: SzpilaSay["mood"]; size: number }) {
       className="shrink-0"
     >
       <SzpilaAvatar mood={mood} size={size} face={face} condition={condition} />
-    </motion.div>
+    </m.div>
   );
 }
 
 function Line({ text, className }: { text: string; className: string }) {
   return (
     <AnimatePresence mode="wait">
-      <motion.p
+      <m.p
         key={text}
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
@@ -348,7 +354,7 @@ function Line({ text, className }: { text: string; className: string }) {
         className={className}
       >
         {text}
-      </motion.p>
+      </m.p>
     </AnimatePresence>
   );
 }

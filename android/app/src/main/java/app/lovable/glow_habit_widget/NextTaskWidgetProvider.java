@@ -33,6 +33,7 @@ public class NextTaskWidgetProvider extends AppWidgetProvider {
         RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget3_root);
         List<JSONObject> plan = WidgetShared.plan(context);
         int total = WidgetShared.habits(context).length();
+        boolean en = WidgetShared.en(context);
 
         PendingIntent openPi = WidgetShared.openAppIntent(context, 3);
         if (openPi != null) {
@@ -46,8 +47,9 @@ public class NextTaskWidgetProvider extends AppWidgetProvider {
                 WidgetShared.ring(context, 48, 5, total > 0 ? 1f : 0f, WidgetShared.ACCENT, false));
             rv.setImageViewResource(R.id.next_icon, WidgetShared.iconRes(context, total > 0 ? "Trophy" : "Sparkles"));
             rv.setInt(R.id.next_icon, "setColorFilter", WidgetShared.ACCENT);
-            rv.setTextViewText(R.id.next_name, total > 0 ? "Komplet!" : "Loop");
-            rv.setTextViewText(R.id.next_sub, total > 0 ? "wszystko zrobione" : "dodaj zadania");
+            rv.setTextViewText(R.id.next_name, total > 0 ? (en ? "All done!" : "Komplet!") : "Loop");
+            rv.setTextViewText(R.id.next_sub, total > 0 ? (en ? "everything's done" : "wszystko zrobione")
+                : (en ? "add habits" : "dodaj zadania"));
             rv.setTextColor(R.id.next_sub, WidgetShared.ACCENT);
             if (openPi != null) rv.setOnClickPendingIntent(R.id.next_ring_box, openPi);
             mgr.updateAppWidget(widgetId, rv);
@@ -64,10 +66,10 @@ public class NextTaskWidgetProvider extends AppWidgetProvider {
         rv.setTextViewText(R.id.next_name, h.optString("name", ""));
 
         String amount = WidgetShared.amountText(h);
-        String when = WidgetShared.whenLabel(h);
-        String sub = avoid ? "potwierdź · " + when : amount.isEmpty() ? when : amount;
+        String when = WidgetShared.whenLabel(h, en);
+        String sub = avoid ? (en ? "confirm · " : "potwierdź · ") + when : amount.isEmpty() ? when : amount;
         rv.setTextViewText(R.id.next_sub, sub);
-        boolean overdue = when.startsWith("zaległe") || when.equals("teraz");
+        boolean overdue = WidgetShared.isDueNow(h); // "teraz" or "zaległe od ..."
         rv.setTextColor(R.id.next_sub, avoid || overdue ? WidgetShared.AVOID : WidgetShared.ACCENT);
 
         // A tap opens the hold-to-complete overlay; nothing is logged until the ring is held.

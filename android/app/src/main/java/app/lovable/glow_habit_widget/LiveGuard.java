@@ -116,6 +116,30 @@ final class LiveGuard {
             .replace("{time}", time).replace("{count}", String.valueOf(count));
     }
 
+    /** Minutes from `now` until `target` (minutes of day), going forward across midnight. */
+    static int minutesTo(int now, int target) {
+        return ((target - now) % (24 * 60) + 24 * 60) % (24 * 60);
+    }
+
+    /**
+     * When the guard starts: at bedtime ("przed snem") if that's before the
+     * deadline the same night (within 12 h), otherwise at the deadline itself.
+     */
+    static int start(boolean bedtimeOn, int bedtime, int deadline) {
+        int lead = minutesTo(bedtime, deadline);
+        return bedtimeOn && lead > 0 && lead < 12 * 60 ? bedtime : deadline;
+    }
+
+    /** Between bedtime and the deadline: countdown jabs ("odkładaj, za {left} min północ"). */
+    static boolean prePhase(int now, int start, int deadline) {
+        return start != deadline && inWindow(now, start, deadline);
+    }
+
+    /** Resolve {left} (minutes to the deadline) and {deadline} (its clock time). */
+    static String fillLeft(String line, int left, String deadline) {
+        return line.replace("{left}", String.valueOf(left)).replace("{deadline}", deadline);
+    }
+
     /** The habit day a night belongs to: before noon it's still "last night". */
     static String habitDay(int nowMin, String today, String yesterday) {
         return nowMin < 12 * 60 ? yesterday : today;
@@ -138,6 +162,19 @@ final class LiveGuard {
 
     static int until(Context c) {
         return settings(c).optInt("until", ScreenTime.NIGHT_END);
+    }
+
+    static boolean bedtimeOn(Context c) {
+        return settings(c).optBoolean("bedtime", false);
+    }
+
+    static int bedtimeAt(Context c) {
+        return settings(c).optInt("bedtimeAt", 23 * 60 + 30);
+    }
+
+    /** Guard start tonight (bedtime or the deadline), see start(). */
+    static int start(Context c) {
+        return start(bedtimeOn(c), bedtimeAt(c), from(c));
     }
 
     /** Watched and not switched off by the user. */
@@ -235,12 +272,61 @@ final class LiveGuard {
         }
     }
 
+    // ------------------------------------------------------------------ bedtime reminder
+
+    static final int ID_BEDTIME = 7520;
+
+    /** At bedtime (once a night): "odłóż telefon za 30 min" - from then on the guard is on. */
+    static void maybeBedtimeReminder(Context c) {
+        if (!bedtimeOn(c)) return;
+        int now = WidgetShared.nowMinute();
+        int bed = bedtimeAt(c);
+        int deadline = from(c);
+        if (start(c) != bed || !prePhase(now, bed, deadline) || minutesTo(bed, now) > 20) return;
+        String day = WidgetShared.today();
+        if (day.equals(prefs(c).getString("bedtime_day", ""))) return;
+        prefs(c).edit().putString("bedtime_day", day).apply();
+        if (android.os.Build.VERSION.SDK_INT >= 33
+                && c.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        LiveGuardService.ensureChannels(c);
+        int left = minutesTo(now, deadline);
+        String clock = WidgetShared.fmtMinute(deadline);
+        JSONObject lines = settings(c).optJSONObject("lines");
+        String text = lines != null ? WidgetShared.pick(lines.optJSONArray("bedtime")) : "";
+        if (text.isEmpty()) {
+            text = WidgetShared.tr(c, "Za {left} min {deadline}. Odkładaj telefon i szykuj się do spania.",
+                "{deadline} in {left} min. Put the phone down and get ready for bed.");
+        }
+        text = fillLeft(text, left, clock);
+        String title = WidgetShared.tr(c, "Odłóż telefon za " + left + " min", "Put the phone down in " + left + " min");
+        Intent home = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        PendingIntent sleep = PendingIntent.getActivity(c, 7521, home, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        androidx.core.app.NotificationCompat.Builder b = new androidx.core.app.NotificationCompat.Builder(c, LiveGuardService.CH_LIVE)
+            .setSmallIcon(R.drawable.ic_stat_szpila)
+            .setColor(WidgetShared.AVOID)
+            .setContentTitle(HabitNotifier.EMOJI_NORMAL + " " + title)
+            .setContentText(text)
+            .setStyle(new androidx.core.app.NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setTimeoutAfter(left * 60_000L)
+            .addAction(0, WidgetShared.tr(c, "😴 Idę spać", "😴 Going to bed"), sleep);
+        PendingIntent open = WidgetShared.openAppIntent(c, 7522);
+        if (open != null) b.setContentIntent(open);
+        try {
+            androidx.core.app.NotificationManagerCompat.from(c).notify(ID_BEDTIME, b.build());
+        } catch (SecurityException ignored) {
+        }
+    }
+
     // ------------------------------------------------------------------ start / schedule
 
     /** Start the guard now if it should be running (in the window, enabled, access granted). */
     static void ensure(Context c) {
         if (!enabled(c) || LiveGuardService.running) return;
-        if (!inWindow(WidgetShared.nowMinute(), from(c), until(c))) return;
+        if (!inWindow(WidgetShared.nowMinute(), start(c), until(c))) return;
         try {
             Intent i = new Intent(c, LiveGuardService.class);
             if (Build.VERSION.SDK_INT >= 26) c.startForegroundService(i);
@@ -257,13 +343,14 @@ final class LiveGuard {
         Intent i = new Intent(c, NotifierReceiver.class).setAction(ACTION_START);
         PendingIntent pi = PendingIntent.getBroadcast(c, 7600, i,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        if (!enabled(c)) {
+        // The bedtime reminder works without usage access; the guard itself needs it.
+        if (!enabled(c) && !bedtimeOn(c)) {
             am.cancel(pi);
             return;
         }
         Calendar at = Calendar.getInstance();
         int now = at.get(Calendar.HOUR_OF_DAY) * 60 + at.get(Calendar.MINUTE);
-        int from = from(c);
+        int from = start(c);
         at.set(Calendar.HOUR_OF_DAY, from / 60);
         at.set(Calendar.MINUTE, from % 60);
         at.set(Calendar.SECOND, 2);

@@ -1,5 +1,6 @@
 import { TrendingDown, TrendingUp, Minus } from "lucide-react";
 import type { WeeklyReport } from "@/lib/habits/utils";
+import { L } from "@/lib/i18n";
 
 export function deltaColor(delta: number): string {
   return delta > 0
@@ -10,11 +11,11 @@ export function deltaColor(delta: number): string {
 }
 
 export function verdict(delta: number): string {
-  if (delta >= 10) return "Dużo lepiej niż tydzień temu";
-  if (delta > 0) return "Trochę lepiej niż tydzień temu";
-  if (delta === 0) return "Tak samo jak tydzień temu";
-  if (delta > -10) return "Trochę gorzej niż tydzień temu";
-  return "Dużo gorzej niż tydzień temu";
+  if (delta >= 10) return L("Dużo lepiej niż tydzień temu", "Way better than last week");
+  if (delta > 0) return L("Trochę lepiej niż tydzień temu", "A bit better than last week");
+  if (delta === 0) return L("Tak samo jak tydzień temu", "Same as last week");
+  if (delta > -10) return L("Trochę gorzej niż tydzień temu", "A bit worse than last week");
+  return L("Dużo gorzej niż tydzień temu", "Way worse than last week");
 }
 
 export function DeltaPill({ delta, big = false }: { delta: number; big?: boolean }) {
@@ -28,7 +29,7 @@ export function DeltaPill({ delta, big = false }: { delta: number; big?: boolean
     >
       <Icon size={big ? 16 : 13} />
       {delta > 0 ? "+" : ""}
-      {delta} pkt
+      {delta} {L("pkt", "pts")}
     </span>
   );
 }
@@ -37,13 +38,13 @@ export function DeltaPill({ delta, big = false }: { delta: number; big?: boolean
 export function WeekBars({ r }: { r: WeeklyReport }) {
   const rows = [
     {
-      label: "Ten tydzień",
+      label: L("Ten tydzień", "This week"),
       rate: r.thisWeek.rate,
       color:
         deltaColor(r.delta) === "var(--muted-foreground)" ? "var(--primary)" : deltaColor(r.delta),
     },
     {
-      label: "Tydzień temu",
+      label: L("Tydzień temu", "Last week"),
       rate: r.lastWeek.rate,
       color: "color-mix(in oklab, var(--foreground) 35%, transparent)",
     },
@@ -82,7 +83,7 @@ export function WeekDayChart({ r }: { r: WeeklyReport }) {
                 height: `${Math.max(3, ((d.prev ?? 0) / 100) * H)}px`,
                 backgroundColor: "color-mix(in oklab, var(--foreground) 22%, transparent)",
               }}
-              title={`Tydzień temu: ${d.prev ?? 0}%`}
+              title={`${L("Tydzień temu", "Last week")}: ${d.prev ?? 0}%`}
             />
             <div
               className="w-1/2 max-w-[12px] rounded-t-[4px]"
@@ -91,7 +92,11 @@ export function WeekDayChart({ r }: { r: WeeklyReport }) {
                 backgroundColor: d.now == null ? "var(--border)" : "var(--primary)",
                 opacity: d.now == null ? 0.6 : 1,
               }}
-              title={d.now == null ? "Jeszcze przed nami" : `Ten tydzień: ${d.now}%`}
+              title={
+                d.now == null
+                  ? L("Jeszcze przed nami", "Still ahead")
+                  : `${L("Ten tydzień", "This week")}: ${d.now}%`
+              }
             />
           </div>
         ))}
@@ -112,15 +117,15 @@ export function WeekDayChart({ r }: { r: WeeklyReport }) {
       </div>
       <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: "var(--primary)" }} /> ten
-          tydzień
+          <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: "var(--primary)" }} />{" "}
+          {L("ten tydzień", "this week")}
         </span>
         <span className="flex items-center gap-1.5">
           <span
             className="h-2 w-2 rounded-sm"
             style={{ backgroundColor: "color-mix(in oklab, var(--foreground) 22%, transparent)" }}
           />
-          tydzień temu
+          {L("tydzień temu", "last week")}
         </span>
       </div>
     </div>

@@ -96,24 +96,26 @@ public class HoldActivity extends Activity {
         TextView name = text(h.optString("name"), 19, 0xFFF4F5F9, true);
         card.addView(name);
 
+        boolean en = WidgetShared.en(this);
         String amount = WidgetShared.amountText(h);
         String sub = avoid
-            ? (done ? "Dziś czysto ✓" : "Zakazane · potwierdź, że dziś bez")
-            : done ? "Zrobione ✓" : amount.isEmpty() ? WidgetShared.whenLabel(h) : amount;
+            ? (done ? (en ? "Clean today ✓" : "Dziś czysto ✓")
+                : (en ? "Forbidden · confirm you stayed clean today" : "Zakazane · potwierdź, że dziś bez"))
+            : done ? (en ? "Done ✓" : "Zrobione ✓") : amount.isEmpty() ? WidgetShared.whenLabel(h, en) : amount;
         TextView subView = text(sub, 13, avoid ? WidgetShared.AVOID : 0xFF9398A5, false);
         subView.setPadding(0, dp(4), 0, dp(14));
         card.addView(subView);
 
         boolean undo = done && !forwardOnly;
         String label;
-        if (done && forwardOnly) label = "Już zrobione";
-        else if (undo) label = "Przytrzymaj, by cofnąć";
-        else if (avoid) label = "Przytrzymaj: dziś czysto";
-        else if ("steps".equals(h.optString("source"))) label = "Przytrzymaj: odśwież kroki";
-        else if ("check".equals(h.optString("goal", "check"))) label = "Przytrzymaj, by zaliczyć";
+        if (done && forwardOnly) label = en ? "Already done" : "Już zrobione";
+        else if (undo) label = en ? "Hold to undo" : "Przytrzymaj, by cofnąć";
+        else if (avoid) label = en ? "Hold: clean today" : "Przytrzymaj: dziś czysto";
+        else if ("steps".equals(h.optString("source"))) label = en ? "Hold: refresh steps" : "Przytrzymaj: odśwież kroki";
+        else if ("check".equals(h.optString("goal", "check"))) label = en ? "Hold to complete" : "Przytrzymaj, by zaliczyć";
         else {
             int step = Math.min(WidgetShared.step(h), Math.max(1, WidgetShared.target(h) - WidgetShared.amount(h)));
-            label = ("Przytrzymaj: +" + step + " " + WidgetShared.unit(h, step)).trim();
+            label = ((en ? "Hold: +" : "Przytrzymaj: +") + step + " " + WidgetShared.unit(h, step)).trim();
         }
 
         Drawable icon = getDrawable(WidgetShared.iconRes(this, h.optString("icon", "")));
@@ -126,13 +128,13 @@ public class HoldActivity extends Activity {
         card.addView(status);
 
         if (avoid && WidgetShared.isPending(h)) {
-            TextView slip = text("Była wpadka", 13, 0xFF9398A5, false);
+            TextView slip = text(en ? "I slipped" : "Była wpadka", 13, 0xFF9398A5, false);
             slip.setPadding(dp(16), dp(12), dp(16), dp(4));
             slip.setOnClickListener(v -> act(true));
             card.addView(slip);
         }
 
-        TextView hint = text("Dotknij poza okienkiem, by anulować", 11, 0xFF5C6170, false);
+        TextView hint = text(en ? "Tap outside to cancel" : "Dotknij poza okienkiem, by anulować", 11, 0xFF5C6170, false);
         hint.setPadding(0, dp(10), 0, 0);
         card.addView(hint);
         return root;
@@ -162,15 +164,16 @@ public class HoldActivity extends Activity {
             else WidgetShared.applyTap(app, habitId, forwardOnly);
             WidgetShared.updateAll(app);
             JSONObject after = WidgetShared.row(app, habitId);
+            boolean en = WidgetShared.en(app);
             String msg;
-            if (slip) msg = "Wpadka zapisana. Szpila już ostrzy język.";
+            if (slip) msg = en ? "Slip logged. Szpila is already sharpening its claws." : "Wpadka zapisana. Szpila już ostrzy język.";
             else if (after != null && WidgetShared.isDone(after)) {
                 String praise = after.optString("praise", "");
-                msg = praise.isEmpty() ? "Zaliczone ✓" : HabitNotifier.EMOJI_IMPRESSED + " " + praise;
+                msg = praise.isEmpty() ? (en ? "Done ✓" : "Zaliczone ✓") : HabitNotifier.EMOJI_IMPRESSED + " " + praise;
             } else if (after != null && !WidgetShared.amountText(after).isEmpty()) {
-                msg = "Zapisane · " + WidgetShared.amountText(after);
+                msg = (en ? "Logged · " : "Zapisane · ") + WidgetShared.amountText(after);
             } else {
-                msg = "Cofnięte";
+                msg = en ? "Undone" : "Cofnięte";
             }
             new Handler(Looper.getMainLooper()).post(() -> {
                 status.setText(msg);

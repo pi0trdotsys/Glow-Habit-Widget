@@ -65,9 +65,13 @@ final class LiveBlock {
             hide(c);
         });
 
+        // Static texts follow the app language (the layout defaults follow the system one).
+        boolean en = WidgetShared.en(c);
+        ((TextView) root.findViewById(R.id.block_sleep)).setText(en ? "😴  Going to bed" : "😴  Idę spać");
         ProgressBar bar = root.findViewById(R.id.block_hold_progress);
         TextView holdText = root.findViewById(R.id.block_hold_text);
-        String idle = holdText.getText().toString();
+        String idle = en ? "Hold for 10 s if you really must" : "Przytrzymaj 10 s, jeśli naprawdę musisz";
+        holdText.setText(idle);
         ValueAnimator anim = ValueAnimator.ofInt(0, 1000);
         anim.setDuration(LiveGuard.HOLD_THROUGH_MS);
         anim.setInterpolator(new LinearInterpolator());
@@ -75,7 +79,8 @@ final class LiveBlock {
             int p = (int) a.getAnimatedValue();
             bar.setProgress(p);
             long left = (long) Math.ceil(LiveGuard.HOLD_THROUGH_MS * (1000 - p) / 1000.0 / 1000.0);
-            holdText.setText(p >= 1000 ? "No dobra…" : "Trzymaj jeszcze " + left + " s… serio?");
+            holdText.setText(p >= 1000 ? (en ? "Fine…" : "No dobra…")
+                : en ? "Keep holding, " + left + " s more… seriously?" : "Trzymaj jeszcze " + left + " s… serio?");
             if (p >= 1000 && shown != null) {
                 hide(c);
                 listener.onHoldThrough();

@@ -12,3 +12,6 @@ globalThis.localStorage ??= {
 } as Storage;
 // zustand reads window.localStorage.
 (globalThis as { window?: unknown }).window ??= globalThis;
+
+// English Szpila lines are lazy-loaded in the app; tests switch languages synchronously.
+await (await import("@/lib/habits/szpila")).loadEnglishLines();

@@ -15,6 +15,7 @@ import {
   todayKey,
   weeklyReport,
 } from "./utils";
+import { L, isEn, pick } from "@/lib/i18n";
 
 /** A day "in form": at least this share of the day's habits done. */
 export const FORMA = 0.8;
@@ -28,34 +29,119 @@ export type HumorId = "wredny" | "trener" | "mafioso" | "poeta";
 
 export interface Unlockable<T extends string> {
   id: T;
+  /** Polish name (use unlockName() for the current language). */
   name: string;
+  nameEn?: string;
   /** Best forma streak needed (days). */
   streak?: number;
   /** Or: weeks with all 3 challenges done. */
   weeks?: number;
+  /** Polish blurb (use unlockBlurb() for the current language). */
   blurb: string;
+  blurbEn?: string;
 }
 
 export const FACES: Unlockable<FaceId>[] = [
-  { id: "wredny", name: "Wredny", streak: 0, blurb: "Klasyka. Patrzy na ciebie z pogardą." },
-  { id: "kujon", name: "Kujon", streak: 3, blurb: "Okulary. Liczy każde twoje odpuszczenie." },
-  { id: "diabel", name: "Diabeł", streak: 7, blurb: "Rogi. Tydzień formy obudził w nim bestię." },
-  { id: "krol", name: "Król", streak: 14, blurb: "Korona. Dwa tygodnie - należy mu się." },
+  {
+    id: "wredny",
+    name: "Wredny",
+    nameEn: "Mean",
+    streak: 0,
+    blurb: "Klasyka. Patrzy na ciebie z pogardą.",
+    blurbEn: "The classic. Looks at you with contempt.",
+  },
+  {
+    id: "kujon",
+    name: "Kujon",
+    nameEn: "Nerd",
+    streak: 3,
+    blurb: "Okulary. Liczy każde twoje odpuszczenie.",
+    blurbEn: "Glasses. Keeps count of every time you slack off.",
+  },
+  {
+    id: "diabel",
+    name: "Diabeł",
+    nameEn: "Devil",
+    streak: 7,
+    blurb: "Rogi. Tydzień formy obudził w nim bestię.",
+    blurbEn: "Horns. A week in form woke the beast.",
+  },
+  {
+    id: "krol",
+    name: "Król",
+    nameEn: "King",
+    streak: 14,
+    blurb: "Korona. Dwa tygodnie - należy mu się.",
+    blurbEn: "Crown. Two weeks - he's earned it.",
+  },
   {
     id: "zloty",
     name: "Złoty",
+    nameEn: "Golden",
     streak: 30,
     blurb: "Złote futro. Miesiąc formy, legenda dzielnicy.",
+    blurbEn: "Golden fur. A month in form, a neighborhood legend.",
   },
-  { id: "dj", name: "DJ", weeks: 1, blurb: "Słuchawki. Za komplet tygodniowych wyzwań." },
+  {
+    id: "dj",
+    name: "DJ",
+    nameEn: "DJ",
+    weeks: 1,
+    blurb: "Słuchawki. Za komplet tygodniowych wyzwań.",
+    blurbEn: "Headphones. For completing all the weekly challenges.",
+  },
 ];
 
 export const HUMORS: Unlockable<HumorId>[] = [
-  { id: "wredny", name: "Wredny", streak: 0, blurb: "Wulgarny, złośliwy, bez litości." },
-  { id: "trener", name: "Trener", streak: 5, blurb: "Drze się jak na siłowni. Bez wymówek, byku." },
-  { id: "mafioso", name: "Mafioso", streak: 10, blurb: "Składa propozycje nie do odrzucenia." },
-  { id: "poeta", name: "Poeta", streak: 21, blurb: "Obraża cię wierszem. Częstochowskim." },
+  {
+    id: "wredny",
+    name: "Wredny",
+    nameEn: "Mean",
+    streak: 0,
+    blurb: "Wulgarny, złośliwy, bez litości.",
+    blurbEn: "Vulgar, spiteful, merciless.",
+  },
+  {
+    id: "trener",
+    name: "Trener",
+    nameEn: "Coach",
+    streak: 5,
+    blurb: "Drze się jak na siłowni. Bez wymówek, byku.",
+    blurbEn: "Yells like it's leg day. No excuses, champ.",
+  },
+  {
+    id: "mafioso",
+    name: "Mafioso",
+    nameEn: "Mafioso",
+    streak: 10,
+    blurb: "Składa propozycje nie do odrzucenia.",
+    blurbEn: "Makes you offers you can't refuse.",
+  },
+  {
+    id: "poeta",
+    name: "Poeta",
+    nameEn: "Poet",
+    streak: 21,
+    blurb: "Obraża cię wierszem. Częstochowskim.",
+    blurbEn: "Insults you in verse. Cheesy rhymes guaranteed.",
+  },
 ];
+
+/** Name of a face/humor in the current language. */
+export const unlockName = <T extends string>(u: Unlockable<T>): string =>
+  isEn() ? (u.nameEn ?? u.name) : u.name;
+
+/** Blurb of a face/humor in the current language. */
+export const unlockBlurb = <T extends string>(u: Unlockable<T>): string =>
+  isEn() ? (u.blurbEn ?? u.blurb) : u.blurb;
+
+/** Aliases for readability at call sites. */
+export const faceName = unlockName;
+export const faceBlurb = unlockBlurb;
+
+/** UI word for an unlock kind: "mina"/"humor" or "face"/"mood". */
+export const kindLabel = (kind: "mina" | "humor"): string =>
+  kind === "mina" ? L("mina", "face") : L("humor", "mood");
 
 export interface Progress {
   /** Current forma streak (today counts once it's in form; otherwise from yesterday). */
@@ -82,7 +168,7 @@ export function nextUnlock(
     .filter((u) => (u.streak ?? 0) > p.best)
     .sort((a, b) => (a.streak ?? 0) - (b.streak ?? 0));
   const n = all[0];
-  return n ? { name: n.name, kind: n.kind, missing: (n.streak ?? 0) - p.current } : null;
+  return n ? { name: unlockName(n), kind: n.kind, missing: (n.streak ?? 0) - p.current } : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -195,11 +281,22 @@ export function catCondition(
   return bad >= 4 ? "neglected" : "normal";
 }
 
+/** Polish labels ("Kot jest …"); use conditionLabel() for the current language. */
 export const CONDITION_LABEL: Record<CatCondition, string> = {
   groomed: "zadbany i zadowolony",
   normal: "w normie",
   neglected: "zaniedbany i obrażony",
 };
+
+export const CONDITION_LABEL_EN: Record<CatCondition, string> = {
+  groomed: "well groomed and happy",
+  normal: "doing fine",
+  neglected: "neglected and offended",
+};
+
+/** "The cat is …" label in the current language. */
+export const conditionLabel = (c: CatCondition): string =>
+  pick(CONDITION_LABEL, CONDITION_LABEL_EN)[c];
 
 // ---------------------------------------------------------------------------
 // Weekly challenges
@@ -269,8 +366,11 @@ export function weeklyChallenges(
       const done = hit.filter(Boolean).length;
       return {
         id: "habit5",
-        title: `${h.name}: 5 z 7 dni`,
-        detail: "Zrób to zadanie w pełni przez 5 dni tego tygodnia.",
+        title: L(`${h.name}: 5 z 7 dni`, `${h.name}: 5 of 7 days`),
+        detail: L(
+          "Zrób to zadanie w pełni przez 5 dni tego tygodnia.",
+          "Fully complete this task on 5 days this week.",
+        ),
         progress: Math.min(done, 5),
         goal: 5,
         status: daysStatus(done, 5, remaining(hit[last])),
@@ -291,8 +391,11 @@ export function weeklyChallenges(
       }
       return {
         id: "clean",
-        title: `Czysty tydzień: ${h.name}`,
-        detail: "Ani jednej wpadki od poniedziałku do niedzieli.",
+        title: L(`Czysty tydzień: ${h.name}`, `Clean week: ${h.name}`),
+        detail: L(
+          "Ani jednej wpadki od poniedziałku do niedzieli.",
+          "Not a single slip from Monday to Sunday.",
+        ),
         progress: clean,
         goal: 7,
         status: slipped ? "failed" : weekOver ? "done" : "active",
@@ -305,8 +408,11 @@ export function weeklyChallenges(
     const done = fractions.filter((f) => f != null && f >= FORMA).length;
     return {
       id: "forma4",
-      title: "4 dni w formie",
-      detail: `Dzień w formie = co najmniej ${Math.round(FORMA * 100)}% zadań.`,
+      title: L("4 dni w formie", "4 days in form"),
+      detail: L(
+        `Dzień w formie = co najmniej ${Math.round(FORMA * 100)}% zadań.`,
+        `A day in form = at least ${Math.round(FORMA * 100)}% of tasks done.`,
+      ),
       progress: Math.min(done, 4),
       goal: 4,
       status: daysStatus(done, 4, remaining((fractions[last] ?? 0) >= FORMA)),
@@ -318,8 +424,11 @@ export function weeklyChallenges(
     const done = fractions.filter((f) => f != null && f >= 1).length;
     return {
       id: "perfect2",
-      title: "2 dni na 100%",
-      detail: "Dwa dni z kompletem zadań. Bez wyjątków.",
+      title: L("2 dni na 100%", "2 days at 100%"),
+      detail: L(
+        "Dwa dni z kompletem zadań. Bez wyjątków.",
+        "Two days with every task done. No exceptions.",
+      ),
       progress: Math.min(done, 2),
       goal: 2,
       status: daysStatus(done, 2, remaining((fractions[last] ?? 0) >= 1)),
@@ -337,8 +446,11 @@ export function weeklyChallenges(
       }
       return {
         id: "night0",
-        title: "Zero social mediów po północy",
-        detail: "Ani razu TikToka, Insta czy YouTube'a w nocy przez cały tydzień.",
+        title: L("Zero social mediów po północy", "Zero social media after midnight"),
+        detail: L(
+          "Ani razu TikToka, Insta czy YouTube'a w nocy przez cały tydzień.",
+          "Not a single late-night TikTok, Insta or YouTube all week.",
+        ),
         progress: clean,
         goal: 7,
         status: bad > 0 ? "failed" : weekOver ? "done" : "active",
@@ -354,8 +466,11 @@ export function weeklyChallenges(
   if (!rep.noBaseline) {
     candidates.push(() => ({
       id: "beat",
-      title: "Pobij zeszły tydzień",
-      detail: `Teraz ${rep.thisWeek.rate}% vs ${rep.lastWeek.rate}% tydzień temu (do tej samej chwili).`,
+      title: L("Pobij zeszły tydzień", "Beat last week"),
+      detail: L(
+        `Teraz ${rep.thisWeek.rate}% vs ${rep.lastWeek.rate}% tydzień temu (do tej samej chwili).`,
+        `Now ${rep.thisWeek.rate}% vs ${rep.lastWeek.rate}% a week ago (at the same point).`,
+      ),
       progress: rep.delta > 0 ? 1 : 0,
       goal: 1,
       status: weekOver ? (rep.delta > 0 ? "done" : "failed") : "active",
@@ -447,10 +562,76 @@ const HUMOR_LINES: Record<Exclude<HumorId, "wredny">, HumorLines> = {
   },
 };
 
+// English voices: a gym-bro coach, a mafia don and a poet who rhymes (badly).
+const HUMOR_LINES_EN: Record<Exclude<HumorId, "wredny">, HumorLines> = {
+  trener: {
+    nag: [
+      "LET'S GO, CHAMP! “{name}” won't do itself! One more rep of life!",
+      "What is this, a warm-up for pensioners? “{name}” - now, damn it, no excuses!",
+      "No pain, no gain! “{name}” is waiting and you're slacking like it's leg day.",
+      "Character muscles don't grow on their own. “{name}” - one, two, go!",
+    ],
+    avoid: [
+      "Keep your guard up! “{name}” is your toughest opponent. Don't let it win, softie!",
+      "Discipline, champ! Zero “{name}” today, you hear me?!",
+    ],
+    praise: [
+      "YEAH, BABY! “{name}” done! That's how you fucking train!",
+      "What a pump! “{name}” crushed. Tomorrow we go harder, champ!",
+    ],
+    liveFirst: ["{app} at {time}?! Recovery is training too, champ! Phone on the bench and sleep!"],
+    liveEscalate: [
+      "{m} min on {app}? Even cardio doesn't last that long! Sleep, damn it, right now!",
+    ],
+  },
+  mafioso: {
+    nag: [
+      "I'm gonna make you an offer you can't refuse: “{name}”. Today. Capisce?",
+      "The family is getting impatient. “{name}” still ain't done. You don't wanna disappoint us, do you?",
+      "I got friends asking about “{name}”. Not nice friends. Do it.",
+      "I respect you. That's why I'm asking nicely: “{name}”. Before I start asking differently.",
+    ],
+    avoid: [
+      "“{name}”? Not in my neighborhood. Remember what happened to the ones who didn't listen.",
+      "One slip with “{name}” and you wake up with a horse's head in your bed. Metaphorically. Probably.",
+    ],
+    praise: [
+      "“{name}” taken care of. The family is proud of you. For now.",
+      "Nice work on “{name}”. Don Szpila won't forget this.",
+    ],
+    liveFirst: [
+      "{app} at {time}? Don Szpila don't like it when his people ain't sleeping. Put it down. I'm asking nicely. Once.",
+    ],
+    liveEscalate: ["{m} minutes. My patience is running out, and I don't ask twice. Phone. Down."],
+  },
+  poeta: {
+    nag: [
+      "Roses are red, your excuses are too - “{name}” isn't done, so what's wrong with you?",
+      "The couch is soft, the day is long, “{name}” undone - you're doing it wrong.",
+      "Get up and move, the clock won't wait, “{name}” is calling, damn it - don't be late.",
+      "A lazy soul on a lazy day - skip “{name}” and you'll pay, pay, pay.",
+    ],
+    avoid: [
+      "Who gives in to “{name}” by night or by day wakes up like a stump in a pile of hay.",
+      "Not “{name}”, friend, not down that road - or come the morning you'll feel like a toad.",
+    ],
+    praise: [
+      "O wonder! “{name}” is done - let this day be praised by everyone!",
+      "With “{name}” you won the fight - glory to you from morning to night!",
+    ],
+    liveFirst: [
+      "Midnight has passed, yet on {app} you stay - your sleep slips off while you scroll away. Go to bed.",
+    ],
+    liveEscalate: [
+      "{m} minutes on {app} - oh horror, oh plight! Put down that phone or you'll suffer tonight.",
+    ],
+  },
+};
+
 const noLines: HumorLines = { nag: [], avoid: [], praise: [], liveFirst: [], liveEscalate: [] };
 
 export function humorLines(humor: HumorId | undefined): HumorLines {
-  return humor && humor !== "wredny" ? HUMOR_LINES[humor] : noLines;
+  return humor && humor !== "wredny" ? pick(HUMOR_LINES, HUMOR_LINES_EN)[humor] : noLines;
 }
 
 /** Live-guard extras for a humor: lines for the first jab and for escalation. */

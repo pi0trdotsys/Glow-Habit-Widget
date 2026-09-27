@@ -7,6 +7,8 @@
 **Nawyki z pazurem.**
 Rób to, co chcesz robić. Rzuć to, czego nie chcesz. A jak odpuścisz, wredny kot ci o tym przypomni. Boleśnie.
 
+**Polski** · [English](README.en.md)
+
 <br />
 
 [![Pobierz APK](https://img.shields.io/github/v/release/pi0trdotsys/Glow-Habit-Widget?label=Pobierz%20APK&style=for-the-badge&color=ff4d5e&labelColor=0b0d11)](https://github.com/pi0trdotsys/Glow-Habit-Widget/releases/latest)
@@ -40,6 +42,9 @@ Zrobisz swoje, dostaniesz pochwałę. Złośliwą, ale zawsze.
 > Do tego 3, 5 albo 8 szpil dziennie i godziny ciszy.
 
 ## ◉ Po północy nie ma zmiłuj
+
+**Tryb przed snem.** O 23:30 Szpila mówi _„odłóż telefon za 30 min”_ i od razu
+zaczyna pilnować, odliczając do północy.
 
 Otwierasz TikToka o 0:40? **Szpila wyskakuje od razu**, a nie dopiero rano.
 Tekst pod konkretną aplikację, a co 5 minut ostrzej.
@@ -113,6 +118,12 @@ Brak potwierdzenia = wpadka. Wczoraj rozliczysz jeszcze rano, do 12:00.
 - **Wieczorne rozliczenie** zakazanych jednym powiadomieniem.
 - **Kroki z Health Connect**: Google Fit, Samsung Health czy Mi Fitness wpisują je za ciebie.
 
+## ◉ Polski i English
+
+Cała aplikacja, szpile (tak, przekleństwa też), powiadomienia i widżety mówią
+**po polsku i po angielsku**. Język wybierasz przy pierwszym uruchomieniu albo
+w każdej chwili w Ustawieniach.
+
 <br />
 
 ---
@@ -123,7 +134,7 @@ Brak potwierdzenia = wpadka. Wczoraj rozliczysz jeszcze rano, do 12:00.
 
 1. Pobierz plik **`szpila-….apk`** z [Releases](https://github.com/pi0trdotsys/Glow-Habit-Widget/releases/latest).
 2. Otwórz go na telefonie i zezwól na instalację z tego źródła.
-3. Uruchom Szpilę, podaj imię i zgódź się na powiadomienia.
+3. Uruchom Szpilę, wybierz język, podaj imię i zgódź się na powiadomienia.
 
 Na start dostajesz gotowe zadania: mycie zębów, wodę, 8000 kroków, czytanie,
 programowanie, naukę języka, scrollowanie w łóżku i fast food. Zmieniasz je,
@@ -172,7 +183,9 @@ powiadomienia, nocny strażnik (foreground service + usage stats), blokada
 (nakładka nad aplikacjami), Health Connect i czas ekranu są natywne
 (Java/Kotlin). Dane żyją w `localStorage` i są lustrzane do
 `SharedPreferences`, skąd czyta je strona natywna
-([`src/lib/widget/bridge.ts`](src/lib/widget/bridge.ts)).
+([`src/lib/widget/bridge.ts`](src/lib/widget/bridge.ts)). Tłumaczenia są
+w kodzie: `L("polski", "English")` ([`src/lib/i18n.ts`](src/lib/i18n.ts)),
+po stronie natywnej `WidgetShared.tr()`.
 
 ```bash
 bun install
