@@ -8,15 +8,7 @@ export interface HabitSchedule {
   target?: number;
 }
 
-export type HabitColor =
-  | "mint"
-  | "coral"
-  | "amber"
-  | "violet"
-  | "sky"
-  | "rose"
-  | "lime"
-  | "sand";
+export type HabitColor = "mint" | "coral" | "amber" | "violet" | "sky" | "rose" | "lime" | "sand";
 
 /**
  * "build" = something to do (read, brush teeth, drink water).

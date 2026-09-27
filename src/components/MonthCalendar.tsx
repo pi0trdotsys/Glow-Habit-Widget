@@ -7,7 +7,15 @@ import { HabitIcon } from "./HabitIcon";
 import { useHabits } from "@/lib/habits/store";
 import { monthGrid } from "@/lib/habits/insights";
 import { AVOID_COLOR, HABIT_COLOR_VAR } from "@/lib/habits/colors";
-import { amountOn, amountText, avoidStatus, dayScore, goalOf, isDueOn, kindOf } from "@/lib/habits/utils";
+import {
+  amountOn,
+  amountText,
+  avoidStatus,
+  dayScore,
+  goalOf,
+  isDueOn,
+  kindOf,
+} from "@/lib/habits/utils";
 
 const WEEKDAYS = ["Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd"];
 
@@ -30,7 +38,9 @@ export function MonthCalendar() {
         >
           <ChevronLeft size={16} />
         </button>
-        <span className="text-sm font-semibold capitalize">{format(month, "LLLL yyyy", { locale: pl })}</span>
+        <span className="text-sm font-semibold capitalize">
+          {format(month, "LLLL yyyy", { locale: pl })}
+        </span>
         <button
           onClick={() => setMonth((m) => addMonths(m, 1))}
           disabled={isCurrent}
@@ -59,7 +69,10 @@ export function MonthCalendar() {
               style={{
                 backgroundColor: bg,
                 opacity: d.inMonth ? 1 : 0.35,
-                color: d.rate != null && d.rate >= 60 ? "var(--primary-foreground)" : "var(--foreground)",
+                color:
+                  d.rate != null && d.rate >= 60
+                    ? "var(--primary-foreground)"
+                    : "var(--foreground)",
                 outline: isSel ? "2px solid var(--foreground)" : undefined,
               }}
               title={d.rate == null ? d.key : `${d.key}: ${d.rate}%`}
@@ -86,25 +99,32 @@ export function MonthCalendar() {
                   ? st === "clean"
                     ? "czysto"
                     : st === "slip"
-                    ? s >= 1
-                      ? "wpadka (w limicie)"
-                      : "wpadka"
-                    : "brak potwierdzenia"
+                      ? s >= 1
+                        ? "wpadka (w limicie)"
+                        : "wpadka"
+                      : "brak potwierdzenia"
                   : goalOf(h).type === "check"
-                  ? s >= 1
-                    ? "zrobione"
-                    : "nie"
-                  : amountText(h, amountOn(h, completions, selected));
+                    ? s >= 1
+                      ? "zrobione"
+                      : "nie"
+                    : amountText(h, amountOn(h, completions, selected));
                 return (
                   <li key={h.id}>
-                    <Link to="/habits/$id" params={{ id: h.id }} className="flex items-center gap-2 text-sm">
+                    <Link
+                      to="/habits/$id"
+                      params={{ id: h.id }}
+                      className="flex items-center gap-2 text-sm"
+                    >
                       <HabitIcon
                         name={h.icon}
                         size={15}
                         style={{ color: avoid ? AVOID_COLOR : HABIT_COLOR_VAR[h.color] }}
                       />
                       <span className="min-w-0 flex-1 truncate">{h.name}</span>
-                      <span className="text-xs" style={{ color: s >= 1 ? "var(--primary)" : "var(--muted-foreground)" }}>
+                      <span
+                        className="text-xs"
+                        style={{ color: s >= 1 ? "var(--primary)" : "var(--muted-foreground)" }}
+                      >
                         {s >= 1 ? "✓ " : ""}
                         {label}
                       </span>

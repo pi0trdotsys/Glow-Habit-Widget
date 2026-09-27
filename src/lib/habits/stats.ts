@@ -1,9 +1,26 @@
 // Longer-range stats: a 90-day trend (daily % + 7-day moving average), month
 // by month, this month vs last month up to the same day, and a CSV export.
-import { addDays, addMonths, differenceInCalendarDays, getDaysInMonth, startOfMonth } from "date-fns";
+import {
+  addDays,
+  addMonths,
+  differenceInCalendarDays,
+  getDaysInMonth,
+  startOfMonth,
+} from "date-fns";
 import type { Completion, Habit } from "./types";
 import { dayFraction } from "./gamification";
-import { amountOn, avoidStatus, countsOn, createdKey, dayScore, goalOf, indexEntries, kindOf, todayKey, unitLabel } from "./utils";
+import {
+  amountOn,
+  avoidStatus,
+  countsOn,
+  createdKey,
+  dayScore,
+  goalOf,
+  indexEntries,
+  kindOf,
+  todayKey,
+  unitLabel,
+} from "./utils";
 
 export interface DayPoint {
   key: string;
@@ -15,7 +32,12 @@ export interface DayPoint {
 }
 
 /** Daily completion % for the last `days` days (today included, partial). */
-export function dailySeries(habits: Habit[], completions: Completion[], days = 90, now: Date = new Date()): DayPoint[] {
+export function dailySeries(
+  habits: Habit[],
+  completions: Completion[],
+  days = 90,
+  now: Date = new Date(),
+): DayPoint[] {
   const idx = indexEntries(completions);
   const out: DayPoint[] = [];
   for (let i = days - 1; i >= 0; i--) {
@@ -58,7 +80,20 @@ export function trendSummary(series: DayPoint[]): TrendSummary {
 }
 
 const MONTHS = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
-const MONTHS_LONG = ["styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec", "lipiec", "sierpień", "wrzesień", "październik", "listopad", "grudzień"];
+const MONTHS_LONG = [
+  "styczeń",
+  "luty",
+  "marzec",
+  "kwiecień",
+  "maj",
+  "czerwiec",
+  "lipiec",
+  "sierpień",
+  "wrzesień",
+  "październik",
+  "listopad",
+  "grudzień",
+];
 
 export interface MonthStat {
   key: string; // "2026-09"
@@ -73,7 +108,13 @@ export interface MonthStat {
   current: boolean;
 }
 
-function monthAvg(habits: Habit[], idx: ReturnType<typeof indexEntries>, from: Date, lastDay: number, now: Date) {
+function monthAvg(
+  habits: Habit[],
+  idx: ReturnType<typeof indexEntries>,
+  from: Date,
+  lastDay: number,
+  now: Date,
+) {
   let sum = 0;
   let n = 0;
   let forma = 0;
@@ -90,7 +131,12 @@ function monthAvg(habits: Habit[], idx: ReturnType<typeof indexEntries>, from: D
 }
 
 /** The last `months` calendar months, oldest first (the current one is partial). */
-export function monthStats(habits: Habit[], completions: Completion[], months = 6, now: Date = new Date()): MonthStat[] {
+export function monthStats(
+  habits: Habit[],
+  completions: Completion[],
+  months = 6,
+  now: Date = new Date(),
+): MonthStat[] {
   const idx = indexEntries(completions);
   const out: MonthStat[] = [];
   for (let i = months - 1; i >= 0; i--) {
@@ -117,7 +163,11 @@ export interface MonthCompare {
 }
 
 /** This month vs last month over the same days (1..today's day of month). */
-export function monthCompare(habits: Habit[], completions: Completion[], now: Date = new Date()): MonthCompare {
+export function monthCompare(
+  habits: Habit[],
+  completions: Completion[],
+  now: Date = new Date(),
+): MonthCompare {
   const idx = indexEntries(completions);
   const thisStart = startOfMonth(now);
   const lastStart = startOfMonth(addMonths(now, -1));
@@ -136,7 +186,17 @@ export function monthCompare(habits: Habit[], completions: Completion[], now: Da
 // CSV
 // ---------------------------------------------------------------------------
 
-const CSV_HEADER = ["data", "zadanie", "rodzaj", "cel", "jednostka", "wynik", "status", "procent", "social_w_nocy"];
+const CSV_HEADER = [
+  "data",
+  "zadanie",
+  "rodzaj",
+  "cel",
+  "jednostka",
+  "wynik",
+  "status",
+  "procent",
+  "social_w_nocy",
+];
 
 function cell(v: string | number): string {
   const s = String(v);
@@ -147,9 +207,18 @@ function cell(v: string | number): string {
  * Every habit-day since the first habit was created, one row each
  * (semicolon-separated, Excel/Sheets friendly in Polish locale; decimal comma).
  */
-export function toCsv(habits: Habit[], completions: Completion[], nightHits: Record<string, number> = {}, now: Date = new Date()): string {
+export function toCsv(
+  habits: Habit[],
+  completions: Completion[],
+  nightHits: Record<string, number> = {},
+  now: Date = new Date(),
+): string {
   const idx = indexEntries(completions);
-  const first = habits.map(createdKey).filter((k) => k !== "0000-00-00").sort()[0] ?? todayKey(now);
+  const first =
+    habits
+      .map(createdKey)
+      .filter((k) => k !== "0000-00-00")
+      .sort()[0] ?? todayKey(now);
   const [y, m, d] = first.split("-").map(Number);
   const start = new Date(y, m - 1, d);
   const total = Math.min(3650, differenceInCalendarDays(now, start));
@@ -163,12 +232,14 @@ export function toCsv(habits: Habit[], completions: Completion[], nightHits: Rec
       const g = goalOf(h);
       const score = dayScore(h, idx, date, now);
       const status = avoid
-        ? { clean: "czysto", slip: "wpadka", pending: "do potwierdzenia" }[avoidStatus(h, idx, date, now)]
+        ? { clean: "czysto", slip: "wpadka", pending: "do potwierdzenia" }[
+            avoidStatus(h, idx, date, now)
+          ]
         : score >= 1
-        ? "zrobione"
-        : score > 0
-        ? "częściowo"
-        : "nie";
+          ? "zrobione"
+          : score > 0
+            ? "częściowo"
+            : "nie";
       rows.push(
         [
           key,
@@ -179,7 +250,7 @@ export function toCsv(habits: Habit[], completions: Completion[], nightHits: Rec
           avoid ? (status === "wpadka" ? 1 : 0) : amountOn(h, idx, date),
           status,
           String(Math.round(score * 100)),
-          h.source === "screen" ? nightHits[key] ?? 0 : "",
+          h.source === "screen" ? (nightHits[key] ?? 0) : "",
         ]
           .map(cell)
           .join(";"),

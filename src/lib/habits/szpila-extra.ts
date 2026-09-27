@@ -38,7 +38,10 @@ export const EXTRA_RULES: [ExtraCategory, RegExp][] = [
   ["porn", /porno|pornograf|p0rn|onani|masturb|eyeoff/],
   ["meals", /posi[łl]k|niejedz|g[łl]odz|pomijan|nieregularn|utensilscrossed/],
   ["energy", /energet|red ?bull|monster|tauryn/],
-  ["shopping", /zakup|shopping|allegro|aliexpress|temu\b|wydawan|kupowan|creditcard|shoppingcart|shoppingbag/],
+  [
+    "shopping",
+    /zakup|shopping|allegro|aliexpress|temu\b|wydawan|kupowan|creditcard|shoppingcart|shoppingbag/,
+  ],
   ["gambling", /hazard|kasyn|zak[łl]ad|bukmach|ruletk|lotto|dice|coins/],
   ["binge", /serial|netflix|telewiz|\btv\b|binge|popcorn|ogl[ąa]dan/],
   ["snooze", /drzemk|budzik|snooze|alarmclockoff/],
@@ -46,7 +49,10 @@ export const EXTRA_RULES: [ExtraCategory, RegExp][] = [
   ["caffeine", /kaw[aąyę]|kofein|coffee/],
   ["procrastination", /prokrast|odk[łl]adan|hourglass|lenistw/],
   ["coding", /program|kodow|\bkod|code|terminal|laptop|github|leetcode|\bdev\b/],
-  ["language", /j[ęe]zyk|angiel|niemieck|hiszpa|francu|w[łl]osk|duolingo|languages|globe|s[łl][óo]wk|fiszk/],
+  [
+    "language",
+    /j[ęe]zyk|angiel|niemieck|hiszpa|francu|w[łl]osk|duolingo|languages|globe|s[łl][óo]wk|fiszk/,
+  ],
 ];
 
 interface Lines {
@@ -72,7 +78,9 @@ export const EXTRA_HARD: Record<ExtraCategory, Lines & { rage: string[] }> = {
       "Znowu zboczeństwo. Zimny prysznic i ogarnij się, kurwa.",
       "Wpadka. Oczy i myśli znowu tam, gdzie nie trzeba. Jutro lepiej.",
     ],
-    rage: ["Cały dzień bez potwierdzenia przy zboczeństwach. Zakładam, że wyobraźnia pracuje na pełnych obrotach, kurwa."],
+    rage: [
+      "Cały dzień bez potwierdzenia przy zboczeństwach. Zakładam, że wyobraźnia pracuje na pełnych obrotach, kurwa.",
+    ],
   },
   coding: {
     nag: [
@@ -150,7 +158,9 @@ export const EXTRA_HARD: Record<ExtraCategory, Lines & { rage: string[] }> = {
       "Znowu pominięty posiłek. Potem wilczy głód i wpierdalanie wszystkiego z lodówki, znam to.",
       "Wpadka z jedzeniem. Organizm to nie kaktus, trzeba go karmić.",
     ],
-    rage: ["Dalej brak potwierdzenia przy posiłkach. Zakładam, że żyjesz powietrzem i kofeiną, kurwa."],
+    rage: [
+      "Dalej brak potwierdzenia przy posiłkach. Zakładam, że żyjesz powietrzem i kofeiną, kurwa.",
+    ],
   },
   energy: {
     nag: [
@@ -249,11 +259,17 @@ export const EXTRA_SOFT: Record<ExtraCategory, Lines> = {
     slip: ["Wpadka się zdarzyła. Jutro nowy dzień."],
   },
   coding: {
-    nag: ["Pora na „{name}”. Nawet 15 minut kodu się liczy.", "Zostało {left} programowania. Dasz radę!"],
+    nag: [
+      "Pora na „{name}”. Nawet 15 minut kodu się liczy.",
+      "Zostało {left} programowania. Dasz radę!",
+    ],
     praise: ["Kod napisany. Świetna robota!"],
   },
   language: {
-    nag: ["Kilka minut nauki języka? Pora na „{name}”.", "Zostało {left} nauki. Każde słówko się liczy."],
+    nag: [
+      "Kilka minut nauki języka? Pora na „{name}”.",
+      "Zostało {left} nauki. Każde słówko się liczy.",
+    ],
     praise: ["Nauka języka zaliczona. Brawo!"],
   },
   porn: {

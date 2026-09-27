@@ -2,7 +2,11 @@ import { TrendingDown, TrendingUp, Minus } from "lucide-react";
 import type { WeeklyReport } from "@/lib/habits/utils";
 
 export function deltaColor(delta: number): string {
-  return delta > 0 ? "var(--primary)" : delta < 0 ? "var(--destructive)" : "var(--muted-foreground)";
+  return delta > 0
+    ? "var(--primary)"
+    : delta < 0
+      ? "var(--destructive)"
+      : "var(--muted-foreground)";
 }
 
 export function verdict(delta: number): string {
@@ -32,8 +36,17 @@ export function DeltaPill({ delta, big = false }: { delta: number; big?: boolean
 /** Two stacked horizontal bars: this week vs last week, same window. */
 export function WeekBars({ r }: { r: WeeklyReport }) {
   const rows = [
-    { label: "Ten tydzień", rate: r.thisWeek.rate, color: deltaColor(r.delta) === "var(--muted-foreground)" ? "var(--primary)" : deltaColor(r.delta) },
-    { label: "Tydzień temu", rate: r.lastWeek.rate, color: "color-mix(in oklab, var(--foreground) 35%, transparent)" },
+    {
+      label: "Ten tydzień",
+      rate: r.thisWeek.rate,
+      color:
+        deltaColor(r.delta) === "var(--muted-foreground)" ? "var(--primary)" : deltaColor(r.delta),
+    },
+    {
+      label: "Tydzień temu",
+      rate: r.lastWeek.rate,
+      color: "color-mix(in oklab, var(--foreground) 35%, transparent)",
+    },
   ];
   return (
     <div className="space-y-2.5">
@@ -88,7 +101,10 @@ export function WeekDayChart({ r }: { r: WeeklyReport }) {
           <div
             key={d.label}
             className="flex-1 text-center text-[10px]"
-            style={{ color: d.isToday ? "var(--primary)" : "var(--muted-foreground)", fontWeight: d.isToday ? 700 : 400 }}
+            style={{
+              color: d.isToday ? "var(--primary)" : "var(--muted-foreground)",
+              fontWeight: d.isToday ? 700 : 400,
+            }}
           >
             {d.label}
           </div>
@@ -96,10 +112,14 @@ export function WeekDayChart({ r }: { r: WeeklyReport }) {
       </div>
       <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: "var(--primary)" }} /> ten tydzień
+          <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: "var(--primary)" }} /> ten
+          tydzień
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: "color-mix(in oklab, var(--foreground) 22%, transparent)" }} />
+          <span
+            className="h-2 w-2 rounded-sm"
+            style={{ backgroundColor: "color-mix(in oklab, var(--foreground) 22%, transparent)" }}
+          />
           tydzień temu
         </span>
       </div>

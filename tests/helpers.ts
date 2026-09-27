@@ -4,7 +4,11 @@ import type { Completion, Habit } from "@/lib/habits/types";
 export const key = (d: Date) => format(d, "yyyy-MM-dd");
 
 let n = 0;
-export function habit(p: Partial<Habit> & { name: string }, createdDaysAgo = 60, now = new Date()): Habit {
+export function habit(
+  p: Partial<Habit> & { name: string },
+  createdDaysAgo = 60,
+  now = new Date(),
+): Habit {
   return {
     id: `h${++n}`,
     icon: "Sparkles",

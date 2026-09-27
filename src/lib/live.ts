@@ -28,8 +28,20 @@ export const SOCIAL_APPS: { pkg: string; key: string; label: string }[] = [
 ];
 
 type LineKey =
-  | "tiktok" | "instagram" | "threads" | "facebook" | "youtube" | "x" | "reddit"
-  | "snapchat" | "pinterest" | "twitch" | "linkedin" | "generic" | "escalate" | "block";
+  | "tiktok"
+  | "instagram"
+  | "threads"
+  | "facebook"
+  | "youtube"
+  | "x"
+  | "reddit"
+  | "snapchat"
+  | "pinterest"
+  | "twitch"
+  | "linkedin"
+  | "generic"
+  | "escalate"
+  | "block";
 
 const HARD: Record<LineKey, string[]> = {
   tiktok: [
@@ -53,7 +65,7 @@ const HARD: Record<LineKey, string[]> = {
     "Grupy, memy, kłótnie w komentarzach o {time}. Twoje życie zasługuje na więcej. Spać, kurwa.",
   ],
   youtube: [
-    "YouTube o {time}. \"Tylko jeden filmik\" - i nagle oglądasz budowę mostów w Norwegii o czwartej. Wyłączaj.",
+    'YouTube o {time}. "Tylko jeden filmik" - i nagle oglądasz budowę mostów w Norwegii o czwartej. Wyłączaj.',
     "Shortsy po północy to TikTok dla udających, że to nie TikTok. Odkładaj telefon.",
     "Autoplay cię nie kocha. Chce tylko, żebyś nie spał. Zamknij YouTube'a.",
   ],
@@ -71,7 +83,7 @@ const HARD: Record<LineKey, string[]> = {
   twitch: ["Twitch o {time}? Streamer zarabia na tym, że ty nie śpisz. Wyłączaj."],
   linkedin: [
     "LinkedIn o {time}?! Nawet korpo-szczury śpią. Nikt nie da ci awansu za nocne scrollowanie.",
-    "Czytasz posty o \"pokorze i wdzięczności\" o {time}? Idź spać, zanim sam zaczniesz takie pisać.",
+    'Czytasz posty o "pokorze i wdzięczności" o {time}? Idź spać, zanim sam zaczniesz takie pisać.',
   ],
   generic: [
     "Jest {time}, a ty na {app}? Odłóż telefon i idź spać, do cholery.",
@@ -82,7 +94,7 @@ const HARD: Record<LineKey, string[]> = {
   escalate: [
     "Już {m} min na {app}. Rano będziesz żałować każdej z nich. Wyłącz to kurestwo.",
     "{m} minut. Wciąż tu jesteś. Ja też. I nie odpuszczę, dopóki nie odłożysz telefonu.",
-    "{m} min o {time}. To już nie jest \"chwilka\", to nałóg. Zamykaj {app}.",
+    '{m} min o {time}. To już nie jest "chwilka", to nałóg. Zamykaj {app}.',
     "Siedzisz na {app} od {m} min. Budzik zadzwoni, a ty będziesz wyglądać jak zombie. Spać!",
     "Kurwa, {m} minut. Poduszka płacze. Odłóż to natychmiast.",
   ],
@@ -90,7 +102,7 @@ const HARD: Record<LineKey, string[]> = {
   block: [
     "Dość tego. {m} minut na {app} o {time}. Trzy szpile zignorowane - teraz ja zamykam ten cyrk.",
     "Koniec, kurwa. Trzy razy prosiłem po dobroci. {app} ma na dziś fajrant, ty też.",
-    "{m} minut scrollowania o {time}. Nie, nie \"jeszcze chwila\". Idziesz spać.",
+    '{m} minut scrollowania o {time}. Nie, nie "jeszcze chwila". Idziesz spać.',
     "Zablokowane. Chcesz dalej? Przytrzymaj guzik 10 sekund i spójrz sobie w oczy.",
     "Jutro rano podziękujesz. Albo nie. Ale {app} i tak zamykasz.",
   ],
@@ -114,7 +126,11 @@ const SOFT: Record<LineKey, string[]> = {
 };
 
 /** Lines for the native guard: per-app pools + generic + escalation (placeholders resolved natively). */
-export function liveLines(level: TauntLevel, userName: string | null, humor: HumorId = "wredny"): Record<string, string[]> {
+export function liveLines(
+  level: TauntLevel,
+  userName: string | null,
+  humor: HumorId = "wredny",
+): Record<string, string[]> {
   const base = level === "soft" ? SOFT : HARD;
   const extra = level === "soft" ? { first: [], escalate: [] } : humorLive(humor);
   const u = (l: string) => l.replaceAll("{u}", userName || "ty");
@@ -132,7 +148,12 @@ const toMin = (t: string) => {
 };
 
 /** The `live` part of the widget snapshot (LiveGuard.settings in Java). */
-export function liveState(n: NotificationSettings, level: TauntLevel, userName: string | null, humor?: HumorId) {
+export function liveState(
+  n: NotificationSettings,
+  level: TauntLevel,
+  userName: string | null,
+  humor?: HumorId,
+) {
   return {
     enabled: n.live,
     block: n.liveBlock,

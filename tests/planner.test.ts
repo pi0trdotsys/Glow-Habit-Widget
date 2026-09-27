@@ -7,7 +7,8 @@ import { WED_1540, entry, habit } from "./helpers";
 
 describe("shared vectors (Java PlannerParityTest checks the same file)", () => {
   test("nextUnitMinute", () => {
-    for (const v of vectors.nextUnit) expect(nextUnitMinute(v, v.units, v.done, v.now)).toBe(v.expected);
+    for (const v of vectors.nextUnit)
+      expect(nextUnitMinute(v, v.units, v.done, v.now)).toBe(v.expected);
   });
   test("rankKey", () => {
     for (const v of vectors.rank) expect(rankKey(v.due, v.now, v.avoid, v.multi)).toBe(v.expected);
@@ -52,8 +53,15 @@ describe("rankKey", () => {
 describe("planDay", () => {
   test("orders pending tasks and skips finished + screen-judged ones", () => {
     const now = WED_1540;
-    const water = habit({ name: "Picie wody", goal: { type: "count", target: 8, step: 1, unit: "szklanek" } });
-    const read = habit({ name: "Czytanie", goal: { type: "minutes", target: 20, step: 10 }, timeOfDay: "evening" });
+    const water = habit({
+      name: "Picie wody",
+      goal: { type: "count", target: 8, step: 1, unit: "szklanek" },
+    });
+    const read = habit({
+      name: "Czytanie",
+      goal: { type: "minutes", target: 20, step: 10 },
+      timeOfDay: "evening",
+    });
     const teeth = habit({ name: "Mycie zębów", goal: { type: "count", target: 2, step: 1 } });
     const phone = habit({ name: "Telefon do późna", kind: "avoid", source: "screen" });
     const fastfood = habit({ name: "Fast food", kind: "avoid" });

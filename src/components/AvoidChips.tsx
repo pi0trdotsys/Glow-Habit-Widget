@@ -8,7 +8,14 @@ import { praiseToast } from "./HabitTile";
 import { useHabits } from "@/lib/habits/store";
 import type { Habit } from "@/lib/habits/types";
 import { AVOID_COLOR } from "@/lib/habits/colors";
-import { avoidStatus, limitLabel, limitOf, slipsInPeriod, todayKey, type AvoidStatus } from "@/lib/habits/utils";
+import {
+  avoidStatus,
+  limitLabel,
+  limitOf,
+  slipsInPeriod,
+  todayKey,
+  type AvoidStatus,
+} from "@/lib/habits/utils";
 import { SZPILA_EMOJI, slipFor } from "@/lib/habits/szpila";
 import { useBackHandler } from "@/lib/back";
 
@@ -60,19 +67,29 @@ export function AvoidChips({ habits, day = new Date() }: { habits: Habit[]; day?
                   st === "clean"
                     ? `color-mix(in oklab, ${AVOID_COLOR} 22%, var(--card))`
                     : st === "slip"
-                    ? "var(--card)"
-                    : `color-mix(in oklab, ${AVOID_COLOR} 12%, var(--card))`,
+                      ? "var(--card)"
+                      : `color-mix(in oklab, ${AVOID_COLOR} 12%, var(--card))`,
                 border: `1px solid color-mix(in oklab, ${AVOID_COLOR} ${active ? 70 : st === "pending" ? 40 : 18}%, transparent)`,
                 color: st === "slip" ? "var(--muted-foreground)" : "var(--foreground)",
               }}
             >
-              <HabitIcon name={h.icon} size={15} style={{ color: st === "slip" ? "var(--muted-foreground)" : AVOID_COLOR }} />
+              <HabitIcon
+                name={h.icon}
+                size={15}
+                style={{ color: st === "slip" ? "var(--muted-foreground)" : AVOID_COLOR }}
+              />
               <span className="max-w-[9rem] truncate">{h.name}</span>
               <span
                 className="grid h-4 w-4 place-items-center rounded-full text-[10px] font-bold"
                 style={{
-                  backgroundColor: st === "clean" ? AVOID_COLOR : st === "slip" ? "var(--muted)" : "transparent",
-                  color: st === "clean" ? "var(--background)" : st === "slip" ? "var(--foreground)" : AVOID_COLOR,
+                  backgroundColor:
+                    st === "clean" ? AVOID_COLOR : st === "slip" ? "var(--muted)" : "transparent",
+                  color:
+                    st === "clean"
+                      ? "var(--background)"
+                      : st === "slip"
+                        ? "var(--foreground)"
+                        : AVOID_COLOR,
                 }}
               >
                 {auto ? "📱" : MARK[st]}
@@ -114,14 +131,17 @@ export function AvoidChips({ habits, day = new Date() }: { habits: Habit[]; day?
                 <div className="flex items-center gap-3">
                   <div
                     className="grid h-11 w-11 shrink-0 place-items-center rounded-full"
-                    style={{ backgroundColor: `color-mix(in oklab, ${AVOID_COLOR} 20%, transparent)` }}
+                    style={{
+                      backgroundColor: `color-mix(in oklab, ${AVOID_COLOR} 20%, transparent)`,
+                    }}
                   >
                     <HabitIcon name={selected.icon} size={20} style={{ color: AVOID_COLOR }} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-semibold">{selected.name}</div>
                     <div className="text-[11px] text-muted-foreground">
-                      {todayKey(day) === todayKey(now) ? "Dziś" : "Wczoraj"} · {limitLabel(limitOf(selected))}
+                      {todayKey(day) === todayKey(now) ? "Dziś" : "Wczoraj"} ·{" "}
+                      {limitLabel(limitOf(selected))}
                       {limitOf(selected).times > 0 &&
                         ` · wykorzystane ${slipsInPeriod(selected, completions, day, now)}/${limitOf(selected).times}`}
                     </div>

@@ -28,7 +28,9 @@ describe("store", () => {
   });
 
   test("the day log keeps at most one point per hour", () => {
-    const id = useHabits.getState().addHabit({ name: "Kroki", icon: "Footprints", color: "lime", schedule: { type: "daily" } });
+    const id = useHabits
+      .getState()
+      .addHabit({ name: "Kroki", icon: "Footprints", color: "lime", schedule: { type: "daily" } });
     const k = todayKey();
     for (let m = 0; m < 24 * 60; m += 7) useHabits.getState().setAmount(id, k, m, m);
     const log = useHabits.getState().completions[0].log!;
@@ -39,7 +41,12 @@ describe("store", () => {
   test("backup round-trip restores habits, history and name", () => {
     const s = useHabits.getState();
     s.setUserName("Tester");
-    const id = s.addHabit({ name: "Czytanie", icon: "BookOpen", color: "amber", schedule: { type: "daily" } });
+    const id = s.addHabit({
+      name: "Czytanie",
+      icon: "BookOpen",
+      color: "amber",
+      schedule: { type: "daily" },
+    });
     s.setAmount(id, todayKey(), 1);
     const json = useHabits.getState().exportData();
     useHabits.setState({ habits: [], completions: [], userName: null });
@@ -50,14 +57,24 @@ describe("store", () => {
   });
 
   test("invalid backups are rejected without touching data", () => {
-    const id = useHabits.getState().addHabit({ name: "X", icon: "Star", color: "mint", schedule: { type: "daily" } });
-    expect(() => useHabits.getState().importData('{"foo":1}')).toThrow("To nie jest kopia zapasowa Szpili.");
+    const id = useHabits
+      .getState()
+      .addHabit({ name: "X", icon: "Star", color: "mint", schedule: { type: "daily" } });
+    expect(() => useHabits.getState().importData('{"foo":1}')).toThrow(
+      "To nie jest kopia zapasowa Szpili.",
+    );
     expect(() => useHabits.getState().importData("nope")).toThrow();
     expect(useHabits.getState().habits.map((h) => h.id)).toEqual([id]);
   });
 
   test("manual avoid answers are kept separate from automatic ones", () => {
-    const id = useHabits.getState().addHabit({ name: "Telefon", icon: "Phone", color: "rose", schedule: { type: "daily" }, kind: "avoid" });
+    const id = useHabits.getState().addHabit({
+      name: "Telefon",
+      icon: "Phone",
+      color: "rose",
+      schedule: { type: "daily" },
+      kind: "avoid",
+    });
     useHabits.getState().setAvoid(id, todayKey(), "slip", 600, true);
     expect(useHabits.getState().completions[0]).toMatchObject({ slipped: true, auto: true });
     useHabits.getState().setAvoid(id, todayKey(), "clean");
@@ -67,8 +84,13 @@ describe("store", () => {
 
 describe("Szpila lines", () => {
   test("placeholders are filled; single-check habits never get amount lines", () => {
-    const water = habit({ name: "Picie wody", goal: { type: "count", target: 8, step: 1, unit: "szklanek" } });
-    expect(fill("Wypite {done} z {target}, zostało {left}.", water, 3)).toBe("Wypite 3 z 8, zostało 5 szklanek.");
+    const water = habit({
+      name: "Picie wody",
+      goal: { type: "count", target: 8, step: 1, unit: "szklanek" },
+    });
+    expect(fill("Wypite {done} z {target}, zostało {left}.", water, 3)).toBe(
+      "Wypite 3 z 8, zostało 5 szklanek.",
+    );
     const teeth = habit({ name: "Mycie zębów" });
     for (const l of nagLines(teeth, "hard", null)) expect(l).not.toMatch(/\{(left|done|target)\}/);
   });
@@ -92,8 +114,16 @@ describe("Szpila lines", () => {
 
 describe("new categories", () => {
   test("coding, languages and common vices get their own lines", () => {
-    const code = habit({ name: "Programuj", icon: "Code", goal: { type: "minutes", target: 30, step: 15 } });
-    const lang = habit({ name: "Ucz się języka obcego", icon: "Languages", goal: { type: "minutes", target: 15, step: 5 } });
+    const code = habit({
+      name: "Programuj",
+      icon: "Code",
+      goal: { type: "minutes", target: 30, step: 15 },
+    });
+    const lang = habit({
+      name: "Ucz się języka obcego",
+      icon: "Languages",
+      goal: { type: "minutes", target: 15, step: 5 },
+    });
     const porn = habit({ name: "Pornografia", icon: "EyeOff", kind: "avoid" });
     const meals = habit({ name: "Pomijanie posiłków", icon: "UtensilsCrossed", kind: "avoid" });
     const bed = habit({ name: "Scrollowanie w łóżku", icon: "Smartphone", kind: "avoid" });

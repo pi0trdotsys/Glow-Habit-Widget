@@ -21,8 +21,14 @@ const BROWSERS = [
 ].filter(Boolean) as string[];
 
 const TYPES: Record<string, string> = {
-  js: "text/javascript", css: "text/css", html: "text/html", png: "image/png",
-  svg: "image/svg+xml", json: "application/json", webmanifest: "application/manifest+json", woff2: "font/woff2",
+  js: "text/javascript",
+  css: "text/css",
+  html: "text/html",
+  png: "image/png",
+  svg: "image/svg+xml",
+  json: "application/json",
+  webmanifest: "application/manifest+json",
+  woff2: "font/woff2",
 };
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -44,7 +50,8 @@ export interface Page {
 }
 
 export async function launch(preload: string): Promise<Page> {
-  if (!existsSync(join(DIST, "index.html"))) throw new Error("Brak dist/client - uruchom najpierw: bun run build:cap");
+  if (!existsSync(join(DIST, "index.html")))
+    throw new Error("Brak dist/client - uruchom najpierw: bun run build:cap");
   const browser = BROWSERS.find((b) => existsSync(b));
   if (!browser) throw new Error("Nie znaleziono Edge/Chrome - ustaw E2E_BROWSER");
 
@@ -54,12 +61,18 @@ export async function launch(preload: string): Promise<Page> {
       const p = decodeURIComponent(new URL(req.url).pathname);
       let f = join(DIST, p);
       if (!p.includes(".") || !existsSync(f)) f = join(DIST, "index.html");
-      return new Response(readFileSync(f), { headers: { "content-type": TYPES[f.split(".").pop()!] ?? "application/octet-stream" } });
+      return new Response(readFileSync(f), {
+        headers: { "content-type": TYPES[f.split(".").pop()!] ?? "application/octet-stream" },
+      });
     },
   });
   const proc: ChildProcess = spawn(browser, [
-    "--headless=new", `--remote-debugging-port=${CDP}`, "--no-first-run", "--disable-gpu",
-    `--user-data-dir=${mkdtempSync(join(tmpdir(), "loop-e2e-"))}`, "about:blank",
+    "--headless=new",
+    `--remote-debugging-port=${CDP}`,
+    "--no-first-run",
+    "--disable-gpu",
+    `--user-data-dir=${mkdtempSync(join(tmpdir(), "loop-e2e-"))}`,
+    "about:blank",
   ]);
 
   let targets: { type: string; webSocketDebuggerUrl: string }[] = [];
@@ -86,12 +99,22 @@ export async function launch(preload: string): Promise<Page> {
     });
 
   await send("Page.enable");
-  await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
+  await send("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 844,
+    deviceScaleFactor: 2,
+    mobile: true,
+  });
   await send("Page.addScriptToEvaluateOnNewDocument", { source: preload });
 
   const evaluate = async <T>(expression: string): Promise<T> => {
-    const r = await send("Runtime.evaluate", { expression, returnByValue: true, awaitPromise: true });
-    if (r.exceptionDetails) throw new Error(`${expression}\n${r.exceptionDetails.exception?.description}`);
+    const r = await send("Runtime.evaluate", {
+      expression,
+      returnByValue: true,
+      awaitPromise: true,
+    });
+    if (r.exceptionDetails)
+      throw new Error(`${expression}\n${r.exceptionDetails.exception?.description}`);
     return r.result?.value as T;
   };
 

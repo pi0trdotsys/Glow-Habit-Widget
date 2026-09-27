@@ -181,9 +181,16 @@ const seedHabits: Omit<Habit, "id" | "createdAt">[] = [
 
 /** Old English seed habits -> their Polish equivalents (applied once on upgrade). */
 const LEGACY_SEEDS: Record<string, Partial<Habit>> = {
-  "Drink water": { name: "Picie wody", goal: { type: "count", target: 8, step: 1, unit: "szklanek" } },
+  "Drink water": {
+    name: "Picie wody",
+    goal: { type: "count", target: 8, step: 1, unit: "szklanek" },
+  },
   "Move 30 min": { name: "Ruch 30 min", goal: { type: "minutes", target: 30, step: 10 } },
-  Read: { name: "Czytanie książki", goal: { type: "minutes", target: 20, step: 10 }, timeOfDay: "evening" },
+  Read: {
+    name: "Czytanie książki",
+    goal: { type: "minutes", target: 20, step: 10 },
+    timeOfDay: "evening",
+  },
   Meditate: { name: "Medytacja" },
   // "No junk food" done-days map 1:1 onto confirmed clean days of an avoid habit.
   "No junk food": { name: "Fast food", kind: "avoid", limit: { times: 1, period: "week" } },
@@ -195,7 +202,12 @@ function uid() {
 }
 
 /** Replace (or drop) the entry for habitId/date. */
-function upsert(list: Completion[], habitId: string, date: string, next: Completion | null): Completion[] {
+function upsert(
+  list: Completion[],
+  habitId: string,
+  date: string,
+  next: Completion | null,
+): Completion[] {
   const rest = list.filter((c) => !(c.habitId === habitId && c.date === date));
   return next ? [...rest, next] : rest;
 }
@@ -347,19 +359,29 @@ export const useHabits = create<HabitsState>()(
         }>;
         const valid =
           Array.isArray(data.habits) &&
-          data.habits.every((h) => h && typeof h.id === "string" && typeof h.name === "string" && h.schedule) &&
+          data.habits.every(
+            (h) => h && typeof h.id === "string" && typeof h.name === "string" && h.schedule,
+          ) &&
           (data.completions == null || Array.isArray(data.completions));
         if (!valid) throw new Error("To nie jest kopia zapasowa Szpili.");
         set((s) => ({
           habits: data.habits!,
-          completions: (data.completions ?? []).filter((c) => c && typeof c.habitId === "string" && typeof c.date === "string"),
+          completions: (data.completions ?? []).filter(
+            (c) => c && typeof c.habitId === "string" && typeof c.date === "string",
+          ),
           seeded: true,
           userName: data.userName ?? s.userName,
-          notifications: data.notifications ? { ...defaultNotifications, ...data.notifications } : s.notifications,
+          notifications: data.notifications
+            ? { ...defaultNotifications, ...data.notifications }
+            : s.notifications,
           autoBackup: data.autoBackup ?? s.autoBackup,
-          nightHits: data.nightHits && typeof data.nightHits === "object" ? data.nightHits : s.nightHits,
+          nightHits:
+            data.nightHits && typeof data.nightHits === "object" ? data.nightHits : s.nightHits,
           szpila: data.szpila ? { ...defaultLook, ...data.szpila } : s.szpila,
-          nightReports: data.nightReports && typeof data.nightReports === "object" ? data.nightReports : s.nightReports,
+          nightReports:
+            data.nightReports && typeof data.nightReports === "object"
+              ? data.nightReports
+              : s.nightReports,
         }));
         return data.habits!.length;
       },
@@ -380,7 +402,9 @@ export const useHabits = create<HabitsState>()(
       migrate: (persisted, version) => {
         const p = (persisted ?? {}) as Partial<HabitsState>;
         if (version < 2 && Array.isArray(p.habits)) {
-          p.habits = p.habits.map((h) => (LEGACY_SEEDS[h.name] ? { ...h, ...LEGACY_SEEDS[h.name] } : h));
+          p.habits = p.habits.map((h) =>
+            LEGACY_SEEDS[h.name] ? { ...h, ...LEGACY_SEEDS[h.name] } : h,
+          );
           // Legacy "done" entries of a check habit become full amounts of the new goal.
           const byId = new Map(p.habits.map((h) => [h.id, h]));
           p.completions = (p.completions ?? []).map((c) => {
@@ -393,13 +417,19 @@ export const useHabits = create<HabitsState>()(
           // "Telefon do późna" is really about scrolling in bed.
           p.habits = p.habits.map((h) =>
             h.name === "Telefon do późna"
-              ? { ...h, name: "Scrollowanie w łóżku", icon: h.icon === "Phone" ? "Smartphone" : h.icon }
+              ? {
+                  ...h,
+                  name: "Scrollowanie w łóżku",
+                  icon: h.icon === "Phone" ? "Smartphone" : h.icon,
+                }
               : h,
           );
           // Coding + a foreign language join the default set (unless already tracked).
           const has = (re: RegExp) => p.habits!.some((h) => re.test(h.name.toLowerCase()));
           const now = new Date().toISOString();
-          for (const seed of seedHabits.filter((s) => s.name === "Programuj" || s.name === "Ucz się języka obcego")) {
+          for (const seed of seedHabits.filter(
+            (s) => s.name === "Programuj" || s.name === "Ucz się języka obcego",
+          )) {
             const re = seed.name === "Programuj" ? /program|kod|code/ : /j[ęe]zyk|angiel|duolingo/;
             if (!has(re)) p.habits.push({ ...seed, id: uid(), createdAt: now });
           }

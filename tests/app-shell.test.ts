@@ -46,9 +46,16 @@ describe("backups", () => {
 
   test("restore explains what went wrong", async () => {
     useHabits.setState({ habits: [], completions: [] });
-    await expect(restoreBackup(new File(["nie json"], "x.json"))).rejects.toThrow("Plik nie jest poprawnym JSON-em.");
-    await expect(restoreBackup(new File(['{"a":1}'], "x.json"))).rejects.toThrow("To nie jest kopia zapasowa Szpili.");
-    const ok = JSON.stringify({ habits: [{ id: "a", name: "Woda", schedule: { type: "daily" } }], completions: [] });
+    await expect(restoreBackup(new File(["nie json"], "x.json"))).rejects.toThrow(
+      "Plik nie jest poprawnym JSON-em.",
+    );
+    await expect(restoreBackup(new File(['{"a":1}'], "x.json"))).rejects.toThrow(
+      "To nie jest kopia zapasowa Szpili.",
+    );
+    const ok = JSON.stringify({
+      habits: [{ id: "a", name: "Woda", schedule: { type: "daily" } }],
+      completions: [],
+    });
     expect(await restoreBackup(new File([ok], "x.json"))).toBe(1);
   });
 });

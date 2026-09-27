@@ -24,7 +24,9 @@ function HabitsPage() {
     <AppShell>
       <header className="flex items-end justify-between px-5 pt-10 pb-6">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{habits.length}/24</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+            {habits.length}/24
+          </p>
           <h1 className="mt-2 font-display text-4xl font-bold tracking-tight">Zadania</h1>
         </div>
         <Link

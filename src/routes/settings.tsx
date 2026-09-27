@@ -46,15 +46,7 @@ export const Route = createFileRoute("/settings")({
   component: SettingsPage,
 });
 
-const DAY_NAMES = [
-  "Niedziela",
-  "Poniedziałek",
-  "Wtorek",
-  "Środa",
-  "Czwartek",
-  "Piątek",
-  "Sobota",
-];
+const DAY_NAMES = ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"];
 
 function SettingsPage() {
   const reset = useHabits((s) => s.reset);
@@ -102,7 +94,8 @@ function SettingsPage() {
   };
 
   const doImport = async (file: File) => {
-    if (!confirm("Przywrócenie zastąpi obecne zadania i historię danymi z kopii. Kontynuować?")) return;
+    if (!confirm("Przywrócenie zastąpi obecne zadania i historię danymi z kopii. Kontynuować?"))
+      return;
     try {
       const n = await restoreBackup(file);
       setMsg(`Przywrócono ${n} zadań z kopii.`);
@@ -214,9 +207,7 @@ function SettingsPage() {
             <div className="flex gap-2">
               <select
                 value={notif.reportDay}
-                onChange={(e) =>
-                  setNotifications({ ...notif, reportDay: Number(e.target.value) })
-                }
+                onChange={(e) => setNotifications({ ...notif, reportDay: Number(e.target.value) })}
                 disabled={!notif.weeklyReport}
                 className="rounded-xl border border-border bg-background px-2 py-1.5 text-sm outline-none disabled:opacity-50"
               >
@@ -229,9 +220,7 @@ function SettingsPage() {
               <input
                 type="time"
                 value={notif.reportTime}
-                onChange={(e) =>
-                  setNotifications({ ...notif, reportTime: e.target.value })
-                }
+                onChange={(e) => setNotifications({ ...notif, reportTime: e.target.value })}
                 disabled={!notif.weeklyReport}
                 className="rounded-xl border border-border bg-background px-3 py-1.5 text-sm outline-none disabled:opacity-50"
               />
@@ -282,7 +271,8 @@ function SettingsPage() {
             />
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Stałe, ciche powiadomienie z paskiem postępu wykonanych dziś zadań i planem, jak skończyć dzień (Android).
+            Stałe, ciche powiadomienie z paskiem postępu wykonanych dziś zadań i planem, jak
+            skończyć dzień (Android).
           </p>
         </div>
 
@@ -307,8 +297,8 @@ function SettingsPage() {
             />
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Wbija szpile w ciągu dnia ({tauntWindow(notif.quietTo, notif.quietFrom)}), gdy zadania leżą albo nie potwierdzisz zakazanych. Teksty są
-            dopasowane do konkretnego zadania.
+            Wbija szpile w ciągu dnia ({tauntWindow(notif.quietTo, notif.quietFrom)}), gdy zadania
+            leżą albo nie potwierdzisz zakazanych. Teksty są dopasowane do konkretnego zadania.
           </p>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {(
@@ -340,8 +330,10 @@ function SettingsPage() {
                   disabled={!notif.taunts}
                   className="h-8 w-10 rounded-full text-xs font-semibold disabled:opacity-40"
                   style={{
-                    backgroundColor: notif.tauntsPerDay === n ? "var(--avoid)" : "var(--background)",
-                    color: notif.tauntsPerDay === n ? "var(--primary-foreground)" : "var(--foreground)",
+                    backgroundColor:
+                      notif.tauntsPerDay === n ? "var(--avoid)" : "var(--background)",
+                    color:
+                      notif.tauntsPerDay === n ? "var(--primary-foreground)" : "var(--foreground)",
                   }}
                 >
                   {n}
@@ -359,14 +351,20 @@ function SettingsPage() {
           <div className="mt-3 flex items-center justify-between gap-2">
             <span className="text-xs text-muted-foreground">Cisza od - do</span>
             <div className="flex items-center gap-2">
-              <TimeInput value={notif.quietFrom} onChange={(v) => setNotifications({ ...notif, quietFrom: v })} />
+              <TimeInput
+                value={notif.quietFrom}
+                onChange={(v) => setNotifications({ ...notif, quietFrom: v })}
+              />
               <span className="text-muted-foreground">-</span>
-              <TimeInput value={notif.quietTo} onChange={(v) => setNotifications({ ...notif, quietTo: v })} />
+              <TimeInput
+                value={notif.quietTo}
+                onChange={(v) => setNotifications({ ...notif, quietTo: v })}
+              />
             </div>
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            W tych godzinach Szpila milczy, a szpile rozkładają się równo między pobudką a snem. Wyjątek: przyłapanie
-            na telefonie po nocy.
+            W tych godzinach Szpila milczy, a szpile rozkładają się równo między pobudką a snem.
+            Wyjątek: przyłapanie na telefonie po nocy.
           </p>
         </div>
 
@@ -393,7 +391,8 @@ function SettingsPage() {
             />
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Jedno powiadomienie z przyciskami „Wszystko czysto” / „Wpadka” dla wszystkich niepotwierdzonych zakazanych.
+            Jedno powiadomienie z przyciskami „Wszystko czysto” / „Wpadka” dla wszystkich
+            niepotwierdzonych zakazanych.
           </p>
         </div>
 
@@ -411,13 +410,21 @@ function SettingsPage() {
             <Toggle checked={autoBackup} onChange={setAutoBackup} />
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Raz dziennie zapisuje kopię do Pobrane/Szpila (po jednym pliku na dzień tygodnia, więc masz ostatnie 7
-            dni). Po reinstalacji przywrócisz ją przyciskiem „Przywróć z pliku”.
+            Raz dziennie zapisuje kopię do Pobrane/Szpila (po jednym pliku na dzień tygodnia, więc
+            masz ostatnie 7 dni). Po reinstalacji przywrócisz ją przyciskiem „Przywróć z pliku”.
             {lastAuto && ` Ostatnia: ${lastAuto}.`}
           </p>
         </div>
-        <Action icon={<Download size={18} />} label="Zapisz kopię teraz" onClick={() => void doExport(false)} />
-        <Action icon={<Share2 size={18} />} label="Udostępnij kopię (Dysk, mail…)" onClick={() => void doExport(true)} />
+        <Action
+          icon={<Download size={18} />}
+          label="Zapisz kopię teraz"
+          onClick={() => void doExport(false)}
+        />
+        <Action
+          icon={<Share2 size={18} />}
+          label="Udostępnij kopię (Dysk, mail…)"
+          onClick={() => void doExport(true)}
+        />
         <Action
           icon={<Upload size={18} />}
           label="Przywróć z pliku"
@@ -523,8 +530,8 @@ function SensorsCard({ onMessage }: { onMessage: (m: string) => void }) {
     <div className="rounded-2xl bg-card p-4">
       <div className="font-medium">Automatyczne śledzenie</div>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        Włącz źródło tutaj, a potem wybierz je w edycji zadania („Kroki z Health Connect” albo „Oceniaj z czasu
-        ekranu”).
+        Włącz źródło tutaj, a potem wybierz je w edycji zadania („Kroki z Health Connect” albo
+        „Oceniaj z czasu ekranu”).
       </p>
 
       <div className="mt-3 flex items-center gap-3">
@@ -535,10 +542,10 @@ function SensorsCard({ onMessage }: { onMessage: (m: string) => void }) {
             {steps == null
               ? "Sprawdzam…"
               : !steps.available
-              ? "Health Connect niedostępny na tym urządzeniu."
-              : steps.granted
-              ? `Połączono${steps.background ? "" : " (bez odczytu w tle - widżet odświeży się po otwarciu aplikacji)"} · zadania: ${stepHabits}`
-              : "Brak zgody na odczyt kroków."}
+                ? "Health Connect niedostępny na tym urządzeniu."
+                : steps.granted
+                  ? `Połączono${steps.background ? "" : " (bez odczytu w tle - widżet odświeży się po otwarciu aplikacji)"} · zadania: ${stepHabits}`
+                  : "Brak zgody na odczyt kroków."}
           </div>
         </div>
         {steps?.available && !steps.granted && (
@@ -567,8 +574,8 @@ function SensorsCard({ onMessage }: { onMessage: (m: string) => void }) {
             {screen == null
               ? "Sprawdzam…"
               : screen
-              ? `Dostęp przyznany · zadania: ${screenHabits}`
-              : "Wymaga „dostępu do danych o użyciu” w ustawieniach systemu."}
+                ? `Dostęp przyznany · zadania: ${screenHabits}`
+                : "Wymaga „dostępu do danych o użyciu” w ustawieniach systemu."}
           </div>
         </div>
         {screen === false && (
@@ -597,7 +604,11 @@ function toMinutes(t: string): number {
 }
 
 const WIDGETS: { kind: WidgetKind; name: string; desc: string }[] = [
-  { kind: "szpila", name: "Szpila 4×1", desc: "Wredny kot i szpila o twoich zadaniach (bez zakazanych)" },
+  {
+    kind: "szpila",
+    name: "Szpila 4×1",
+    desc: "Wredny kot i szpila o twoich zadaniach (bez zakazanych)",
+  },
   { kind: "next", name: "Następne zadanie 1×1", desc: "Co zrobić teraz - sam wybiera" },
   { kind: "icons", name: "Ikony 4×2", desc: "Pierścień postępu, czas do końca dnia" },
   { kind: "list", name: "Lista 4×2", desc: "Dzisiejsze zadania jako lista" },
@@ -612,8 +623,8 @@ function WidgetsCard({ onMessage }: { onMessage: (m: string) => void }) {
         <span className="font-medium">Widżety na ekranie głównym</span>
       </div>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        Dotknij „Dodaj”, a telefon zapyta, gdzie postawić widżet. Możesz też przytrzymać pusty obszar ekranu
-        głównego → Widżety → Szpila.
+        Dotknij „Dodaj”, a telefon zapyta, gdzie postawić widżet. Możesz też przytrzymać pusty
+        obszar ekranu głównego → Widżety → Szpila.
       </p>
       <ul className="mt-3 space-y-2">
         {WIDGETS.map((w) => (
@@ -624,9 +635,13 @@ function WidgetsCard({ onMessage }: { onMessage: (m: string) => void }) {
             </div>
             <button
               onClick={async () => {
-                if (!Capacitor.isNativePlatform()) return onMessage("Widżety działają w aplikacji na Androida.");
+                if (!Capacitor.isNativePlatform())
+                  return onMessage("Widżety działają w aplikacji na Androida.");
                 const ok = await pinWidget(w.kind);
-                if (!ok) onMessage("Twój launcher nie obsługuje dodawania z aplikacji - dodaj widżet z listy widżetów.");
+                if (!ok)
+                  onMessage(
+                    "Twój launcher nie obsługuje dodawania z aplikacji - dodaj widżet z listy widżetów.",
+                  );
               }}
               className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold"
               style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}

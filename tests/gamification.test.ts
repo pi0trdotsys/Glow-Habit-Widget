@@ -18,9 +18,21 @@ import type { Completion } from "@/lib/habits/types";
 import { WED_1540, entry, habit, key } from "./helpers";
 
 const now = WED_1540;
-const water = habit({ name: "Picie wody", goal: { type: "count", target: 8, step: 1, unit: "szklanek" } }, 60, now);
-const read = habit({ name: "Czytanie książki", goal: { type: "minutes", target: 20, step: 10 } }, 60, now);
-const food = habit({ name: "Fast food", kind: "avoid", limit: { times: 0, period: "week" } }, 60, now);
+const water = habit(
+  { name: "Picie wody", goal: { type: "count", target: 8, step: 1, unit: "szklanek" } },
+  60,
+  now,
+);
+const read = habit(
+  { name: "Czytanie książki", goal: { type: "minutes", target: 20, step: 10 } },
+  60,
+  now,
+);
+const food = habit(
+  { name: "Fast food", kind: "avoid", limit: { times: 0, period: "week" } },
+  60,
+  now,
+);
 const habits = [water, read, food];
 
 /** Full days for `days` days back from yesterday (and optionally today). */
@@ -36,7 +48,11 @@ function perfect(days: number, from = 1): Completion[] {
 describe("forma", () => {
   test("day fraction averages habit scores; null when nothing counts", () => {
     const d = addDays(now, -1);
-    const idx = indexEntries([entry(water, d, { amount: 4 }), entry(read, d, { amount: 20 }), entry(food, d)]);
+    const idx = indexEntries([
+      entry(water, d, { amount: 4 }),
+      entry(read, d, { amount: 20 }),
+      entry(food, d),
+    ]);
     expect(dayFraction(habits, idx, d, now)).toBeCloseTo((0.5 + 1 + 1) / 3);
     expect(dayFraction(habits, idx, addDays(now, -200), now)).toBeNull(); // before creation
   });
@@ -49,7 +65,12 @@ describe("forma", () => {
     expect(formaStreaks(habits, broken, now).current).toBe(2);
     expect(formaStreaks(habits, broken, now).best).toBe(2);
     // today in form extends it
-    const today = [...c, entry(water, now, { amount: 8 }), entry(read, now, { amount: 20 }), entry(food, now)];
+    const today = [
+      ...c,
+      entry(water, now, { amount: 8 }),
+      entry(read, now, { amount: 20 }),
+      entry(food, now),
+    ];
     expect(formaStreaks(habits, today, now).current).toBe(6);
   });
 
@@ -71,7 +92,11 @@ describe("unlocks", () => {
   });
 
   test("next unlock is the closest one above the best streak", () => {
-    expect(nextUnlock({ current: 2, best: 2, perfectWeeks: 0 })).toEqual({ name: "Kujon", kind: "mina", missing: 1 });
+    expect(nextUnlock({ current: 2, best: 2, perfectWeeks: 0 })).toEqual({
+      name: "Kujon",
+      kind: "mina",
+      missing: 1,
+    });
     expect(nextUnlock({ current: 1, best: 7, perfectWeeks: 0 })?.name).toBe("Mafioso");
     expect(nextUnlock({ current: 30, best: 30, perfectWeeks: 0 })).toBeNull();
   });
@@ -91,7 +116,9 @@ describe("weekly challenges", () => {
     expect(a.map((c) => c.id)).toEqual(b.map((c) => c.id)); // same week
     const ids = new Set<string>();
     for (let w = 0; w < 8; w++) {
-      weeklyChallenges(habits, perfect(90), {}, true, addDays(now, -7 * w)).forEach((c) => ids.add(c.id));
+      weeklyChallenges(habits, perfect(90), {}, true, addDays(now, -7 * w)).forEach((c) =>
+        ids.add(c.id),
+      );
     }
     expect(ids.size).toBeGreaterThan(3); // rotates
   });
@@ -106,8 +133,12 @@ describe("weekly challenges", () => {
     const all = weeklyChallenges(habits, week, {}, false, now, monday);
     for (const c of all) expect(c.status).toBe("done");
 
-    const slipped = week.map((e) => (e.habitId === food.id && e.date === key(addDays(monday, 2)) ? { ...e, slipped: true } : e));
-    const clean = weeklyChallenges(habits, slipped, {}, false, now, monday).find((c) => c.id === "clean");
+    const slipped = week.map((e) =>
+      e.habitId === food.id && e.date === key(addDays(monday, 2)) ? { ...e, slipped: true } : e,
+    );
+    const clean = weeklyChallenges(habits, slipped, {}, false, now, monday).find(
+      (c) => c.id === "clean",
+    );
     if (clean) expect(clean.status).toBe("failed");
   });
 
@@ -117,7 +148,14 @@ describe("weekly challenges", () => {
     let found = false;
     for (let w = 0; w < 20 && !found; w++) {
       const m = addDays(monday, -7 * w);
-      const c = weeklyChallenges(habits, perfect(200), { ...hits, [key(m)]: 1 }, true, addDays(m, 2), m).find((x) => x.id === "night0");
+      const c = weeklyChallenges(
+        habits,
+        perfect(200),
+        { ...hits, [key(m)]: 1 },
+        true,
+        addDays(m, 2),
+        m,
+      ).find((x) => x.id === "night0");
       if (c) {
         expect(c.status).toBe("failed");
         found = true;
@@ -129,7 +167,9 @@ describe("weekly challenges", () => {
   test("unreachable day goals fail early", () => {
     // Sunday with nothing done all week: 4 forma days impossible
     const sunday = addDays(now, 4);
-    const c = weeklyChallenges(habits, [], {}, false, sunday).find((x) => x.id === "forma4" || x.id === "perfect2" || x.id === "habit5");
+    const c = weeklyChallenges(habits, [], {}, false, sunday).find(
+      (x) => x.id === "forma4" || x.id === "perfect2" || x.id === "habit5",
+    );
     if (c) expect(c.status).toBe("failed");
   });
 });
@@ -149,7 +189,9 @@ describe("humors", () => {
     // soft level stays gentle
     expect(nagLines(water, "soft", null).some((l) => l.includes("propozycję"))).toBe(false);
     setHumor("wredny");
-    expect(nagLines(water, "hard", null).some((l) => l.includes("propozycję nie do odrzucenia"))).toBe(false);
+    expect(
+      nagLines(water, "hard", null).some((l) => l.includes("propozycję nie do odrzucenia")),
+    ).toBe(false);
   });
 
   test("every humor has lines for all pools", () => {

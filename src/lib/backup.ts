@@ -11,7 +11,12 @@ import { csvFileName, toCsv } from "@/lib/habits/stats";
 interface BackupPlugin {
   saveBackup(opts: { name: string; json: string; share?: boolean }): Promise<{ location: string }>;
   backupInfo(): Promise<{ lastAuto: string }>;
-  saveFile(opts: { name: string; text: string; mime: string; share?: boolean }): Promise<{ location: string }>;
+  saveFile(opts: {
+    name: string;
+    text: string;
+    mime: string;
+    share?: boolean;
+  }): Promise<{ location: string }>;
 }
 const Native = registerPlugin<BackupPlugin>("HabitWidget");
 
@@ -64,7 +69,9 @@ export async function restoreBackup(file: File): Promise<number> {
   try {
     return useHabits.getState().importData(text);
   } catch (e) {
-    throw new Error(e instanceof SyntaxError ? "Plik nie jest poprawnym JSON-em." : (e as Error).message);
+    throw new Error(
+      e instanceof SyntaxError ? "Plik nie jest poprawnym JSON-em." : (e as Error).message,
+    );
   }
 }
 

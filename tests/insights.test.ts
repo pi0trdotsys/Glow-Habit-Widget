@@ -7,7 +7,11 @@ import { entry, habit } from "./helpers";
 describe("habitInsights", () => {
   const now = new Date(2026, 8, 23, 12, 0);
   const phone = habit({ name: "Telefon do późna", kind: "avoid" }, 50, now);
-  const steps = habit({ name: "8000 kroków", goal: { type: "count", target: 8000, step: 1000, unit: "kroków" } }, 50, now);
+  const steps = habit(
+    { name: "8000 kroków", goal: { type: "count", target: 8000, step: 1000, unit: "kroków" } },
+    50,
+    now,
+  );
   const read = habit({ name: "Czytanie" }, 60, now);
 
   test("finds 'after a late phone night you walk less'", () => {
@@ -42,7 +46,9 @@ describe("usualMinute / monthGrid", () => {
   const read = habit({ name: "Czytanie" }, 60, now);
 
   test("median first-log minute, needs 3+ days", () => {
-    const logs = [1260, 1275, 1300].map((m, i) => entry(read, addDays(now, -i - 1), { amount: 1, log: [[m, 1]] }));
+    const logs = [1260, 1275, 1300].map((m, i) =>
+      entry(read, addDays(now, -i - 1), { amount: 1, log: [[m, 1]] }),
+    );
     expect(usualMinute(read, logs.slice(0, 2), now)).toBeNull();
     expect(usualMinute(read, logs, now)).toBe(1275);
   });

@@ -280,14 +280,10 @@ export const MORE_RAGE: Partial<Record<Category, string[]>> = {
     "Trening olany od rana. Twoje mięśnie składają wypowiedzenie, a tłuszcz podpisuje umowę na czas nieokreślony.",
     "Ruszysz tę dupę dzisiaj czy mam wezwać dźwig? Na trening, kurwa!",
   ],
-  meditation: [
-    "Zamiast medytacji masz dziś wkurwienie i chaos. Pięć minut, do chuja, pięć minut!",
-  ],
+  meditation: ["Zamiast medytacji masz dziś wkurwienie i chaos. Pięć minut, do chuja, pięć minut!"],
   sleep: ["Kurwa, idź już spać. Jutro będziesz zombie i znowu będzie na mnie."],
   pills: ["Tabletka dalej w opakowaniu. Myślisz, że działa przez patrzenie? Łykaj, do chuja."],
-  learning: [
-    "Nauka olana cały dzień. Jutro będziesz tak samo w lesie jak dziś. Siadaj, kurwa.",
-  ],
+  learning: ["Nauka olana cały dzień. Jutro będziesz tak samo w lesie jak dziś. Siadaj, kurwa."],
   generic: [
     "„{name}” leży od rana. Ja już nie mam siły, a ty masz jej mniej niż zdechły chomik. Rób to, kurwa.",
     "Jeszcze raz: „{name}”. Nie jutro. Nie za godzinę. Teraz, do jasnej cholery.",
@@ -297,12 +293,16 @@ export const MORE_RAGE: Partial<Record<Category, string[]>> = {
     "Dalej zero potwierdzenia przy telefonie. Zakładam, że siedzisz z nosem w ekranie jak pierdolony zombie.",
   ],
   fastfood: ["Cały dzień bez potwierdzenia. Czuję frytki przez ekran, kurwa mać."],
-  sweets: ["Brak potwierdzenia przy słodyczach. Zakładam, że cała paczka już zniknęła, ja pierdolę."],
+  sweets: [
+    "Brak potwierdzenia przy słodyczach. Zakładam, że cała paczka już zniknęła, ja pierdolę.",
+  ],
   alcohol: ["Dalej nic przy alkoholu. Zakładam, że już leje się strumieniami, kurwa."],
   smoking: ["Brak potwierdzenia przy fajkach. Zakładam, że dymisz jak Wawel w smoczy dzień."],
   games: ["Dalej nic przy graniu. Zakładam, że pad już przyrósł ci do dłoni na amen."],
   social: ["Zero potwierdzenia przy rolkach. Zakładam, że twój kciuk przewinął już pół internetu."],
-  avoidGeneric: ["„{name}” bez potwierdzenia cały dzień. Zakładam, że dajesz w palnik. Udowodnij, że nie, kurwa."],
+  avoidGeneric: [
+    "„{name}” bez potwierdzenia cały dzień. Zakładam, że dajesz w palnik. Udowodnij, że nie, kurwa.",
+  ],
 };
 
 export const MORE_ALL_DONE = [

@@ -33,14 +33,20 @@ describe("persisted data migrations", () => {
   });
 
   test("v2 -> 'Telefon do późna' becomes scrolling in bed; coding + language are added once", () => {
-    const out = migrate({ habits: [base("Telefon do późna", { icon: "Phone", kind: "avoid" })], completions: [] }, 2);
+    const out = migrate(
+      { habits: [base("Telefon do późna", { icon: "Phone", kind: "avoid" })], completions: [] },
+      2,
+    );
     const names = out.habits.map((h) => h.name);
     expect(names).toContain("Scrollowanie w łóżku");
     expect(out.habits.find((h) => h.name === "Scrollowanie w łóżku")!.icon).toBe("Smartphone");
     expect(names).toContain("Programuj");
     expect(names).toContain("Ucz się języka obcego");
     // already tracking something similar -> not duplicated
-    const again = migrate({ habits: [base("Nauka angielskiego"), base("Programowanie")], completions: [] }, 2);
+    const again = migrate(
+      { habits: [base("Nauka angielskiego"), base("Programowanie")], completions: [] },
+      2,
+    );
     expect(again.habits).toHaveLength(2);
   });
 

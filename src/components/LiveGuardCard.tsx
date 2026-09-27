@@ -46,13 +46,16 @@ export function LiveGuardCard() {
         <Toggle checked={notif.live} onChange={(on) => update({ live: on })} />
       </div>
       <p className="mt-2 text-[11px] text-muted-foreground">
-        Gdy w nocy otworzysz social media, Szpila wyskakuje od razu, a nie dopiero rano w ocenie. Siedzisz dalej -
-        co 5 min dostajesz ostrzejszą szpilę.
+        Gdy w nocy otworzysz social media, Szpila wyskakuje od razu, a nie dopiero rano w ocenie.
+        Siedzisz dalej - co 5 min dostajesz ostrzejszą szpilę.
         {st?.running ? " Teraz czuwa." : ""}
         {tonight > 0 ? ` Tej nocy: ${tonight}× social media.` : ""}
       </p>
       {!granted && (
-        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl p-3" style={{ backgroundColor: "color-mix(in oklab, var(--avoid) 14%, transparent)" }}>
+        <div
+          className="mt-3 flex items-center justify-between gap-3 rounded-xl p-3"
+          style={{ backgroundColor: "color-mix(in oklab, var(--avoid) 14%, transparent)" }}
+        >
           <span className="text-[11px]">Wymaga „dostępu do danych o użyciu”.</span>
           <button
             onClick={() => void openUsageSettings()}
@@ -67,15 +70,20 @@ export function LiveGuardCard() {
         <div className="min-w-0">
           <div className="text-sm font-medium">Blokada po 3. szpili</div>
           <div className="text-[11px] text-muted-foreground">
-            Dalej siedzisz? Pełnoekranowy kot zasłania aplikację: „Idę spać” albo przytrzymaj 10 s, jeśli naprawdę
-            musisz.
+            Dalej siedzisz? Pełnoekranowy kot zasłania aplikację: „Idę spać” albo przytrzymaj 10 s,
+            jeśli naprawdę musisz.
           </div>
         </div>
         <Toggle checked={notif.liveBlock} onChange={(on) => update({ liveBlock: on })} />
       </div>
       {notif.liveBlock && st?.overlay === false && (
-        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl p-3" style={{ backgroundColor: "color-mix(in oklab, var(--avoid) 14%, transparent)" }}>
-          <span className="text-[11px]">Blokada wymaga zgody „Wyświetlanie nad innymi aplikacjami”.</span>
+        <div
+          className="mt-3 flex items-center justify-between gap-3 rounded-xl p-3"
+          style={{ backgroundColor: "color-mix(in oklab, var(--avoid) 14%, transparent)" }}
+        >
+          <span className="text-[11px]">
+            Blokada wymaga zgody „Wyświetlanie nad innymi aplikacjami”.
+          </span>
           <button
             onClick={() => void openOverlaySettings()}
             className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold"
@@ -88,9 +96,17 @@ export function LiveGuardCard() {
       <div className="mt-3 flex items-center justify-between">
         <span className="text-xs text-muted-foreground">Czuwa od - do</span>
         <div className="flex items-center gap-2">
-          <TimeField value={notif.liveFrom} disabled={!notif.live} onChange={(v) => update({ liveFrom: v })} />
+          <TimeField
+            value={notif.liveFrom}
+            disabled={!notif.live}
+            onChange={(v) => update({ liveFrom: v })}
+          />
           <span className="text-xs text-muted-foreground">-</span>
-          <TimeField value={notif.liveUntil} disabled={!notif.live} onChange={(v) => update({ liveUntil: v })} />
+          <TimeField
+            value={notif.liveUntil}
+            disabled={!notif.live}
+            onChange={(v) => update({ liveUntil: v })}
+          />
         </div>
       </div>
       {installed.length > 0 && (
@@ -104,12 +120,18 @@ export function LiveGuardCard() {
                   key={a.pkg}
                   disabled={!notif.live}
                   onClick={() =>
-                    update({ liveOff: on ? [...notif.liveOff, a.pkg] : notif.liveOff.filter((p) => p !== a.pkg) })
+                    update({
+                      liveOff: on
+                        ? [...notif.liveOff, a.pkg]
+                        : notif.liveOff.filter((p) => p !== a.pkg),
+                    })
                   }
                   className="rounded-full border px-3 py-1 text-xs font-medium transition disabled:opacity-50"
                   style={{
                     borderColor: on ? "var(--avoid)" : "var(--border)",
-                    backgroundColor: on ? "color-mix(in oklab, var(--avoid) 16%, transparent)" : "transparent",
+                    backgroundColor: on
+                      ? "color-mix(in oklab, var(--avoid) 16%, transparent)"
+                      : "transparent",
                     color: on ? "var(--foreground)" : "var(--muted-foreground)",
                   }}
                 >
@@ -125,7 +147,15 @@ export function LiveGuardCard() {
   );
 }
 
-function TimeField({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled?: boolean }) {
+function TimeField({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+}) {
   return (
     <input
       type="time"

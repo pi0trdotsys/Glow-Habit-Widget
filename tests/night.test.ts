@@ -22,7 +22,15 @@ const bad: NightReport = {
   screen: 61,
   asleep: 100,
 };
-const clean: NightReport = { date: "2026-09-24", granted: true, apps: [], visits: 0, social: 0, screen: 3, asleep: -1 };
+const clean: NightReport = {
+  date: "2026-09-24",
+  granted: true,
+  apps: [],
+  visits: 0,
+  social: 0,
+  screen: 3,
+  asleep: -1,
+};
 
 describe("rachunek za noc", () => {
   test("apps line and placeholders (mirrors NightStats)", () => {
@@ -49,7 +57,8 @@ describe("rachunek za noc", () => {
   test("hard comments swear, soft ones don't; no leftover placeholders", () => {
     const swear = /kurw|gówn|jeba/i;
     expect(billLines("hard", null).bad.some((l) => swear.test(l))).toBe(true);
-    for (const l of [...billLines("soft", null).bad, ...billLines("soft", null).good]) expect(swear.test(l)).toBe(false);
+    for (const l of [...billLines("soft", null).bad, ...billLines("soft", null).good])
+      expect(swear.test(l)).toBe(false);
     for (const l of [...billLines("hard", "Ola").bad, ...billLines("hard", "Ola").good]) {
       expect(fillBill(l, bad)).not.toMatch(/\{\w+\}/);
     }
@@ -87,8 +96,16 @@ describe("full-screen block lines", () => {
 
 describe("kot w domu", () => {
   const now = WED_1540;
-  const water = habit({ name: "Picie wody", goal: { type: "count", target: 8, step: 1, unit: "szklanek" } }, 60, now);
-  const read = habit({ name: "Czytanie", goal: { type: "minutes", target: 20, step: 10 } }, 60, now);
+  const water = habit(
+    { name: "Picie wody", goal: { type: "count", target: 8, step: 1, unit: "szklanek" } },
+    60,
+    now,
+  );
+  const read = habit(
+    { name: "Czytanie", goal: { type: "minutes", target: 20, step: 10 } },
+    60,
+    now,
+  );
   const days = (n: number, amount: number): Completion[] =>
     Array.from({ length: n }, (_, i) => addDays(now, -(i + 1))).flatMap((d) => [
       entry(water, d, { amount }),
@@ -109,7 +126,13 @@ describe("kot w domu", () => {
     // started 2 days ago, both days in form but no 3-day streak yet
     const w2 = { ...water, createdAt: addDays(now, -2).toISOString() };
     const r2 = { ...read, createdAt: addDays(now, -2).toISOString() };
-    expect(catCondition([w2, r2], days(2, 8).map((e) => ({ ...e, habitId: e.habitId === water.id ? w2.id : r2.id })), now)).toBe("normal");
+    expect(
+      catCondition(
+        [w2, r2],
+        days(2, 8).map((e) => ({ ...e, habitId: e.habitId === water.id ? w2.id : r2.id })),
+        now,
+      ),
+    ).toBe("normal");
     expect(catCondition([habit({ name: "Nowe" }, 0, now)], [], now)).toBe("normal");
   });
 });

@@ -126,7 +126,11 @@ async function syncSteps(): Promise<void> {
  * the night is over within the limit = clean, otherwise still undecided (null).
  * Mirrors HabitNotifier.checkLateScreen.
  */
-export function screenVerdict(minutes: number, limit: number, closed: boolean): "clean" | "slip" | null {
+export function screenVerdict(
+  minutes: number,
+  limit: number,
+  closed: boolean,
+): "clean" | "slip" | null {
   if (minutes > limit) return "slip";
   return closed ? "clean" : null;
 }

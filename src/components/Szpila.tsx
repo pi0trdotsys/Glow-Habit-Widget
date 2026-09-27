@@ -29,11 +29,29 @@ export function SzpilaAvatar({
   const impressed = mood === "impressed";
   const eyeRy = angry ? 2.2 : impressed ? 5 : 2.9;
   const ears = angry
-    ? { l: "M7 31 L11 13 L27 21 Z", r: "M57 31 L53 13 L37 21 Z", li: "M11 27 L13 18 L22 22 Z", ri: "M53 27 L51 18 L42 22 Z" }
-    : { l: "M10 27 L15 5 L28 18 Z", r: "M54 27 L49 5 L36 18 Z", li: "M14 22 L16 11 L23 17 Z", ri: "M50 22 L48 11 L41 17 Z" };
+    ? {
+        l: "M7 31 L11 13 L27 21 Z",
+        r: "M57 31 L53 13 L37 21 Z",
+        li: "M11 27 L13 18 L22 22 Z",
+        ri: "M53 27 L51 18 L42 22 Z",
+      }
+    : {
+        l: "M10 27 L15 5 L28 18 Z",
+        r: "M54 27 L49 5 L36 18 Z",
+        li: "M14 22 L16 11 L23 17 Z",
+        ri: "M50 22 L48 11 L41 17 Z",
+      };
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden>
-      {face === "dj" && <path d="M9 40 Q8 9 32 9 Q56 9 55 40" stroke="#4a4a5c" strokeWidth="3.5" fill="none" strokeLinecap="round" />}
+      {face === "dj" && (
+        <path
+          d="M9 40 Q8 9 32 9 Q56 9 55 40"
+          stroke="#4a4a5c"
+          strokeWidth="3.5"
+          fill="none"
+          strokeLinecap="round"
+        />
+      )}
       <path d={ears.l} fill={FACE} stroke={EDGE} strokeWidth="1.5" strokeLinejoin="round" />
       <path d={ears.r} fill={FACE} stroke={EDGE} strokeWidth="1.5" strokeLinejoin="round" />
       <path d={ears.li} fill={PINK} opacity="0.7" />
@@ -54,8 +72,20 @@ export function SzpilaAvatar({
       )}
       {mood === "smug" && (
         <>
-          <path d="M17 31.5 Q23 29.5 29 31.5" stroke={EDGE} strokeWidth="2" fill="none" strokeLinecap="round" />
-          <path d="M35 31.5 Q41 29.5 47 31.5" stroke={EDGE} strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path
+            d="M17 31.5 Q23 29.5 29 31.5"
+            stroke={EDGE}
+            strokeWidth="2"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M35 31.5 Q41 29.5 47 31.5"
+            stroke={EDGE}
+            strokeWidth="2"
+            fill="none"
+            strokeLinecap="round"
+          />
         </>
       )}
       {/* nose */}
@@ -63,14 +93,32 @@ export function SzpilaAvatar({
       {/* mouth */}
       {angry ? (
         <>
-          <path d="M26 49 Q32 44.5 38 49" stroke="#111" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path
+            d="M26 49 Q32 44.5 38 49"
+            stroke="#111"
+            strokeWidth="2"
+            fill="none"
+            strokeLinecap="round"
+          />
           <path d="M28.6 47.2 L29.6 50.6 L30.8 46.6 Z" fill="#fff" />
           <path d="M35.4 47.2 L34.4 50.6 L33.2 46.6 Z" fill="#fff" />
         </>
       ) : impressed ? (
-        <path d="M27 45.5 Q32 50 37 45.5" stroke="#111" strokeWidth="2" fill="none" strokeLinecap="round" />
+        <path
+          d="M27 45.5 Q32 50 37 45.5"
+          stroke="#111"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+        />
       ) : (
-        <path d="M27.5 45.5 Q31 47.5 33.5 45.8 Q37 44.8 40 41.8" stroke="#111" strokeWidth="2" fill="none" strokeLinecap="round" />
+        <path
+          d="M27.5 45.5 Q31 47.5 33.5 45.8 Q37 44.8 40 41.8"
+          stroke="#111"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+        />
       )}
       <Accessory face={face} />
       <Condition condition={condition} />
@@ -90,7 +138,14 @@ function Condition({ condition }: { condition: CatCondition }) {
   if (condition === "groomed") {
     return (
       <g>
-        <path d="M19 23 Q29 17 41 19.5" stroke="#fff" strokeOpacity="0.35" strokeWidth="2" fill="none" strokeLinecap="round" />
+        <path
+          d="M19 23 Q29 17 41 19.5"
+          stroke="#fff"
+          strokeOpacity="0.35"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+        />
         <g fill="#fff6c8">
           <path d="M55 12 l1.3 3.2 l3.2 1.3 l-3.2 1.3 l-1.3 3.2 l-1.3 -3.2 l-3.2 -1.3 l3.2 -1.3 Z" />
           <path d="M7 18 l0.9 2.2 l2.2 0.9 l-2.2 0.9 l-0.9 2.2 l-0.9 -2.2 l-2.2 -0.9 l2.2 -0.9 Z" />
@@ -108,7 +163,10 @@ function Condition({ condition }: { condition: CatCondition }) {
     return (
       <g>
         <g stroke="#55556a" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M24 17 L26 11.5 L28.5 16 L31 10.5 L33.5 16 L36 11.5 L38.5 17" strokeWidth="1.8" />
+          <path
+            d="M24 17 L26 11.5 L28.5 16 L31 10.5 L33.5 16 L36 11.5 L38.5 17"
+            strokeWidth="1.8"
+          />
           <path d="M8.5 37 L3.5 35.5 L8 40.5 L2.5 42 L8.5 45" strokeWidth="1.6" />
           <path d="M55.5 37 L60.5 35.5 L56 40.5 L61.5 42 L55.5 45" strokeWidth="1.6" />
         </g>
@@ -117,14 +175,29 @@ function Condition({ condition }: { condition: CatCondition }) {
           <path d="M35.5 39.2 Q41 42 46.5 39.2" />
         </g>
         <g transform="rotate(-28 44 24)">
-          <rect x="35.5" y="21.5" width="17" height="5" rx="2" fill="#f2c9a0" stroke="#c99a6e" strokeWidth="0.6" />
+          <rect
+            x="35.5"
+            y="21.5"
+            width="17"
+            height="5"
+            rx="2"
+            fill="#f2c9a0"
+            stroke="#c99a6e"
+            strokeWidth="0.6"
+          />
           <rect x="41.5" y="21.5" width="5" height="5" fill="#e8b98a" />
         </g>
         <circle cx="56.1" cy="11" r="1.4" fill="#111" />
         <ellipse cx="55.9" cy="9.3" rx="1.5" ry="1" fill="#dde3ee" opacity="0.8" />
         <circle cx="7.5" cy="15" r="1.2" fill="#111" />
         <ellipse cx="7.4" cy="13.5" rx="1.3" ry="0.9" fill="#dde3ee" opacity="0.8" />
-        <path d="M59 14 Q61.5 16 60 18.5 M3.5 18 Q2 20 4 22" stroke="#8e95a3" strokeWidth="0.7" fill="none" strokeLinecap="round" />
+        <path
+          d="M59 14 Q61.5 16 60 18.5 M3.5 18 Q2 20 4 22"
+          stroke="#8e95a3"
+          strokeWidth="0.7"
+          fill="none"
+          strokeLinecap="round"
+        />
       </g>
     );
   }
@@ -167,7 +240,13 @@ function Accessory({ face }: { face: FaceId }) {
     case "krol":
       return (
         <g>
-          <path d="M21 18 L22.5 6 L27.5 12 L32 3.5 L36.5 12 L41.5 6 L43 18 Z" fill="#fdba2f" stroke="#b07d12" strokeWidth="1.2" strokeLinejoin="round" />
+          <path
+            d="M21 18 L22.5 6 L27.5 12 L32 3.5 L36.5 12 L41.5 6 L43 18 Z"
+            fill="#fdba2f"
+            stroke="#b07d12"
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+          />
           <circle cx="32" cy="13.5" r="1.8" fill="#ff4d5e" />
           <circle cx="25.5" cy="14.5" r="1.2" fill="#55c4fe" />
           <circle cx="38.5" cy="14.5" r="1.2" fill="#55c4fe" />
@@ -200,14 +279,18 @@ export function SzpilaCard({ say, onReroll }: { say: SzpilaSay; onReroll: () => 
       onClick={onReroll}
       className="mx-5 mb-6 flex w-[calc(100%-2.5rem)] items-start gap-3 rounded-3xl p-4 text-left transition-transform active:scale-[0.99]"
       style={{
-        background: "linear-gradient(135deg, color-mix(in oklab, var(--avoid) 16%, var(--card)), var(--card))",
+        background:
+          "linear-gradient(135deg, color-mix(in oklab, var(--avoid) 16%, var(--card)), var(--card))",
         border: "1px solid color-mix(in oklab, var(--avoid) 30%, transparent)",
       }}
       aria-label={`${SZPILA_NAME} mówi. Dotknij, by usłyszeć kolejną szpilę.`}
     >
       <Face mood={say.mood} size={56} />
       <div className="min-w-0 flex-1">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--avoid)" }}>
+        <div
+          className="text-[11px] font-semibold uppercase tracking-[0.16em]"
+          style={{ color: "var(--avoid)" }}
+        >
           {SZPILA_NAME}
         </div>
         <Line text={say.text} className="mt-1 text-sm leading-snug" />

@@ -53,9 +53,7 @@ function WidgetPage() {
           )}
 
           {due.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              Brak zadań na dziś.
-            </p>
+            <p className="py-8 text-center text-sm text-muted-foreground">Brak zadań na dziś.</p>
           ) : (
             <div className="grid grid-cols-4 gap-y-6 gap-x-2 justify-items-center">
               {due.map((h) => (

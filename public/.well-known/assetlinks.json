@@ -1,8 +1,12 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "app.lovable.glow_habit_widget",
-        "sha256_cert_fingerprints": ["94:14:8A:C3:2C:55:A7:60:CF:86:9D:C7:AB:D6:91:00:E9:B3:72:69:A5:8E:B9:18:57:91:30:74:75:DF:32:06"]
-      }
-    }]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.lovable.glow_habit_widget",
+      "sha256_cert_fingerprints": [
+        "94:14:8A:C3:2C:55:A7:60:CF:86:9D:C7:AB:D6:91:00:E9:B3:72:69:A5:8E:B9:18:57:91:30:74:75:DF:32:06"
+      ]
+    }
+  }
+]

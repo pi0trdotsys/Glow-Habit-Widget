@@ -38,7 +38,10 @@ function SzpilaPage() {
   const look = useHabits((s) => s.szpila);
   const setSzpila = useHabits((s) => s.setSzpila);
 
-  const p = useMemo(() => progressOf(habits, completions, nightHits, liveOn), [habits, completions, nightHits, liveOn]);
+  const p = useMemo(
+    () => progressOf(habits, completions, nightHits, liveOn),
+    [habits, completions, nightHits, liveOn],
+  );
   const challenges = useMemo(
     () => weeklyChallenges(habits, completions, nightHits, liveOn),
     [habits, completions, nightHits, liveOn],
@@ -49,7 +52,11 @@ function SzpilaPage() {
 
   const choose = <T extends string>(u: Unlockable<T>, kind: "face" | "humor") => {
     if (!isUnlocked(u, p)) {
-      toast(u.weeks ? `🔒 Zalicz komplet wyzwań w jednym tygodniu.` : `🔒 Potrzebujesz ${u.streak} ${days(u.streak ?? 0)} formy z rzędu.`);
+      toast(
+        u.weeks
+          ? `🔒 Zalicz komplet wyzwań w jednym tygodniu.`
+          : `🔒 Potrzebujesz ${u.streak} ${days(u.streak ?? 0)} formy z rzędu.`,
+      );
       return;
     }
     setSzpila(kind === "face" ? { face: u.id as never } : { humor: u.id as never });
@@ -64,11 +71,17 @@ function SzpilaPage() {
           animate={{ rotate: 0, scale: 1 }}
           transition={{ type: "spring", stiffness: 380, damping: 13 }}
         >
-          <SzpilaAvatar mood={conditionMood(condition, "smug")} face={look.face} condition={condition} size={88} />
+          <SzpilaAvatar
+            mood={conditionMood(condition, "smug")}
+            face={look.face}
+            condition={condition}
+            size={88}
+          />
         </motion.div>
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.18em]" style={{ color: "var(--avoid)" }}>
-            mina {FACES.find((f) => f.id === look.face)?.name} · humor {HUMORS.find((h) => h.id === look.humor)?.name}
+            mina {FACES.find((f) => f.id === look.face)?.name} · humor{" "}
+            {HUMORS.find((h) => h.id === look.humor)?.name}
           </p>
           <h1 className="mt-1 font-display text-4xl font-bold tracking-tight">Szpila</h1>
           <p className="mt-1 text-xs text-muted-foreground" data-condition={condition}>
@@ -76,8 +89,8 @@ function SzpilaPage() {
             {condition === "neglected"
               ? "Tydzień wpadek - ogarnij się, to się ogarnie."
               : condition === "groomed"
-              ? "Seria w formie robi swoje."
-              : "3 dni w formie z rzędu i będzie zadbany."}
+                ? "Seria w formie robi swoje."
+                : "3 dni w formie z rzędu i będzie zadbany."}
           </p>
         </div>
       </header>
@@ -100,7 +113,9 @@ function SzpilaPage() {
       </section>
 
       <section className="mx-5 mt-4 rounded-3xl bg-card p-5">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Miny</h2>
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          Miny
+        </h2>
         <div className="grid grid-cols-3 gap-3">
           {FACES.map((f) => {
             const open = isUnlocked(f, p);
@@ -113,7 +128,9 @@ function SzpilaPage() {
                 className="relative flex flex-col items-center gap-1 rounded-2xl p-2 transition active:scale-95"
                 style={{
                   border: `1.5px solid ${active ? "var(--avoid)" : "var(--border)"}`,
-                  background: active ? "color-mix(in oklab, var(--avoid) 12%, transparent)" : "transparent",
+                  background: active
+                    ? "color-mix(in oklab, var(--avoid) 12%, transparent)"
+                    : "transparent",
                 }}
               >
                 <div style={{ filter: open ? undefined : "grayscale(1) brightness(0.55)" }}>
@@ -121,9 +138,17 @@ function SzpilaPage() {
                 </div>
                 <span className="text-xs font-medium">{f.name}</span>
                 <span className="text-[10px] text-muted-foreground">
-                  {open ? (active ? "wybrana" : "odblokowana") : f.weeks ? "komplet wyzwań" : `${f.streak} ${days(f.streak ?? 0)} formy`}
+                  {open
+                    ? active
+                      ? "wybrana"
+                      : "odblokowana"
+                    : f.weeks
+                      ? "komplet wyzwań"
+                      : `${f.streak} ${days(f.streak ?? 0)} formy`}
                 </span>
-                {!open && <Lock size={12} className="absolute right-2 top-2 text-muted-foreground" />}
+                {!open && (
+                  <Lock size={12} className="absolute right-2 top-2 text-muted-foreground" />
+                )}
               </button>
             );
           })}
@@ -131,12 +156,17 @@ function SzpilaPage() {
       </section>
 
       <section className="mx-5 mt-4 rounded-3xl bg-card p-5">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Humory</h2>
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          Humory
+        </h2>
         <ul className="space-y-2">
           {HUMORS.map((h) => {
             const open = isUnlocked(h, p);
             const active = look.humor === h.id;
-            const sample = (h.id === "wredny" ? WREDNY_SAMPLE : humorLines(h.id).nag[0]).replaceAll("{name}", sampleHabit);
+            const sample = (h.id === "wredny" ? WREDNY_SAMPLE : humorLines(h.id).nag[0]).replaceAll(
+              "{name}",
+              sampleHabit,
+            );
             return (
               <li key={h.id}>
                 <button
@@ -144,25 +174,42 @@ function SzpilaPage() {
                   className="w-full rounded-2xl p-3 text-left transition active:scale-[0.99]"
                   style={{
                     border: `1.5px solid ${active ? "var(--avoid)" : "var(--border)"}`,
-                    background: active ? "color-mix(in oklab, var(--avoid) 10%, transparent)" : "transparent",
+                    background: active
+                      ? "color-mix(in oklab, var(--avoid) 10%, transparent)"
+                      : "transparent",
                     opacity: open ? 1 : 0.6,
                   }}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-semibold">{h.name}</span>
                     <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                      {open ? active ? "wybrany" : "odblokowany" : <><Lock size={11} /> {h.streak} {days(h.streak ?? 0)} formy</>}
+                      {open ? (
+                        active ? (
+                          "wybrany"
+                        ) : (
+                          "odblokowany"
+                        )
+                      ) : (
+                        <>
+                          <Lock size={11} /> {h.streak} {days(h.streak ?? 0)} formy
+                        </>
+                      )}
                     </span>
                   </div>
                   <div className="text-[11px] text-muted-foreground">{h.blurb}</div>
-                  {open && <p className="mt-1.5 text-xs italic leading-snug">„{sample.replace(/^„|”$/g, "")}”</p>}
+                  {open && (
+                    <p className="mt-1.5 text-xs italic leading-snug">
+                      „{sample.replace(/^„|”$/g, "")}”
+                    </p>
+                  )}
                 </button>
               </li>
             );
           })}
         </ul>
         <p className="mt-3 text-[11px] text-muted-foreground">
-          Humor miesza się z klasycznymi szpilami (tryb „Ostro”) - w aplikacji, powiadomieniach, widżecie i w nocy.
+          Humor miesza się z klasycznymi szpilami (tryb „Ostro”) - w aplikacji, powiadomieniach,
+          widżecie i w nocy.
         </p>
       </section>
     </AppShell>
@@ -176,7 +223,8 @@ function StreakCard({ p, next }: { p: Progress; next: ReturnType<typeof nextUnlo
     <section
       className="mx-5 rounded-3xl p-5"
       style={{
-        background: "linear-gradient(135deg, color-mix(in oklab, var(--avoid) 18%, var(--card)), var(--card))",
+        background:
+          "linear-gradient(135deg, color-mix(in oklab, var(--avoid) 18%, var(--card)), var(--card))",
         border: "1px solid color-mix(in oklab, var(--avoid) 28%, transparent)",
       }}
     >
@@ -217,18 +265,32 @@ function StreakCard({ p, next }: { p: Progress; next: ReturnType<typeof nextUnlo
 
 function ChallengeRow({ c }: { c: Challenge }) {
   const pct = c.goal ? Math.min(100, (c.progress / c.goal) * 100) : 0;
-  const color = c.status === "done" ? "var(--primary)" : c.status === "failed" ? "var(--muted-foreground)" : "var(--avoid)";
+  const color =
+    c.status === "done"
+      ? "var(--primary)"
+      : c.status === "failed"
+        ? "var(--muted-foreground)"
+        : "var(--avoid)";
   return (
     <li className="flex items-start gap-3" data-challenge={c.id} data-status={c.status}>
       <span
         className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
         style={{ backgroundColor: `color-mix(in oklab, ${color} 18%, transparent)`, color }}
       >
-        {c.status === "done" ? <Check size={15} /> : c.status === "failed" ? <X size={15} /> : <Trophy size={13} />}
+        {c.status === "done" ? (
+          <Check size={15} />
+        ) : c.status === "failed" ? (
+          <X size={15} />
+        ) : (
+          <Trophy size={13} />
+        )}
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
-          <span className="text-sm font-medium" style={{ textDecoration: c.status === "failed" ? "line-through" : undefined }}>
+          <span
+            className="text-sm font-medium"
+            style={{ textDecoration: c.status === "failed" ? "line-through" : undefined }}
+          >
             {c.title}
           </span>
           {c.goal > 1 && (
@@ -242,7 +304,10 @@ function ChallengeRow({ c }: { c: Challenge }) {
         </div>
         {c.goal > 1 && c.status !== "failed" && (
           <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-background/60">
-            <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
+            <div
+              className="h-full rounded-full"
+              style={{ width: `${pct}%`, backgroundColor: color }}
+            />
           </div>
         )}
       </div>

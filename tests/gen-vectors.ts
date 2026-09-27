@@ -27,14 +27,24 @@ for (const due of [450, 720, 1260])
         rank.push({ due, now, avoid, multi, expected: rankKey(due, now, avoid, multi) });
 
 const slots = [];
-for (const [wake, bedtime] of [[540, 1320], [420, 1380], [600, 60], [480, 480]])
-  for (const n of [1, 3, 5, 8]) slots.push({ n, wake, bedtime, expected: tauntSlots(n, wake, bedtime) });
+for (const [wake, bedtime] of [
+  [540, 1320],
+  [420, 1380],
+  [600, 60],
+  [480, 480],
+])
+  for (const n of [1, 3, 5, 8])
+    slots.push({ n, wake, bedtime, expected: tauntSlots(n, wake, bedtime) });
 
 const tier = [];
-for (const overdue of [-30, 0, 179, 180, 400]) for (const jabs of [0, 2, 3]) tier.push({ overdue, jabs, expected: escalationTier(overdue, jabs) });
+for (const overdue of [-30, 0, 179, 180, 400])
+  for (const jabs of [0, 2, 3])
+    tier.push({ overdue, jabs, expected: escalationTier(overdue, jabs) });
 
 writeFileSync(
   new URL("./planner-vectors.json", import.meta.url),
   JSON.stringify({ nextUnit, rank, slots, tier }, null, 1) + "\n",
 );
-console.log(`nextUnit ${nextUnit.length}, rank ${rank.length}, slots ${slots.length}, tier ${tier.length}`);
+console.log(
+  `nextUnit ${nextUnit.length}, rank ${rank.length}, slots ${slots.length}, tier ${tier.length}`,
+);

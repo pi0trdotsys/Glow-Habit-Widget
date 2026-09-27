@@ -46,7 +46,10 @@ export function tauntSlots(n: number, wake = 9 * 60, bedtime = 22 * 60): number[
   let end = (bedtime > wake ? bedtime : bedtime + 24 * 60) - 30;
   if (end < start) end = start;
   if (n <= 1) return [start % 1440];
-  return Array.from({ length: n }, (_, i) => Math.round(start + ((end - start) * i) / (n - 1)) % 1440);
+  return Array.from(
+    { length: n },
+    (_, i) => Math.round(start + ((end - start) * i) / (n - 1)) % 1440,
+  );
 }
 
 const hhmmToMin = (t: string) => {
@@ -87,8 +90,8 @@ function weeklyReportBody(): string {
     d > 0
       ? `jesteś ${d} pkt przed zeszłym tygodniem - tak trzymaj!`
       : d === 0
-      ? "idziesz łeb w łeb z zeszłym tygodniem - dasz radę wyprzedzić?"
-      : `zeszły tydzień był lepszy o ${Math.abs(d)} pkt - czas to odrobić!`;
+        ? "idziesz łeb w łeb z zeszłym tygodniem - dasz radę wyprzedzić?"
+        : `zeszły tydzień był lepszy o ${Math.abs(d)} pkt - czas to odrobić!`;
   return `${who}${trend} Dotknij, żeby zobaczyć raport.`;
 }
 
@@ -116,8 +119,8 @@ function boostBody(slot: number): string {
     diff > 0
       ? `o ${diff} więcej niż tydzień temu o tej porze 🎉`
       : diff < 0
-      ? `o ${Math.abs(diff)} mniej niż tydzień temu o tej porze - nadrób! 💪`
-      : "dokładnie tyle, co tydzień temu o tej porze";
+        ? `o ${Math.abs(diff)} mniej niż tydzień temu o tej porze - nadrób! 💪`
+        : "dokładnie tyle, co tydzień temu o tej porze";
   return `${who}w tym tygodniu ${Math.round(r.thisWeek.score)} wykonań, ${countLine}`;
 }
 
@@ -143,11 +146,7 @@ export async function requestNotificationPermission(): Promise<PermissionState> 
 export async function getPermissionState(): Promise<PermissionState> {
   if (isNative()) {
     const res = await LocalNotifications.checkPermissions();
-    return res.display === "granted"
-      ? "granted"
-      : res.display === "denied"
-      ? "denied"
-      : "default";
+    return res.display === "granted" ? "granted" : res.display === "denied" ? "denied" : "default";
   }
   if (!notificationsSupported()) return "unsupported";
   return Notification.permission as PermissionState;
@@ -199,7 +198,7 @@ async function syncNative(): Promise<void> {
   if (notifications.weeklyReport) {
     const { hour, minute } = parseTime(notifications.reportTime);
     // Capacitor weekday is 1=Sunday .. 7=Saturday; our reportDay is 0=Sunday.
-    const weekday = ((notifications.reportDay % 7) + 7) % 7 + 1;
+    const weekday = (((notifications.reportDay % 7) + 7) % 7) + 1;
     schedule.push({
       id: ID_WEEKLY,
       title: "Podsumowanie tygodnia",
@@ -289,7 +288,11 @@ function webTick(): void {
       const plan = planDay(habits, completions, now);
       if (plan.length === 0) continue;
       const say = szpilaNow(habits, completions, plan, notifications.tauntLevel, userName, m);
-      fire(`taunt-${m}`, `${say.mood === "angry" ? SZPILA_EMOJI.angry : SZPILA_EMOJI.normal} ${SZPILA_NAME}`, say.text);
+      fire(
+        `taunt-${m}`,
+        `${say.mood === "angry" ? SZPILA_EMOJI.angry : SZPILA_EMOJI.normal} ${SZPILA_NAME}`,
+        say.text,
+      );
     }
   }
 }

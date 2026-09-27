@@ -1,4 +1,11 @@
-import { addDays, differenceInCalendarDays, format, parseISO, startOfMonth, startOfWeek } from "date-fns";
+import {
+  addDays,
+  differenceInCalendarDays,
+  format,
+  parseISO,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
 import type {
   Completion,
   Habit,
@@ -146,7 +153,11 @@ export function indexEntries(completions: Completion[]): EntryIndex {
   return m;
 }
 
-function entryOf(idx: EntryIndex | Completion[], habitId: string, key: string): Completion | undefined {
+function entryOf(
+  idx: EntryIndex | Completion[],
+  habitId: string,
+  key: string,
+): Completion | undefined {
   if (idx instanceof Map) return idx.get(`${habitId}|${key}`);
   return idx.find((c) => c.habitId === habitId && c.date === key);
 }
@@ -252,7 +263,11 @@ export function slipsInPeriod(
 }
 
 /** Remaining allowed slips in the current period (0 = none left). */
-export function slipsLeft(h: Habit, idx: EntryIndex | Completion[], now: Date = new Date()): number {
+export function slipsLeft(
+  h: Habit,
+  idx: EntryIndex | Completion[],
+  now: Date = new Date(),
+): number {
   return Math.max(0, limitOf(h).times - slipsInPeriod(h, idx, now, now));
 }
 
@@ -293,7 +308,11 @@ export function countsOn(
   return !(isAutoScreen(h) && avoidStatus(h, idx, date, now, cutoffMin) === "pending");
 }
 
-export function isCompletedOn(habit: Habit, completions: Completion[] | EntryIndex, date: Date): boolean {
+export function isCompletedOn(
+  habit: Habit,
+  completions: Completion[] | EntryIndex,
+  date: Date,
+): boolean {
   return dayScore(habit, completions, date) >= 1;
 }
 
@@ -304,7 +323,8 @@ export function currentStreak(habit: Habit, completions: Completion[]): number {
   let streak = 0;
   let cursor = now;
   // Grace: if today isn't done yet, count from yesterday.
-  if (!isDueOn(habit, cursor) || dayScore(habit, idx, cursor, now) < 1) cursor = addDays(cursor, -1);
+  if (!isDueOn(habit, cursor) || dayScore(habit, idx, cursor, now) < 1)
+    cursor = addDays(cursor, -1);
   for (let guard = 0; guard < 3650; guard++) {
     if (habit.createdAt && todayKey(cursor) < createdKey(habit)) break;
     if (!countsOn(habit, idx, cursor, now)) {
@@ -467,7 +487,11 @@ function dayWindow(
  * (Mon -> same weekday, same minute). Early in the week you're never compared
  * to last week's finished total.
  */
-export function weeklyReport(habits: Habit[], completions: Completion[], now: Date = new Date()): WeeklyReport {
+export function weeklyReport(
+  habits: Habit[],
+  completions: Completion[],
+  now: Date = new Date(),
+): WeeklyReport {
   const idx = indexEntries(completions);
   const startThis = startOfWeek(now, { weekStartsOn: 1 });
   const startLast = addDays(startThis, -7);
@@ -475,24 +499,34 @@ export function weeklyReport(habits: Habit[], completions: Completion[], now: Da
   const cutoff = minuteOfDay(now);
   const lastWeekNow = addDays(now, -7);
 
-  let sT = 0, dT = 0, sL = 0, dL = 0;
+  let sT = 0,
+    dT = 0,
+    sL = 0,
+    dL = 0;
   const perHabit: WeeklyReport["perHabit"] = [];
   const days: WeekDay[] = [];
 
   for (let i = 0; i < 7; i++) {
-    let dsT = 0, ddT = 0, dsL = 0, ddL = 0;
+    let dsT = 0,
+      ddT = 0,
+      dsL = 0,
+      ddL = 0;
     for (const h of habits) {
       const cut = i === todayIdx ? cutoff : undefined;
       if (i <= todayIdx) {
         const t = dayWindow(h, idx, addDays(startThis, i), now, cut);
-        dsT += t.score; ddT += t.due;
+        dsT += t.score;
+        ddT += t.due;
       }
       const l = dayWindow(h, idx, addDays(startLast, i), lastWeekNow, cut);
-      dsL += l.score; ddL += l.due;
+      dsL += l.score;
+      ddL += l.due;
     }
     if (i <= todayIdx) {
-      sT += dsT; dT += ddT;
-      sL += dsL; dL += ddL;
+      sT += dsT;
+      dT += ddT;
+      sL += dsL;
+      dL += ddL;
     }
     days.push({
       label: DAY_SHORT[i],
@@ -503,15 +537,26 @@ export function weeklyReport(habits: Habit[], completions: Completion[], now: Da
   }
 
   for (const h of habits) {
-    let t = 0, l = 0, dueT = 0, dueL = 0;
+    let t = 0,
+      l = 0,
+      dueT = 0,
+      dueL = 0;
     for (let i = 0; i <= todayIdx; i++) {
       const cut = i === todayIdx ? cutoff : undefined;
       const a = dayWindow(h, idx, addDays(startThis, i), now, cut);
       const b = dayWindow(h, idx, addDays(startLast, i), lastWeekNow, cut);
-      t += a.score; dueT += a.due;
-      l += b.score; dueL += b.due;
+      t += a.score;
+      dueT += a.due;
+      l += b.score;
+      dueL += b.due;
     }
-    perHabit.push({ habit: h, this: round1(t), last: round1(l), dueThis: round1(dueT), dueLast: round1(dueL) });
+    perHabit.push({
+      habit: h,
+      this: round1(t),
+      last: round1(l),
+      dueThis: round1(dueT),
+      dueLast: round1(dueL),
+    });
   }
 
   const rateT = dT === 0 ? 0 : Math.round((Math.min(sT, dT) / dT) * 100);
@@ -555,18 +600,23 @@ function guessWindow(h: Habit): Window | null {
   const n = `${h.name} ${h.icon}`.toLowerCase();
   const g = goalOf(h);
   if (/z[ęe]b|tooth|brush|nitk/.test(n)) {
-    return g.target >= 2 ? { start: 7 * 60 + 30, end: 21 * 60 + 30 } : { start: 21 * 60 + 30, end: 21 * 60 + 30 };
+    return g.target >= 2
+      ? { start: 7 * 60 + 30, end: 21 * 60 + 30 }
+      : { start: 21 * 60 + 30, end: 21 * 60 + 30 };
   }
   if (/wod|water|droplet|glass|pij|pić/.test(n)) return { start: 8 * 60, end: 20 * 60 };
   if (/krok|step|footprint|spacer|walk/.test(n)) return { start: 9 * 60, end: 20 * 60 };
   if (/czyt|ksi[ąa]ż|read|book/.test(n)) return { start: 21 * 60, end: 21 * 60 };
   if (/program|kod|code|terminal/.test(n)) return { start: 18 * 60, end: 18 * 60 };
-  if (/j[ęe]zyk|angiel|languages|duolingo/.test(n)) return { start: 19 * 60 + 30, end: 19 * 60 + 30 };
+  if (/j[ęe]zyk|angiel|languages|duolingo/.test(n))
+    return { start: 19 * 60 + 30, end: 19 * 60 + 30 };
   if (/medyt|meditat|oddech/.test(n)) return { start: 7 * 60 + 45, end: 7 * 60 + 45 };
-  if (/si[łl]own|gym|trening|dumbbell|bieg|run/.test(n)) return { start: 17 * 60 + 30, end: 17 * 60 + 30 };
+  if (/si[łl]own|gym|trening|dumbbell|bieg|run/.test(n))
+    return { start: 17 * 60 + 30, end: 17 * 60 + 30 };
   if (/witamin|suplement|pill|lek/.test(n)) return { start: 8 * 60 + 30, end: 8 * 60 + 30 };
   if (kindOf(h) === "avoid") {
-    if (/telefon|phone|p[óo][źz]n|scroll|ekran/.test(n)) return { start: 22 * 60 + 30, end: 22 * 60 + 30 };
+    if (/telefon|phone|p[óo][źz]n|scroll|ekran/.test(n))
+      return { start: 22 * 60 + 30, end: 22 * 60 + 30 };
     return { start: 21 * 60, end: 21 * 60 };
   }
   return null;
@@ -590,7 +640,9 @@ export function habitWindow(h: Habit, completions: Completion[]): Window {
   if (h.reminder) {
     const [hh, mm] = h.reminder.split(":").map(Number);
     const s = hh * 60 + (mm || 0);
-    return multi ? { start: s, end: Math.max(s, Math.min(s + 12 * 60, 21 * 60)) } : { start: s, end: s };
+    return multi
+      ? { start: s, end: Math.max(s, Math.min(s + 12 * 60, 21 * 60)) }
+      : { start: s, end: s };
   }
   if (h.timeOfDay && h.timeOfDay !== "anytime") {
     const w = TOD_WINDOW[h.timeOfDay];
@@ -616,7 +668,12 @@ export function unitsOf(h: Habit): number {
  * 8 glasses of water 8:00-20:00 -> one roughly every 1h40m.
  * Mirrored in WidgetShared.nextMinute (Java) - keep both in sync.
  */
-export function nextUnitMinute(w: Window, units: number, doneUnits: number, nowMin?: number): number {
+export function nextUnitMinute(
+  w: Window,
+  units: number,
+  doneUnits: number,
+  nowMin?: number,
+): number {
   if (units <= 1 || w.end <= w.start) return w.start;
   const at = (i: number) => Math.round(w.start + ((w.end - w.start) * i) / (units - 1));
   let i = Math.min(doneUnits, units - 1);
@@ -654,25 +711,46 @@ export interface PlanItem {
 }
 
 /** Pending items for today, sorted by what to do next. */
-export function planDay(habits: Habit[], completions: Completion[], now: Date = new Date()): PlanItem[] {
+export function planDay(
+  habits: Habit[],
+  completions: Completion[],
+  now: Date = new Date(),
+): PlanItem[] {
   const idx = indexEntries(completions);
   const nowMin = minuteOfDay(now);
   const out: PlanItem[] = [];
   for (const h of habits) {
     if (!isDueOn(h, now)) continue;
     const avoid = kindOf(h) === "avoid";
-    if (h.schedule.type === "timesPerWeek" && thisWeekCount(h, completions) >= (h.schedule.target ?? 1)) continue;
+    if (
+      h.schedule.type === "timesPerWeek" &&
+      thisWeekCount(h, completions) >= (h.schedule.target ?? 1)
+    )
+      continue;
     if (avoid) {
       if (isAutoScreen(h) || avoidStatus(h, idx, now, now) !== "pending") continue;
       const at = habitWindow(h, completions).start;
-      out.push({ habit: h, at, amount: 0, left: 0, avoid, overdue: at <= nowMin, key: rankKey(at, nowMin, true) });
+      out.push({
+        habit: h,
+        at,
+        amount: 0,
+        left: 0,
+        avoid,
+        overdue: at <= nowMin,
+        key: rankKey(at, nowMin, true),
+      });
       continue;
     }
     const g = goalOf(h);
     const amount = amountOn(h, idx, now);
     if (amount >= g.target) continue;
     const units = unitsOf(h);
-    const at = nextUnitMinute(habitWindow(h, completions), units, Math.floor(amount / g.step), nowMin);
+    const at = nextUnitMinute(
+      habitWindow(h, completions),
+      units,
+      Math.floor(amount / g.step),
+      nowMin,
+    );
     out.push({
       habit: h,
       at,
@@ -693,7 +771,11 @@ export interface TodayProgress {
   fraction: number;
 }
 
-export function todayProgress(habits: Habit[], completions: Completion[], now: Date = new Date()): TodayProgress {
+export function todayProgress(
+  habits: Habit[],
+  completions: Completion[],
+  now: Date = new Date(),
+): TodayProgress {
   const idx = indexEntries(completions);
   let done = 0;
   let total = 0;

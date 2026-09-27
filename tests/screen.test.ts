@@ -9,7 +9,9 @@ describe("scrolling in bed judged from screen time", () => {
     expect(DEFAULT_LATE_AFTER).toBe("00:00");
     expect(DEFAULT_LATE_LIMIT).toBe(15);
     expect(lateAfterMin(habit({ name: "X", kind: "avoid", source: "screen" }))).toBe(0);
-    expect(lateAfterMin(habit({ name: "X", kind: "avoid", source: "screen", lateAfter: "23:30" }))).toBe(1410);
+    expect(
+      lateAfterMin(habit({ name: "X", kind: "avoid", source: "screen", lateAfter: "23:30" })),
+    ).toBe(1410);
   });
 
   test("verdict: over the limit = slip even mid-night; quiet night = clean only once it's over", () => {
@@ -20,7 +22,17 @@ describe("scrolling in bed judged from screen time", () => {
     expect(screenVerdict(15, 15, true)).toBe("clean"); // exactly the tolerance is fine
   });
 
-  const bed = habit({ name: "Scrollowanie w łóżku", icon: "Smartphone", kind: "avoid", source: "screen", lateAfter: "00:00" }, 30, WED_1540);
+  const bed = habit(
+    {
+      name: "Scrollowanie w łóżku",
+      icon: "Smartphone",
+      kind: "avoid",
+      source: "screen",
+      lateAfter: "00:00",
+    },
+    30,
+    WED_1540,
+  );
   const now = WED_1540;
 
   test("never pre-ticked either way, never an automatic slip", () => {
@@ -33,7 +45,10 @@ describe("scrolling in bed judged from screen time", () => {
   });
 
   test("automatic verdicts count; undecided nights stay out of the weekly comparison", () => {
-    const c = [entry(bed, addDays(now, -1), { auto: true }), entry(bed, addDays(now, -2), { slipped: true, auto: true })];
+    const c = [
+      entry(bed, addDays(now, -1), { auto: true }),
+      entry(bed, addDays(now, -2), { slipped: true, auto: true }),
+    ];
     expect(avoidStatus(bed, c, addDays(now, -1), now)).toBe("clean");
     expect(avoidStatus(bed, c, addDays(now, -2), now)).toBe("slip");
     const r = weeklyReport([bed], c, now);

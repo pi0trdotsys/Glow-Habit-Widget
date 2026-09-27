@@ -33,7 +33,9 @@ export function NightBillCard({ now = new Date() }: { now?: Date }) {
       className="relative rounded-2xl p-3"
       data-night-bill
       style={{
-        background: bad ? "color-mix(in oklab, var(--avoid) 10%, var(--card))" : "color-mix(in oklab, var(--primary) 8%, var(--card))",
+        background: bad
+          ? "color-mix(in oklab, var(--avoid) 10%, var(--card))"
+          : "color-mix(in oklab, var(--primary) 8%, var(--card))",
         border: `1px solid color-mix(in oklab, ${bad ? "var(--avoid)" : "var(--primary)"} 24%, transparent)`,
       }}
     >
@@ -51,7 +53,10 @@ export function NightBillCard({ now = new Date() }: { now?: Date }) {
       >
         <X size={14} />
       </button>
-      <div className="text-xs font-semibold" style={{ color: bad ? "var(--avoid)" : "var(--primary)" }}>
+      <div
+        className="text-xs font-semibold"
+        style={{ color: bad ? "var(--avoid)" : "var(--primary)" }}
+      >
         🧾 Rachunek za noc
       </div>
       <NightFacts r={r} />
@@ -79,7 +84,9 @@ export function NightFacts({ r }: { r: NightReport }) {
           ))}
         </div>
       ) : (
-        <div className="mt-1.5 text-[11px] text-muted-foreground">Zero social mediów po północy.</div>
+        <div className="mt-1.5 text-[11px] text-muted-foreground">
+          Zero social mediów po północy.
+        </div>
       )}
       <div className="mt-2 flex gap-4 text-[11px] text-muted-foreground">
         <span>📱 {r.screen ?? 0} min po północy</span>
@@ -98,16 +105,25 @@ export function NightList({ max = 7 }: { max?: number }) {
   if (nights.length === 0) return null;
   return (
     <section className="mx-5 mt-4 rounded-3xl bg-card p-5" data-night-list>
-      <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Ostatnie noce</h2>
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        Ostatnie noce
+      </h2>
       <ul className="divide-y divide-border">
         {nights.map((r) => (
           <li key={r.date} className="py-2.5">
             <div className="flex items-baseline justify-between">
               <span className="text-sm font-medium">
-                {new Date(`${r.date}T12:00:00`).toLocaleDateString("pl-PL", { weekday: "short", day: "numeric", month: "short" })} →
-                noc
+                {new Date(`${r.date}T12:00:00`).toLocaleDateString("pl-PL", {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                })}{" "}
+                → noc
               </span>
-              <span className="text-xs font-semibold" style={{ color: badNight(r) ? "var(--avoid)" : "var(--primary)" }}>
+              <span
+                className="text-xs font-semibold"
+                style={{ color: badNight(r) ? "var(--avoid)" : "var(--primary)" }}
+              >
                 {badNight(r) ? `${r.social} min social` : "czysto"}
               </span>
             </div>

@@ -48,8 +48,8 @@ Nie pomogło? Po trzeciej szpili kot **zasłania całą aplikację**.
 Do wyboru: **„Idę spać”** albo **przytrzymaj guzik 10 sekund**, jeśli naprawdę
 musisz. I spójrz sobie przy tym w oczy.
 
-Rano czeka **rachunek za noc**: *„3× Instagram (22 min) · 1× YouTube (25 min)
-· 61 min z telefonem po północy · telefon odłożony ok. 1:40”*. Z komentarzem.
+Rano czeka **rachunek za noc**: _„3× Instagram (22 min) · 1× YouTube (25 min)
+· 61 min z telefonem po północy · telefon odłożony ok. 1:40”_. Z komentarzem.
 
 „Scrollowanie w łóżku” ocenia się samo i uczciwie: liczą się **tylko social
 media**. Budzik, muzyka i podcast do snu to nie wpadka.
@@ -99,8 +99,8 @@ Brak potwierdzenia = wpadka. Wczoraj rozliczysz jeszcze rano, do 12:00.
 - **Trend z 90 dni** ze średnią z 7 dni i porównaniem ostatnich 30 dni z
   poprzednimi 30.
 - **Miesiąc do miesiąca** do tego samego dnia i 6 miesięcy na jednym wykresie.
-- **Powiązania między nawykami**: *„Dzień po nocy z telefonem robisz o 4000
-  kroków mniej”*.
+- **Powiązania między nawykami**: _„Dzień po nocy z telefonem robisz o 4000
+  kroków mniej”_.
 - **Eksport do CSV** jednym dotknięciem, prosto do Excela albo Arkuszy.
 
 ## ◉ Bez otwierania aplikacji
@@ -134,14 +134,14 @@ usuwasz albo dodajesz własne z ponad 20 szablonów.
 
 ## ▸ Pierwsze 2 minuty, które robią różnicę
 
-| | Gdzie | Po co |
-|---|---|---|
-| 🔔 | Zgoda na powiadomienia | Szpile, pasek postępu, rachunek za noc |
-| 📱 | Ustawienia → Automatyczne śledzenie → **Otwórz** | Szpila na żywo, rachunek za noc, uczciwa ocena scrollowania |
-| 🛑 | Ustawienia → Szpila na żywo → **Zezwól** | Pełnoekranowa blokada po 3. szpili |
-| 👣 | Ustawienia → Automatyczne śledzenie → **Połącz** | Kroki wpisują się same |
-| 🔋 | Ustawienia systemu → Bateria → Szpila → **Bez ograniczeń** | Szpile i nocny strażnik działają punktualnie (szczególnie Xiaomi, POCO, Samsung) |
-| ➕ | Przytrzymaj ekran główny → **Widżety** → Szpila | Kot zawsze na widoku |
+|     | Gdzie                                                      | Po co                                                                            |
+| --- | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 🔔  | Zgoda na powiadomienia                                     | Szpile, pasek postępu, rachunek za noc                                           |
+| 📱  | Ustawienia → Automatyczne śledzenie → **Otwórz**           | Szpila na żywo, rachunek za noc, uczciwa ocena scrollowania                      |
+| 🛑  | Ustawienia → Szpila na żywo → **Zezwól**                   | Pełnoekranowa blokada po 3. szpili                                               |
+| 👣  | Ustawienia → Automatyczne śledzenie → **Połącz**           | Kroki wpisują się same                                                           |
+| 🔋  | Ustawienia systemu → Bateria → Szpila → **Bez ograniczeń** | Szpile i nocny strażnik działają punktualnie (szczególnie Xiaomi, POCO, Samsung) |
+| ➕  | Przytrzymaj ekran główny → **Widżety** → Szpila            | Kot zawsze na widoku                                                             |
 
 ## ▸ Twoje dane są twoje
 

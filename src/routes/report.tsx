@@ -21,7 +21,10 @@ export const Route = createFileRoute("/report")({
   head: () => ({
     meta: [
       { title: "Raport - Szpila" },
-      { name: "description", content: "Ten tydzień vs zeszły - porównanie do tego samego momentu tygodnia." },
+      {
+        name: "description",
+        content: "Ten tydzień vs zeszły - porównanie do tego samego momentu tygodnia.",
+      },
     ],
   }),
   component: ReportPage,
@@ -82,8 +85,8 @@ function ReportPage() {
         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{r.windowLabel}</p>
         <h1 className="mt-2 font-display text-4xl font-bold tracking-tight">Tydzień do tygodnia</h1>
         <p className="mt-2 text-xs text-muted-foreground">
-          Porównanie tylko do tego samego momentu tygodnia - dzisiejszy dzień liczy się tak samo jak ten sam dzień
-          tydzień temu, do tej samej godziny.
+          Porównanie tylko do tego samego momentu tygodnia - dzisiejszy dzień liczy się tak samo jak
+          ten sam dzień tydzień temu, do tej samej godziny.
         </p>
       </header>
       {tabs}
@@ -95,8 +98,8 @@ function ReportPage() {
               {r.noBaseline ? "Pierwszy tydzień" : verdict(r.delta)}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">
-              {fmt(r.thisWeek.score)} z {fmt(r.thisWeek.due)} wykonań · tydzień temu {fmt(r.lastWeek.score)} z{" "}
-              {fmt(r.lastWeek.due)}
+              {fmt(r.thisWeek.score)} z {fmt(r.thisWeek.due)} wykonań · tydzień temu{" "}
+              {fmt(r.lastWeek.score)} z {fmt(r.lastWeek.due)}
             </div>
           </div>
           {!r.noBaseline && <DeltaPill delta={r.delta} big />}
@@ -108,15 +111,17 @@ function ReportPage() {
           {r.noBaseline
             ? "Tydzień temu nie było jeszcze czego porównać. Pełne porównanie pojawi się za tydzień."
             : diffScore > 0
-            ? `Masz o ${fmt(diffScore)} wykonań więcej niż o tej porze tydzień temu.`
-            : diffScore < 0
-            ? `Brakuje ci ${fmt(-diffScore)} wykonań do wyniku sprzed tygodnia o tej porze.`
-            : "Dokładnie tyle samo wykonań co o tej porze tydzień temu."}
+              ? `Masz o ${fmt(diffScore)} wykonań więcej niż o tej porze tydzień temu.`
+              : diffScore < 0
+                ? `Brakuje ci ${fmt(-diffScore)} wykonań do wyniku sprzed tygodnia o tej porze.`
+                : "Dokładnie tyle samo wykonań co o tej porze tydzień temu."}
         </p>
       </section>
 
       <section className="mx-5 mt-4 rounded-3xl bg-card p-5">
-        <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Dzień po dniu</h2>
+        <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          Dzień po dniu
+        </h2>
         <WeekDayChart r={r} />
       </section>
 
@@ -143,7 +148,9 @@ function ReportPage() {
       </section>
 
       <section className="mx-5 mt-4 rounded-3xl bg-card p-5">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Miesiąc</h2>
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          Miesiąc
+        </h2>
         <MonthCalendar />
       </section>
 
@@ -167,25 +174,42 @@ function ReportPage() {
               const max = Math.max(p.dueThis, p.dueLast, 0.1);
               return (
                 <li key={p.habit.id}>
-                  <Link to="/habits/$id" params={{ id: p.habit.id }} className="flex items-center gap-3 rounded-2xl bg-card p-3">
+                  <Link
+                    to="/habits/$id"
+                    params={{ id: p.habit.id }}
+                    className="flex items-center gap-3 rounded-2xl bg-card p-3"
+                  >
                     <div
                       className="grid h-10 w-10 shrink-0 place-items-center rounded-full"
                       style={{ backgroundColor: `color-mix(in oklab, ${color} 22%, transparent)` }}
                     >
-                      <HabitIcon name={p.habit.icon} size={18} style={avoid ? { color } : undefined} />
+                      <HabitIcon
+                        name={p.habit.icon}
+                        size={18}
+                        style={avoid ? { color } : undefined}
+                      />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-medium">{p.habit.name}</div>
                       <div className="mt-1.5 space-y-1">
                         <MiniBar value={p.this} max={max} color={color} />
-                        <MiniBar value={p.last} max={max} color="color-mix(in oklab, var(--foreground) 25%, transparent)" />
+                        <MiniBar
+                          value={p.last}
+                          max={max}
+                          color="color-mix(in oklab, var(--foreground) 25%, transparent)"
+                        />
                       </div>
                       <div className="mt-1 text-[11px] text-muted-foreground">
-                        {fmt(p.this)}/{fmt(p.dueThis)} teraz · {fmt(p.last)}/{fmt(p.dueLast)} tydzień temu
-                        {usual.get(p.habit.id) != null && ` · zwykle ok. ${formatMinute(usual.get(p.habit.id)!)}`}
+                        {fmt(p.this)}/{fmt(p.dueThis)} teraz · {fmt(p.last)}/{fmt(p.dueLast)}{" "}
+                        tydzień temu
+                        {usual.get(p.habit.id) != null &&
+                          ` · zwykle ok. ${formatMinute(usual.get(p.habit.id)!)}`}
                       </div>
                     </div>
-                    <span className="w-10 shrink-0 text-right text-sm font-bold" style={{ color: deltaColor(diff) }}>
+                    <span
+                      className="w-10 shrink-0 text-right text-sm font-bold"
+                      style={{ color: deltaColor(diff) }}
+                    >
                       {diff > 0 ? "+" : ""}
                       {fmt(diff)}
                     </span>
@@ -203,7 +227,10 @@ function ReportPage() {
 function MiniBar({ value, max, color }: { value: number; max: number; color: string }) {
   return (
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-background">
-      <div className="h-full rounded-full" style={{ width: `${Math.min(100, (value / max) * 100)}%`, backgroundColor: color }} />
+      <div
+        className="h-full rounded-full"
+        style={{ width: `${Math.min(100, (value / max) * 100)}%`, backgroundColor: color }}
+      />
     </div>
   );
 }

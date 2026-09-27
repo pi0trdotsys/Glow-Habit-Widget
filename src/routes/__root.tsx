@@ -99,8 +99,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:title", content: "Szpila - nawyki z pazurem" },
       { name: "twitter:description", content: "Buduj dobre nawyki, rzucaj złe. Utrzymaj serię." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/5ebe8d17-cac7-4450-bb49-299bedfb8569" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/5ebe8d17-cac7-4450-bb49-299bedfb8569" },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/5ebe8d17-cac7-4450-bb49-299bedfb8569",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/5ebe8d17-cac7-4450-bb49-299bedfb8569",
+      },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
@@ -223,9 +231,12 @@ function PwaRegister() {
     const blocked =
       h.startsWith("id-preview--") ||
       h.startsWith("preview--") ||
-      h === "lovableproject.com" || h.endsWith(".lovableproject.com") ||
-      h === "lovableproject-dev.com" || h.endsWith(".lovableproject-dev.com") ||
-      h === "beta.lovable.dev" || h.endsWith(".beta.lovable.dev");
+      h === "lovableproject.com" ||
+      h.endsWith(".lovableproject.com") ||
+      h === "lovableproject-dev.com" ||
+      h.endsWith(".lovableproject-dev.com") ||
+      h === "beta.lovable.dev" ||
+      h.endsWith(".beta.lovable.dev");
     const killed = new URLSearchParams(window.location.search).get("sw") === "off";
     if (blocked || killed) {
       navigator.serviceWorker.getRegistrations().then((regs) => {

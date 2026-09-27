@@ -9,8 +9,21 @@
 // (the widget/notification side re-computes them from the live snapshot).
 import type { Completion, Habit } from "./types";
 import type { TauntLevel } from "./store";
-import { MORE_ALL_DONE, MORE_CAUGHT, MORE_EVENING, MORE_HARD, MORE_RAGE, MOTIVATE } from "./szpila-more";
-import { EXTRA_AVOID, EXTRA_HARD, EXTRA_RULES, EXTRA_SOFT, type ExtraCategory } from "./szpila-extra";
+import {
+  MORE_ALL_DONE,
+  MORE_CAUGHT,
+  MORE_EVENING,
+  MORE_HARD,
+  MORE_RAGE,
+  MOTIVATE,
+} from "./szpila-more";
+import {
+  EXTRA_AVOID,
+  EXTRA_HARD,
+  EXTRA_RULES,
+  EXTRA_SOFT,
+  type ExtraCategory,
+} from "./szpila-extra";
 import { addDays } from "date-fns";
 import { humorLines, humorNag, withHumor, type HumorId } from "./gamification";
 import {
@@ -92,7 +105,15 @@ function categoryOf(h: Habit): Category {
   }
   for (const [cat, re] of RULES) {
     if (!re.test(n)) continue;
-    const isAvoidCat = ["phone", "fastfood", "sweets", "alcohol", "smoking", "games", "social"].includes(cat);
+    const isAvoidCat = [
+      "phone",
+      "fastfood",
+      "sweets",
+      "alcohol",
+      "smoking",
+      "games",
+      "social",
+    ].includes(cat);
     if (isAvoidCat === avoid) return cat;
   }
   return avoid ? "avoidGeneric" : "generic";
@@ -324,7 +345,10 @@ const SOFT: Record<BaseCategory, Lines> = {
   },
   sleep: { nag: ["Pora się wyspać. Jutro podziękujesz."], praise: ["Wyspane. Tak trzymaj!"] },
   pills: { nag: ["Nie zapomnij o „{name}”."], praise: ["Zażyte. Dobra robota."] },
-  learning: { nag: ["„{name}” czeka. Zostało {left}."], praise: ["Nauka zaliczona. Mądrzej z dnia na dzień!"] },
+  learning: {
+    nag: ["„{name}” czeka. Zostało {left}."],
+    praise: ["Nauka zaliczona. Mądrzej z dnia na dzień!"],
+  },
   generic: {
     nag: ["„{name}” czeka na ciebie.", "Pora na „{name}”. Zostało {left}."],
     praise: ["„{name}” zaliczone. Tak trzymaj!"],
@@ -396,9 +420,7 @@ const RAGE_HARD: Partial<Record<Category, string[]>> = {
   phone: [
     "Dalej brak potwierdzenia. Zakładam najgorsze: siedzisz z nosem w ekranie jak ostatni zombie.",
   ],
-  fastfood: [
-    "Cały dzień bez potwierdzenia. Już czuję frytki z tego telefonu, kurwa.",
-  ],
+  fastfood: ["Cały dzień bez potwierdzenia. Już czuję frytki z tego telefonu, kurwa."],
   generic: [
     "„{name}” leży od godzin. Serio? Ja pierdolę, jak można być tak leniwym?",
     "Dalej nic z „{name}”. Moja cierpliwość się skończyła, zostały same przekleństwa.",
@@ -482,11 +504,14 @@ function linesFor(h: Habit, level: TauntLevel): Lines {
   const cat = categoryOf(h);
   if (level === "soft") return isExtra(cat) ? EXTRA_SOFT[cat] : SOFT[cat];
   const base: Lines = isExtra(cat) ? EXTRA_HARD[cat] : HARD[cat];
-  const more = isExtra(cat) ? {} : MORE_HARD[cat] ?? {};
+  const more = isExtra(cat) ? {} : (MORE_HARD[cat] ?? {});
   const motivate = kindOf(h) === "avoid" ? MOTIVATE.avoid : MOTIVATE.build;
   return {
     nag: withHumor([...base.nag, ...(more.nag ?? []), ...motivate], humorNag(h, activeHumor)),
-    praise: withHumor([...base.praise, ...(more.praise ?? []), ...MOTIVATE.praise], humorLines(activeHumor).praise),
+    praise: withHumor(
+      [...base.praise, ...(more.praise ?? []), ...MOTIVATE.praise],
+      humorLines(activeHumor).praise,
+    ),
     slip: base.slip || more.slip ? [...(base.slip ?? []), ...(more.slip ?? [])] : undefined,
   };
 }
@@ -525,8 +550,11 @@ export function rageLines(h: Habit, level: TauntLevel, userName: string | null):
     level === "hard" && isExtra(cat)
       ? [...EXTRA_HARD[cat].rage, ...MORE_RAGE[fallback]!]
       : level === "hard"
-      ? [...(RAGE_HARD[cat] ?? RAGE_HARD[fallback]!), ...(MORE_RAGE[cat] ?? MORE_RAGE[fallback] ?? [])]
-      : RAGE_SOFT;
+        ? [
+            ...(RAGE_HARD[cat] ?? RAGE_HARD[fallback]!),
+            ...(MORE_RAGE[cat] ?? MORE_RAGE[fallback] ?? []),
+          ]
+        : RAGE_SOFT;
   // Build habits also get the motivating rage ("Dosyć tego. Wstajesz i robisz…").
   const all = level === "hard" && kindOf(h) === "build" ? [...pool, ...MOTIVATE.rage] : pool;
   return usable(all, h).map((l) => personal(l, h, userName));
@@ -551,7 +579,12 @@ function plural5w(n: number, one: string, few: string, many: string): string {
  * days, or missed days of a build habit in the last 7. Empty when there's
  * nothing to hold against you. Counts are baked in (they change daily at most).
  */
-export function memoryLines(h: Habit, completions: Completion[], level: TauntLevel, userName: string | null): string[] {
+export function memoryLines(
+  h: Habit,
+  completions: Completion[],
+  level: TauntLevel,
+  userName: string | null,
+): string[] {
   const idx = indexEntries(completions);
   const now = new Date();
   let bad = 0;
@@ -559,7 +592,10 @@ export function memoryLines(h: Habit, completions: Completion[], level: TauntLev
   for (let i = 1; i <= days; i++) {
     const d = addDays(now, -i);
     if (!isDueOn(h, d)) continue;
-    if (kindOf(h) === "avoid" ? avoidStatus(h, idx, d, now) === "slip" : dayScore(h, idx, d, now) < 1) bad++;
+    if (
+      kindOf(h) === "avoid" ? avoidStatus(h, idx, d, now) === "slip" : dayScore(h, idx, d, now) < 1
+    )
+      bad++;
   }
   const hard = level === "hard";
   let lines: string[] = [];
@@ -582,7 +618,12 @@ export function memoryLines(h: Habit, completions: Completion[], level: TauntLev
 }
 
 /** Sunday-evening weekly roast (posted natively at 20:00). */
-export function weeklyRoast(habits: Habit[], completions: Completion[], level: TauntLevel, userName: string | null): string {
+export function weeklyRoast(
+  habits: Habit[],
+  completions: Completion[],
+  level: TauntLevel,
+  userName: string | null,
+): string {
   if (habits.length === 0) return "";
   const r = weeklyReport(habits, completions);
   const hard = level === "hard";
@@ -604,7 +645,9 @@ export function weeklyRoast(habits: Habit[], completions: Completion[], level: T
     }
   }
   const delta = r.delta > 0 ? `+${r.delta}` : `${r.delta}`;
-  const parts = [`${who}tydzień: ${r.thisWeek.rate}%${r.noBaseline ? "" : ` (${delta} pkt vs poprzedni)`}.`];
+  const parts = [
+    `${who}tydzień: ${r.thisWeek.rate}%${r.noBaseline ? "" : ` (${delta} pkt vs poprzedni)`}.`,
+  ];
   if (best && worst && best.name !== worst.name) {
     parts.push(
       hard
@@ -613,18 +656,22 @@ export function weeklyRoast(habits: Habit[], completions: Completion[], level: T
     );
   }
   if (slips > 0) {
-    parts.push(hard ? `Wpadek z zakazanymi: ${slips}. Brawo, mistrzu wymówek.` : `Wpadki z zakazanymi: ${slips}.`);
+    parts.push(
+      hard
+        ? `Wpadek z zakazanymi: ${slips}. Brawo, mistrzu wymówek.`
+        : `Wpadki z zakazanymi: ${slips}.`,
+    );
   }
   if (!r.noBaseline)
     parts.push(
-    r.delta >= 0
-      ? hard
-        ? "Lepiej niż tydzień temu. Nie przyzwyczajaj się, będę patrzeć na ręce."
-        : "Lepiej niż tydzień temu - tak trzymaj!"
-      : hard
-      ? "Gorzej niż tydzień temu. Od jutra koniec pierdolenia, bierzemy się do roboty."
-      : "Gorzej niż tydzień temu. Nowy tydzień, nowa szansa.",
-  );
+      r.delta >= 0
+        ? hard
+          ? "Lepiej niż tydzień temu. Nie przyzwyczajaj się, będę patrzeć na ręce."
+          : "Lepiej niż tydzień temu - tak trzymaj!"
+        : hard
+          ? "Gorzej niż tydzień temu. Od jutra koniec pierdolenia, bierzemy się do roboty."
+          : "Gorzej niż tydzień temu. Nowy tydzień, nowa szansa.",
+    );
   return parts.join(" ");
 }
 
@@ -672,7 +719,10 @@ export function szpilaNow(
   if (plan.length === 0) return { text: pick(ALL_DONE[level], seed), mood: "impressed" };
   if (now.getHours() >= 20 && plan.length >= 2 && (seed ?? 1) % 2 === 0) {
     return {
-      text: pick(EVENING[level], seed).replaceAll("{pending}", `${plan.length} ${plural5(plan.length)}`),
+      text: pick(EVENING[level], seed).replaceAll(
+        "{pending}",
+        `${plan.length} ${plural5(plan.length)}`,
+      ),
       mood: "angry",
     };
   }
@@ -681,7 +731,11 @@ export function szpilaNow(
   const rage = escalationTier(minuteOfDay(now) - top.at) === 1;
   const pool = rage ? rageLines(top.habit, level, userName) : nagLines(top.habit, level, userName);
   const line = pick(pool, seed);
-  return { text: fill(line, top.habit, top.amount), mood: top.overdue ? "angry" : "smug", habitId: top.habit.id };
+  return {
+    text: fill(line, top.habit, top.amount),
+    mood: top.overdue ? "angry" : "smug",
+    habitId: top.habit.id,
+  };
 }
 
 function plural5(n: number): string {

@@ -46,7 +46,8 @@ function isBad(h: Habit, idx: Idx, d: Date, now: Date): boolean {
 }
 
 function badPhrase(h: Habit, lag: number): string {
-  if (kindOf(h) === "avoid") return lag ? `Dzień po wpadce z „${h.name}”` : `W dni z wpadką „${h.name}”`;
+  if (kindOf(h) === "avoid")
+    return lag ? `Dzień po wpadce z „${h.name}”` : `W dni z wpadką „${h.name}”`;
   return lag ? `Dzień po niezaliczonym „${h.name}”` : `W dni bez „${h.name}”`;
 }
 
@@ -62,7 +63,12 @@ function effectPhrase(h: Habit, bad: number, good: number): string {
   return `${what} w ${b}% dni zamiast ${g}% (o ${diff} pkt ${bad < good ? "rzadziej" : "częściej"})`;
 }
 
-export function habitInsights(habits: Habit[], completions: Completion[], days = 60, now = new Date()): Insight[] {
+export function habitInsights(
+  habits: Habit[],
+  completions: Completion[],
+  days = 60,
+  now = new Date(),
+): Insight[] {
   const idx = indexEntries(completions);
   const out: Insight[] = [];
   const todayK = todayKey(now);
@@ -79,7 +85,8 @@ export function habitInsights(habits: Habit[], completions: Completion[], days =
           const e = addDays(d, lag);
           if (todayKey(e) >= todayK) continue; // only finished days
           if (!countsOn(cause, idx, d, now) || !countsOn(effect, idx, e, now)) continue;
-          if (cause.schedule.type === "timesPerWeek" || effect.schedule.type === "timesPerWeek") continue;
+          if (cause.schedule.type === "timesPerWeek" || effect.schedule.type === "timesPerWeek")
+            continue;
           (isBad(cause, idx, d, now) ? badVals : goodVals).push(effectValue(effect, idx, e, now));
         }
         if (badVals.length < MIN_DAYS_PER_SIDE || goodVals.length < MIN_DAYS_PER_SIDE) continue;
@@ -131,7 +138,12 @@ export interface MonthDay {
 }
 
 /** Mon-first calendar grid (6 weeks) for the month containing `month`, with the overall daily rate. */
-export function monthGrid(habits: Habit[], completions: Completion[], month: Date, now = new Date()): MonthDay[] {
+export function monthGrid(
+  habits: Habit[],
+  completions: Completion[],
+  month: Date,
+  now = new Date(),
+): MonthDay[] {
   const idx = indexEntries(completions);
   const first = new Date(month.getFullYear(), month.getMonth(), 1);
   const offset = (first.getDay() + 6) % 7; // Monday = 0

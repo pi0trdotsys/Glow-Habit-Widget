@@ -1,12 +1,27 @@
 import { describe, expect, test } from "bun:test";
 import { addDays } from "date-fns";
-import { dailySeries, monthCompare, monthStats, toCsv, trendSummary, csvFileName } from "@/lib/habits/stats";
+import {
+  dailySeries,
+  monthCompare,
+  monthStats,
+  toCsv,
+  trendSummary,
+  csvFileName,
+} from "@/lib/habits/stats";
 import type { Completion } from "@/lib/habits/types";
 import { WED_1540, entry, habit, key } from "./helpers";
 
 const now = WED_1540; // Wed 2026-09-23
-const water = habit({ name: "Picie wody", goal: { type: "count", target: 8, step: 1, unit: "szklanek" } }, 120, now);
-const food = habit({ name: "Fast food; \"XL\"", kind: "avoid", limit: { times: 1, period: "week" } }, 120, now);
+const water = habit(
+  { name: "Picie wody", goal: { type: "count", target: 8, step: 1, unit: "szklanek" } },
+  120,
+  now,
+);
+const food = habit(
+  { name: 'Fast food; "XL"', kind: "avoid", limit: { times: 1, period: "week" } },
+  120,
+  now,
+);
 const habits = [water, food];
 
 function days(n: number, amount: (i: number) => number, clean = true): Completion[] {
@@ -50,8 +65,20 @@ describe("90-day trend", () => {
 
 describe("months", () => {
   test("six months, oldest first, current month flagged", () => {
-    const m = monthStats(habits, days(100, () => 8), 6, now);
-    expect(m.map((x) => x.key)).toEqual(["2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09"]);
+    const m = monthStats(
+      habits,
+      days(100, () => 8),
+      6,
+      now,
+    );
+    expect(m.map((x) => x.key)).toEqual([
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07",
+      "2026-08",
+      "2026-09",
+    ]);
     expect(m[5].current).toBe(true);
     expect(m[5].label).toBe("wrz");
     expect(m[4].pct).toBe(100);
@@ -65,7 +92,8 @@ describe("months", () => {
       const date = new Date(2026, 7, d);
       c.push(entry(water, date, { amount: d <= 23 ? 8 : 0 }), entry(food, date));
     }
-    for (let d = 1; d <= 22; d++) c.push(entry(water, new Date(2026, 8, d), { amount: 4 }), entry(food, new Date(2026, 8, d)));
+    for (let d = 1; d <= 22; d++)
+      c.push(entry(water, new Date(2026, 8, d), { amount: 4 }), entry(food, new Date(2026, 8, d)));
     const cmp = monthCompare(habits, c, now);
     expect(cmp.upTo).toBe(23);
     expect(cmp.lastMonth.pct).toBe(100);
@@ -88,7 +116,9 @@ describe("CSV export", () => {
     expect(lines[0]).toBe("data;zadanie;rodzaj;cel;jednostka;wynik;status;procent;social_w_nocy");
     expect(lines).toHaveLength(1 + 121 * 2);
     const y = lines.filter((l) => l.startsWith(key(addDays(now, -1))));
-    expect(y).toContain(`${key(addDays(now, -1))};Picie wody;do zrobienia;8;szklanek;8;zrobione;100;`);
+    expect(y).toContain(
+      `${key(addDays(now, -1))};Picie wody;do zrobienia;8;szklanek;8;zrobione;100;`,
+    );
     expect(y).toContain(`${key(addDays(now, -1))};"Fast food; ""XL""";zakazane;0;;0;czysto;100;`);
     const d2 = lines.filter((l) => l.startsWith(key(addDays(now, -2))));
     expect(d2.some((l) => l.includes(";3;częściowo;38;"))).toBe(true);

@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
-import { DEFAULT_LATE_AFTER, DEFAULT_LATE_LIMIT, openUsageSettings, requestSteps, screenGranted } from "@/lib/sensors";
+import {
+  DEFAULT_LATE_AFTER,
+  DEFAULT_LATE_LIMIT,
+  openUsageSettings,
+  requestSteps,
+  screenGranted,
+} from "@/lib/sensors";
 import { Ban, Sparkles } from "lucide-react";
 import { HabitIcon } from "./HabitIcon";
 import { AVOID_COLOR, HABIT_COLOR_VAR, HABIT_COLORS, HABIT_ICONS } from "@/lib/habits/colors";
@@ -40,7 +46,12 @@ const COLOR_NAMES: Record<HabitColor, string> = {
 };
 
 /** One-tap starting points, tuned so the planner and Szpila recognise them. */
-const A = (name: string, icon: string, times: number, period: "day" | "week" | "month" = "week"): HabitDraft => ({
+const A = (
+  name: string,
+  icon: string,
+  times: number,
+  period: "day" | "week" | "month" = "week",
+): HabitDraft => ({
   name,
   icon,
   color: "rose",
@@ -50,15 +61,70 @@ const A = (name: string, icon: string, times: number, period: "day" | "week" | "
 });
 
 const TEMPLATES: HabitDraft[] = [
-  { name: "Mycie zębów", icon: "Tooth", color: "mint", schedule: { type: "daily" }, goal: { type: "count", target: 2, step: 1, unit: "razy" } },
-  { name: "Picie wody", icon: "GlassWater", color: "sky", schedule: { type: "daily" }, goal: { type: "count", target: 8, step: 1, unit: "szklanek" } },
-  { name: "8000 kroków", icon: "Footprints", color: "lime", schedule: { type: "daily" }, goal: { type: "count", target: 8000, step: 1000, unit: "kroków" } },
-  { name: "Czytanie książki", icon: "BookOpen", color: "amber", schedule: { type: "daily" }, goal: { type: "minutes", target: 20, step: 10 }, timeOfDay: "evening" },
-  { name: "Programuj", icon: "Code", color: "violet", schedule: { type: "daily" }, goal: { type: "minutes", target: 30, step: 15 } },
-  { name: "Ucz się języka obcego", icon: "Languages", color: "coral", schedule: { type: "daily" }, goal: { type: "minutes", target: 15, step: 5 } },
-  { name: "Medytacja", icon: "Sparkles", color: "violet", schedule: { type: "daily" }, goal: { type: "minutes", target: 10, step: 5 }, timeOfDay: "morning" },
-  { name: "Siłownia", icon: "Dumbbell", color: "coral", schedule: { type: "timesPerWeek", target: 3 } },
-  { name: "Witaminy", icon: "Pill", color: "sand", schedule: { type: "daily" }, timeOfDay: "morning" },
+  {
+    name: "Mycie zębów",
+    icon: "Tooth",
+    color: "mint",
+    schedule: { type: "daily" },
+    goal: { type: "count", target: 2, step: 1, unit: "razy" },
+  },
+  {
+    name: "Picie wody",
+    icon: "GlassWater",
+    color: "sky",
+    schedule: { type: "daily" },
+    goal: { type: "count", target: 8, step: 1, unit: "szklanek" },
+  },
+  {
+    name: "8000 kroków",
+    icon: "Footprints",
+    color: "lime",
+    schedule: { type: "daily" },
+    goal: { type: "count", target: 8000, step: 1000, unit: "kroków" },
+  },
+  {
+    name: "Czytanie książki",
+    icon: "BookOpen",
+    color: "amber",
+    schedule: { type: "daily" },
+    goal: { type: "minutes", target: 20, step: 10 },
+    timeOfDay: "evening",
+  },
+  {
+    name: "Programuj",
+    icon: "Code",
+    color: "violet",
+    schedule: { type: "daily" },
+    goal: { type: "minutes", target: 30, step: 15 },
+  },
+  {
+    name: "Ucz się języka obcego",
+    icon: "Languages",
+    color: "coral",
+    schedule: { type: "daily" },
+    goal: { type: "minutes", target: 15, step: 5 },
+  },
+  {
+    name: "Medytacja",
+    icon: "Sparkles",
+    color: "violet",
+    schedule: { type: "daily" },
+    goal: { type: "minutes", target: 10, step: 5 },
+    timeOfDay: "morning",
+  },
+  {
+    name: "Siłownia",
+    icon: "Dumbbell",
+    color: "coral",
+    schedule: { type: "timesPerWeek", target: 3 },
+  },
+  {
+    name: "Witaminy",
+    icon: "Pill",
+    color: "sand",
+    schedule: { type: "daily" },
+    timeOfDay: "morning",
+  },
   A("Scrollowanie w łóżku", "Smartphone", 1),
   A("Fast food", "Hamburger", 1),
   A("Słodycze", "Candy", 2),
@@ -85,7 +151,13 @@ interface Props {
   disabledReason?: string | null;
 }
 
-export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", disabledReason }: Props) {
+export function HabitForm({
+  initial,
+  onSave,
+  onCancel,
+  saveLabel = "Zapisz",
+  disabledReason,
+}: Props) {
   const [kind, setKind] = useState<HabitKind>(initial?.kind ?? "build");
   const [name, setName] = useState(initial?.name ?? "");
   const [icon, setIcon] = useState<string>(initial?.icon ?? "Sparkles");
@@ -141,8 +213,8 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
         type === "daily"
           ? { type: "daily" }
           : type === "weekdays"
-          ? { type: "weekdays", days }
-          : { type: "timesPerWeek", target: weekTarget },
+            ? { type: "weekdays", days }
+            : { type: "timesPerWeek", target: weekTarget },
       goal:
         avoid || goalType === "check"
           ? undefined
@@ -155,7 +227,10 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
       limit: avoid ? { times: limitTimes, period: limitPeriod } : undefined,
       timeOfDay,
       // A source only makes sense for its kind: steps -> build count, screen -> avoid.
-      source: (source === "steps" && !avoid && goalType === "count") || (source === "screen" && avoid) ? source : undefined,
+      source:
+        (source === "steps" && !avoid && goalType === "count") || (source === "screen" && avoid)
+          ? source
+          : undefined,
       lateAfter: source === "screen" && avoid ? lateAfter : undefined,
       lateLimit: source === "screen" && avoid ? lateLimit : undefined,
       lateBasis: source === "screen" && avoid ? lateBasis : undefined,
@@ -173,7 +248,10 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
           onClick={save}
           disabled={!canSave}
           className="rounded-full px-4 py-2 text-sm font-semibold disabled:opacity-40"
-          style={{ backgroundColor: avoid ? AVOID_COLOR : "var(--primary)", color: "var(--primary-foreground)" }}
+          style={{
+            backgroundColor: avoid ? AVOID_COLOR : "var(--primary)",
+            color: "var(--primary-foreground)",
+          }}
         >
           {saveLabel}
         </button>
@@ -187,7 +265,8 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
               onClick={() => setKind(k)}
               className="flex items-center justify-center gap-1.5 rounded-full py-2 text-sm font-semibold transition-colors"
               style={{
-                backgroundColor: kind === k ? (k === "avoid" ? AVOID_COLOR : "var(--primary)") : "transparent",
+                backgroundColor:
+                  kind === k ? (k === "avoid" ? AVOID_COLOR : "var(--primary)") : "transparent",
                 color: kind === k ? "var(--primary-foreground)" : "var(--muted-foreground)",
               }}
             >
@@ -211,7 +290,11 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
                   onClick={() => applyTemplate(t)}
                   className="flex shrink-0 items-center gap-1.5 rounded-full bg-card px-3 py-2 text-xs font-medium"
                 >
-                  <HabitIcon name={t.icon} size={14} style={{ color: t.kind === "avoid" ? AVOID_COLOR : HABIT_COLOR_VAR[t.color] }} />
+                  <HabitIcon
+                    name={t.icon}
+                    size={14}
+                    style={{ color: t.kind === "avoid" ? AVOID_COLOR : HABIT_COLOR_VAR[t.color] }}
+                  />
                   {t.name}
                 </button>
               ))}
@@ -227,7 +310,12 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
               boxShadow: `0 0 0 2px ${accent}`,
             }}
           >
-            <HabitIcon name={icon} size={42} strokeWidth={1.8} style={avoid ? { color: AVOID_COLOR } : undefined} />
+            <HabitIcon
+              name={icon}
+              size={42}
+              strokeWidth={1.8}
+              style={avoid ? { color: AVOID_COLOR } : undefined}
+            />
           </div>
           <input
             value={name}
@@ -242,11 +330,22 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
           <Section title="Limit">
             <div className="rounded-2xl bg-card p-4">
               <div className="flex items-center justify-center gap-4">
-                <Stepper value={limitTimes} min={0} max={30} onChange={setLimitTimes} label={limitTimes === 0 ? "0×" : `${limitTimes}×`} />
+                <Stepper
+                  value={limitTimes}
+                  min={0}
+                  max={30}
+                  onChange={setLimitTimes}
+                  label={limitTimes === 0 ? "0×" : `${limitTimes}×`}
+                />
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {(["day", "week", "month"] as const).map((p) => (
-                  <Chip key={p} on={limitPeriod === p} onClick={() => setLimitPeriod(p)} accent={AVOID_COLOR}>
+                  <Chip
+                    key={p}
+                    on={limitPeriod === p}
+                    onClick={() => setLimitPeriod(p)}
+                    accent={AVOID_COLOR}
+                  >
                     {p === "day" ? "dziennie" : p === "week" ? "w tygodniu" : "w miesiącu"}
                   </Chip>
                 ))}
@@ -255,7 +354,11 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
                 {limitTimes === 0
                   ? "Całkowity zakaz - każda wpadka się liczy."
                   : `Dozwolone ${limitTimes} ${limitTimes === 1 ? "raz" : "razy"} ${
-                      limitPeriod === "day" ? "dziennie" : limitPeriod === "week" ? "w tygodniu" : "w miesiącu"
+                      limitPeriod === "day"
+                        ? "dziennie"
+                        : limitPeriod === "week"
+                          ? "w tygodniu"
+                          : "w miesiącu"
                     }. Powyżej - Szpila się nie hamuje.`}
               </p>
             </div>
@@ -298,11 +401,16 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
                   </Row>
                 )}
                 <Row label="Jedno przytrzymanie dodaje">
-                  <NumberInput value={goalStep} onChange={setGoalStep} max={Math.max(1, goalTarget)} />
+                  <NumberInput
+                    value={goalStep}
+                    onChange={setGoalStep}
+                    max={Math.max(1, goalTarget)}
+                  />
                 </Row>
                 <p className="text-[11px] text-muted-foreground">
-                  Przytrzymaj kafelek, by dodać {goalStep} {goalType === "minutes" ? "min" : goalUnit || "raz(y)"}. Dokładną
-                  ilość wpiszesz na stronie zadania.
+                  Przytrzymaj kafelek, by dodać {goalStep}{" "}
+                  {goalType === "minutes" ? "min" : goalUnit || "raz(y)"}. Dokładną ilość wpiszesz
+                  na stronie zadania.
                 </p>
                 {isNative && goalType === "count" && (
                   <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
@@ -317,8 +425,10 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
                       onChange={async (on) => {
                         if (!on) return setSource(undefined);
                         const s = await requestSteps();
-                        if (!s.available) return alert("Health Connect jest niedostępny na tym telefonie.");
-                        if (!s.granted) return alert("Bez zgody na odczyt kroków nie da się ich pobierać.");
+                        if (!s.available)
+                          return alert("Health Connect jest niedostępny na tym telefonie.");
+                        if (!s.granted)
+                          return alert("Bez zgody na odczyt kroków nie da się ich pobierać.");
                         setSource("steps");
                         if (!goalUnit) setGoalUnit("kroków");
                         if (goalStep === 1 && goalTarget >= 1000) setGoalStep(1000);
@@ -358,7 +468,10 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
                 key={i}
                 onClick={() => setIcon(i)}
                 className="grid aspect-square place-items-center rounded-xl bg-card transition"
-                style={{ outline: icon === i ? `2px solid ${avoid ? AVOID_COLOR : "var(--primary)"}` : "none" }}
+                style={{
+                  outline:
+                    icon === i ? `2px solid ${avoid ? AVOID_COLOR : "var(--primary)"}` : "none",
+                }}
               >
                 <HabitIcon name={i} size={20} strokeWidth={1.8} />
               </button>
@@ -369,7 +482,12 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
         <Section title="Harmonogram">
           <div className="grid grid-cols-3 gap-2">
             {(["daily", "weekdays", "timesPerWeek"] as const).map((t) => (
-              <Chip key={t} on={type === t} onClick={() => setType(t)} accent={avoid ? AVOID_COLOR : undefined}>
+              <Chip
+                key={t}
+                on={type === t}
+                onClick={() => setType(t)}
+                accent={avoid ? AVOID_COLOR : undefined}
+              >
                 {t === "daily" ? "Codziennie" : t === "weekdays" ? "Wybrane dni" : "X / tydzień"}
               </Chip>
             ))}
@@ -382,7 +500,9 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
                 return (
                   <button
                     key={v}
-                    onClick={() => setDays((d) => (on ? d.filter((x) => x !== v) : [...d, v].sort()))}
+                    onClick={() =>
+                      setDays((d) => (on ? d.filter((x) => x !== v) : [...d, v].sort()))
+                    }
                     className="h-10 w-10 rounded-full text-xs font-semibold"
                     style={{
                       backgroundColor: on ? "var(--primary)" : "var(--card)",
@@ -398,7 +518,13 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
 
           {type === "timesPerWeek" && (
             <div className="mt-3 flex items-center justify-center rounded-2xl bg-card py-4">
-              <Stepper value={weekTarget} min={1} max={7} onChange={setWeekTarget} label={`${weekTarget}×`} />
+              <Stepper
+                value={weekTarget}
+                min={1}
+                max={7}
+                onChange={setWeekTarget}
+                label={`${weekTarget}×`}
+              />
             </div>
           )}
         </Section>
@@ -406,14 +532,25 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
         <Section title="Pora dnia">
           <div className="grid grid-cols-4 gap-2">
             {(["morning", "midday", "evening", "anytime"] as const).map((t) => (
-              <Chip key={t} on={timeOfDay === t} onClick={() => setTimeOfDay(t)} accent={avoid ? AVOID_COLOR : undefined}>
-                {t === "morning" ? "Rano" : t === "midday" ? "W dzień" : t === "evening" ? "Wieczór" : "Obojętnie"}
+              <Chip
+                key={t}
+                on={timeOfDay === t}
+                onClick={() => setTimeOfDay(t)}
+                accent={avoid ? AVOID_COLOR : undefined}
+              >
+                {t === "morning"
+                  ? "Rano"
+                  : t === "midday"
+                    ? "W dzień"
+                    : t === "evening"
+                      ? "Wieczór"
+                      : "Obojętnie"}
               </Chip>
             ))}
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Na tej podstawie widżet „Następne zadanie” i plan dnia podpowiadają, co robić teraz. „Obojętnie” = aplikacja
-            uczy się, kiedy zwykle to robisz.
+            Na tej podstawie widżet „Następne zadanie” i plan dnia podpowiadają, co robić teraz.
+            „Obojętnie” = aplikacja uczy się, kiedy zwykle to robisz.
           </p>
         </Section>
 
@@ -440,7 +577,9 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
           </div>
         </Section>
 
-        {disabledReason && <p className="mt-4 text-center text-xs text-destructive">{disabledReason}</p>}
+        {disabledReason && (
+          <p className="mt-4 text-center text-xs text-destructive">{disabledReason}</p>
+        )}
       </div>
     </>
   );
@@ -449,7 +588,9 @@ export function HabitForm({ initial, onSave, onCancel, saveLabel = "Zapisz", dis
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-6">
-      <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{title}</h2>
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        {title}
+      </h2>
       {children}
     </section>
   );
@@ -471,7 +612,7 @@ function Chip({
       onClick={onClick}
       className="rounded-full px-2 py-2 text-xs font-medium"
       style={{
-        backgroundColor: on ? accent ?? "var(--primary)" : "var(--card)",
+        backgroundColor: on ? (accent ?? "var(--primary)") : "var(--card)",
         color: on ? "var(--primary-foreground)" : "var(--foreground)",
       }}
     >
@@ -489,7 +630,15 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function NumberInput({ value, onChange, max }: { value: number; onChange: (n: number) => void; max: number }) {
+function NumberInput({
+  value,
+  onChange,
+  max,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+  max: number;
+}) {
   return (
     <input
       type="number"
@@ -497,7 +646,9 @@ function NumberInput({ value, onChange, max }: { value: number; onChange: (n: nu
       min={1}
       max={max}
       value={Number.isFinite(value) ? value : ""}
-      onChange={(e) => onChange(Math.max(0, Math.min(max, Math.round(Number(e.target.value) || 0))))}
+      onChange={(e) =>
+        onChange(Math.max(0, Math.min(max, Math.round(Number(e.target.value) || 0))))
+      }
       onBlur={() => value < 1 && onChange(1)}
       className="w-28 rounded-xl border border-border bg-background px-3 py-1.5 text-right text-sm tabular-nums outline-none"
     />
@@ -519,11 +670,17 @@ function Stepper({
 }) {
   return (
     <div className="flex items-center gap-4">
-      <button onClick={() => onChange(Math.max(min, value - 1))} className="h-9 w-9 rounded-full bg-secondary text-lg">
+      <button
+        onClick={() => onChange(Math.max(min, value - 1))}
+        className="h-9 w-9 rounded-full bg-secondary text-lg"
+      >
         −
       </button>
       <span className="w-16 text-center text-2xl font-bold">{label}</span>
-      <button onClick={() => onChange(Math.min(max, value + 1))} className="h-9 w-9 rounded-full bg-secondary text-lg">
+      <button
+        onClick={() => onChange(Math.min(max, value + 1))}
+        className="h-9 w-9 rounded-full bg-secondary text-lg"
+      >
         +
       </button>
     </div>
@@ -590,8 +747,8 @@ function ScreenSourceBox({
         <div>
           <div className="text-sm font-medium">Oceniaj z czasu ekranu</div>
           <div className="text-[11px] text-muted-foreground">
-            Bez klikania i bez domyślnego zaznaczenia: nocne scrollowanie dłuższe niż tolerancja = wpadka,
-            spokojna noc = czysto (o 5:00). Do tego czasu dzień jest nierozstrzygnięty.
+            Bez klikania i bez domyślnego zaznaczenia: nocne scrollowanie dłuższe niż tolerancja =
+            wpadka, spokojna noc = czysto (o 5:00). Do tego czasu dzień jest nierozstrzygnięty.
           </div>
         </div>
         <Toggle checked={on} onChange={onToggle} />
@@ -607,7 +764,8 @@ function ScreenSourceBox({
             />
           </Row>
           <p className="text-[11px] text-muted-foreground">
-            Godzina przed 5:00 (np. 00:00) oznacza tę noc po północy - liczy się noc z dnia na dzień.
+            Godzina przed 5:00 (np. 00:00) oznacza tę noc po północy - liczy się noc z dnia na
+            dzień.
           </p>
           <Row label="Tolerancja (minut)">
             <NumberInput value={lateLimit} onChange={setLateLimit} max={240} />
@@ -629,18 +787,23 @@ function ScreenSourceBox({
                   className="rounded-xl border p-2.5 text-left transition"
                   style={{
                     borderColor: lateBasis === id ? AVOID_COLOR : "var(--border)",
-                    backgroundColor: lateBasis === id ? "color-mix(in oklab, var(--avoid) 12%, transparent)" : "transparent",
+                    backgroundColor:
+                      lateBasis === id
+                        ? "color-mix(in oklab, var(--avoid) 12%, transparent)"
+                        : "transparent",
                   }}
                 >
                   <div className="text-xs font-semibold">{label}</div>
-                  <div className="mt-0.5 text-[10px] leading-snug text-muted-foreground">{hint}</div>
+                  <div className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
+                    {hint}
+                  </div>
                 </button>
               ))}
             </div>
             {lateBasis === "social" && (
               <p className="mt-2 text-[11px] text-muted-foreground">
-                Social media = TikTok, Instagram, Facebook, YouTube, X, Reddit, Snapchat, Pinterest, Twitch, LinkedIn,
-                Threads (oprócz wyłączonych w „Szpila na żywo”).
+                Social media = TikTok, Instagram, Facebook, YouTube, X, Reddit, Snapchat, Pinterest,
+                Twitch, LinkedIn, Threads (oprócz wyłączonych w „Szpila na żywo”).
               </p>
             )}
           </div>

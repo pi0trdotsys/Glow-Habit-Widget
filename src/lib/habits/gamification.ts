@@ -41,7 +41,12 @@ export const FACES: Unlockable<FaceId>[] = [
   { id: "kujon", name: "Kujon", streak: 3, blurb: "Okulary. Liczy każde twoje odpuszczenie." },
   { id: "diabel", name: "Diabeł", streak: 7, blurb: "Rogi. Tydzień formy obudził w nim bestię." },
   { id: "krol", name: "Król", streak: 14, blurb: "Korona. Dwa tygodnie - należy mu się." },
-  { id: "zloty", name: "Złoty", streak: 30, blurb: "Złote futro. Miesiąc formy, legenda dzielnicy." },
+  {
+    id: "zloty",
+    name: "Złoty",
+    streak: 30,
+    blurb: "Złote futro. Miesiąc formy, legenda dzielnicy.",
+  },
   { id: "dj", name: "DJ", weeks: 1, blurb: "Słuchawki. Za komplet tygodniowych wyzwań." },
 ];
 
@@ -67,7 +72,9 @@ export function isUnlocked<T extends string>(u: Unlockable<T>, p: Progress): boo
 }
 
 /** The next thing to unlock (by streak) and how many days are missing. */
-export function nextUnlock(p: Progress): { name: string; kind: "mina" | "humor"; missing: number } | null {
+export function nextUnlock(
+  p: Progress,
+): { name: string; kind: "mina" | "humor"; missing: number } | null {
   const all = [
     ...FACES.filter((f) => f.streak != null).map((f) => ({ ...f, kind: "mina" as const })),
     ...HUMORS.map((h) => ({ ...h, kind: "humor" as const })),
@@ -85,7 +92,12 @@ export function nextUnlock(p: Progress): { name: string; kind: "mina" | "humor";
 type Idx = ReturnType<typeof indexEntries>;
 
 /** Share of the day's habits done (0..1), or null when nothing counted that day. */
-export function dayFraction(habits: Habit[], idx: Idx, date: Date, now: Date = new Date()): number | null {
+export function dayFraction(
+  habits: Habit[],
+  idx: Idx,
+  date: Date,
+  now: Date = new Date(),
+): number | null {
   let n = 0;
   let sum = 0;
   for (const h of habits) {
@@ -112,7 +124,11 @@ function firstDay(habits: Habit[], now: Date): Date {
  * Forma streaks. Days where nothing counted (e.g. only an undecided night)
  * neither extend nor break a streak. Today only extends it once in form.
  */
-export function formaStreaks(habits: Habit[], completions: Completion[], now: Date = new Date()): Omit<Progress, "perfectWeeks"> {
+export function formaStreaks(
+  habits: Habit[],
+  completions: Completion[],
+  now: Date = new Date(),
+): Omit<Progress, "perfectWeeks"> {
   const idx = indexEntries(completions);
   const start = firstDay(habits, now);
   const days = differenceInCalendarDays(now, start);
@@ -164,7 +180,11 @@ export const BAD_DAY = 0.5;
  * neglected (and offended) after a week of slips - 4+ bad days (< 50%) out of
  * the last 7 finished days; otherwise normal. Widget: SzpilaWidgetProvider.condMood.
  */
-export function catCondition(habits: Habit[], completions: Completion[], now: Date = new Date()): CatCondition {
+export function catCondition(
+  habits: Habit[],
+  completions: Completion[],
+  now: Date = new Date(),
+): CatCondition {
   const idx = indexEntries(completions);
   let bad = 0;
   for (let i = 1; i <= 7; i++) {
@@ -231,10 +251,13 @@ export function weeklyChallenges(
   const day = (i: number) => addDays(monday, i);
   /** Days still ahead (today included unless `todayCounted`). */
   const remaining = (todayCounted: boolean) => (weekOver ? 0 : 6 - last + (todayCounted ? 0 : 1));
-  const inWeek = (h: Habit) => [0, 1, 2, 3, 4, 5, 6].some((i) => countsOn(h, idx, day(i), now) || i > last);
+  const inWeek = (h: Habit) =>
+    [0, 1, 2, 3, 4, 5, 6].some((i) => countsOn(h, idx, day(i), now) || i > last);
   const builds = habits.filter((h) => kindOf(h) === "build" && inWeek(h));
   const avoids = habits.filter((h) => kindOf(h) === "avoid" && !isAutoScreen(h) && inWeek(h));
-  const fractions = [0, 1, 2, 3, 4, 5, 6].map((i) => (i <= last ? dayFraction(habits, idx, day(i), now) : null));
+  const fractions = [0, 1, 2, 3, 4, 5, 6].map((i) =>
+    i <= last ? dayFraction(habits, idx, day(i), now) : null,
+  );
 
   const candidates: (() => Challenge)[] = [];
 
@@ -324,7 +347,9 @@ export function weeklyChallenges(
   }
 
   // Beat last week over the same window - only with a baseline.
-  const at = weekOver ? new Date(day(6).getFullYear(), day(6).getMonth(), day(6).getDate(), 23, 59) : now;
+  const at = weekOver
+    ? new Date(day(6).getFullYear(), day(6).getMonth(), day(6).getDate(), 23, 59)
+    : now;
   const rep = weeklyReport(habits, completions, at);
   if (!rep.noBaseline) {
     candidates.push(() => ({
@@ -391,8 +416,12 @@ const HUMOR_LINES: Record<Exclude<HumorId, "wredny">, HumorLines> = {
       "„{name}” załatwione. Rodzina jest z ciebie dumna. Na razie.",
       "Dobra robota z „{name}”. Don Szpila to zapamięta.",
     ],
-    liveFirst: ["{app} o {time}? Don Szpila nie lubi, jak jego ludzie nie śpią. Odłóż to. Grzecznie proszę. Raz."],
-    liveEscalate: ["{m} minut. Moja cierpliwość się kończy, a ja nie proszę dwa razy. Telefon. Odłóż."],
+    liveFirst: [
+      "{app} o {time}? Don Szpila nie lubi, jak jego ludzie nie śpią. Odłóż to. Grzecznie proszę. Raz.",
+    ],
+    liveEscalate: [
+      "{m} minut. Moja cierpliwość się kończy, a ja nie proszę dwa razy. Telefon. Odłóż.",
+    ],
   },
   poeta: {
     nag: [
@@ -409,8 +438,12 @@ const HUMOR_LINES: Record<Exclude<HumorId, "wredny">, HumorLines> = {
       "O, cudzie! „{name}” zrobione - niech będzie ten dzień pochwalone!",
       "Z „{name}” wygrana, chwała ci od rana!",
     ],
-    liveFirst: ["Północ minęła, a ty w {app} tkwisz - sen ci ucieka, a ty wciąż patrzysz. Idź spać."],
-    liveEscalate: ["{m} minut w {app} - o, zgrozo, o, klęsko! Odłóż ten telefon, bo będzie ci ciężko."],
+    liveFirst: [
+      "Północ minęła, a ty w {app} tkwisz - sen ci ucieka, a ty wciąż patrzysz. Idź spać.",
+    ],
+    liveEscalate: [
+      "{m} minut w {app} - o, zgrozo, o, klęsko! Odłóż ten telefon, bo będzie ci ciężko.",
+    ],
   },
 };
 

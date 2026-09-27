@@ -120,14 +120,19 @@ function TodayPage() {
             className="rounded-2xl p-3"
             style={{ background: `color-mix(in oklab, ${AVOID_COLOR} 8%, var(--card))` }}
           >
-            <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold" style={{ color: AVOID_COLOR }}>
+            <div
+              className="mb-2 flex items-center gap-1.5 text-xs font-semibold"
+              style={{ color: AVOID_COLOR }}
+            >
               <Sunrise size={14} /> Rozlicz wczoraj · do {formatMinute(AVOID_GRACE_MIN)}
             </div>
             <AvoidChips habits={settleYesterday} day={yesterday} />
           </section>
         )}
         {due.length > 0 && <NowCard plan={plan} />}
-        {due.length > 0 && <PlanFold plan={plan} delta={report.delta} hasHistory={!report.noBaseline} />}
+        {due.length > 0 && (
+          <PlanFold plan={plan} delta={report.delta} hasHistory={!report.noBaseline} />
+        )}
       </div>
 
       {due.length === 0 ? (
@@ -143,7 +148,10 @@ function TodayPage() {
           )}
           {avoid.length > 0 && (
             <section className="mt-8 px-5">
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: AVOID_COLOR }}>
+              <h2
+                className="mb-3 text-xs font-semibold uppercase tracking-[0.16em]"
+                style={{ color: AVOID_COLOR }}
+              >
                 Zakazane · dotknij, by potwierdzić
               </h2>
               <AvoidChips habits={avoid} />
@@ -181,9 +189,20 @@ function ProgressRing({ fraction }: { fraction: number }) {
   const c = 2 * Math.PI * r;
   const pct = Math.round(fraction * 100);
   return (
-    <div className="relative grid shrink-0 place-items-center" style={{ width: size, height: size }} aria-label={`Postęp dnia ${pct}%`}>
+    <div
+      className="relative grid shrink-0 place-items-center"
+      style={{ width: size, height: size }}
+      aria-label={`Postęp dnia ${pct}%`}
+    >
       <svg width={size} height={size} className="absolute inset-0 -rotate-90" aria-hidden>
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--border)" strokeWidth={stroke} fill="none" />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          stroke="var(--border)"
+          strokeWidth={stroke}
+          fill="none"
+        />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -237,7 +256,9 @@ function NowCard({ plan }: { plan: PlanItem[] }) {
     const key = todayKey();
     logStep(h.id);
     if (next.avoid || next.left <= goalOf(h).step) {
-      praiseToast(h, () => (next.avoid ? setAvoid(h.id, key, null) : setAmount(h.id, key, next.amount)));
+      praiseToast(h, () =>
+        next.avoid ? setAvoid(h.id, key, null) : setAmount(h.id, key, next.amount),
+      );
     }
   };
   return (
@@ -251,18 +272,28 @@ function NowCard({ plan }: { plan: PlanItem[] }) {
         <HabitIcon name={next.habit.icon} size={22} style={next.avoid ? { color } : undefined} />
       </Link>
       <div className="min-w-0 flex-1">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Teraz</div>
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Teraz
+        </div>
         <div className="truncate font-semibold">{next.habit.name}</div>
-        <div className="truncate text-xs" style={{ color: next.overdue ? AVOID_COLOR : "var(--muted-foreground)" }}>
+        <div
+          className="truncate text-xs"
+          style={{ color: next.overdue ? AVOID_COLOR : "var(--muted-foreground)" }}
+        >
           {whenLabel(next, minuteOfDay())}
-          {!next.avoid && goalOf(next.habit).type !== "check" && ` · ${next.amount}/${goalOf(next.habit).target}`}
+          {!next.avoid &&
+            goalOf(next.habit).type !== "check" &&
+            ` · ${next.amount}/${goalOf(next.habit).target}`}
         </div>
       </div>
       <button
         type="button"
         onClick={doNext}
         className="shrink-0 rounded-full px-3.5 py-2 text-sm font-semibold transition-transform active:scale-95"
-        style={{ backgroundColor: next.avoid ? AVOID_COLOR : "var(--primary)", color: "var(--primary-foreground)" }}
+        style={{
+          backgroundColor: next.avoid ? AVOID_COLOR : "var(--primary)",
+          color: "var(--primary-foreground)",
+        }}
       >
         {actionLabel(next)}
       </button>
@@ -271,7 +302,15 @@ function NowCard({ plan }: { plan: PlanItem[] }) {
 }
 
 /** "Plan dnia (N)" folded by default, plus the week-vs-week pill linking to the report. */
-function PlanFold({ plan, delta, hasHistory }: { plan: PlanItem[]; delta: number; hasHistory: boolean }) {
+function PlanFold({
+  plan,
+  delta,
+  hasHistory,
+}: {
+  plan: PlanItem[];
+  delta: number;
+  hasHistory: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const rest = plan.slice(1);
   useBackHandler(open, () => setOpen(false));
@@ -307,7 +346,11 @@ function PlanFold({ plan, delta, hasHistory }: { plan: PlanItem[]; delta: number
           >
             {rest.map((p) => (
               <li key={p.habit.id}>
-                <Link to="/habits/$id" params={{ id: p.habit.id }} className="flex items-center gap-3 py-2.5 text-sm">
+                <Link
+                  to="/habits/$id"
+                  params={{ id: p.habit.id }}
+                  className="flex items-center gap-3 py-2.5 text-sm"
+                >
                   <span
                     className="w-11 shrink-0 text-xs tabular-nums"
                     style={{ color: p.overdue ? AVOID_COLOR : "var(--muted-foreground)" }}
@@ -319,7 +362,9 @@ function PlanFold({ plan, delta, hasHistory }: { plan: PlanItem[]; delta: number
                     size={16}
                     style={{ color: p.avoid ? AVOID_COLOR : HABIT_COLOR_VAR[p.habit.color] }}
                   />
-                  <span className="min-w-0 flex-1 truncate">{p.avoid ? `Potwierdź: ${p.habit.name}` : p.habit.name}</span>
+                  <span className="min-w-0 flex-1 truncate">
+                    {p.avoid ? `Potwierdź: ${p.habit.name}` : p.habit.name}
+                  </span>
                   {!p.avoid && goalOf(p.habit).type !== "check" && (
                     <span className="shrink-0 text-xs text-muted-foreground">
                       {p.left} {unitLabel(p.habit, p.left)}

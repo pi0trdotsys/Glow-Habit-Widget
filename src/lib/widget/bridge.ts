@@ -121,7 +121,7 @@ export function buildState() {
       id: h.id,
       name: h.name,
       icon: h.icon,
-      colorHex: avoid ? AVOID_HEX : COLOR_HEX[h.color] ?? COLOR_HEX.mint,
+      colorHex: avoid ? AVOID_HEX : (COLOR_HEX[h.color] ?? COLOR_HEX.mint),
       kind: avoid ? "avoid" : "build",
       goal: avoid ? "check" : g.type,
       amount,
@@ -175,7 +175,9 @@ export function buildState() {
     yesterday: {
       date: todayKey(addDays(today, -1)),
       items: habits
-        .filter((h) => kindOf(h) === "avoid" && h.source !== "screen" && isDueOn(h, addDays(today, -1)))
+        .filter(
+          (h) => kindOf(h) === "avoid" && h.source !== "screen" && isDueOn(h, addDays(today, -1)),
+        )
         .filter((h) => avoidStatus(h, idx, addDays(today, -1), today) === "pending")
         .map((h) => ({ id: h.id, name: h.name })),
     },

@@ -28,7 +28,9 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
   return (
     <motion.div
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
-      style={{ background: "radial-gradient(120% 90% at 50% 42%, #2a0f15 0%, #0d0b10 55%, #07090c 100%)" }}
+      style={{
+        background: "radial-gradient(120% 90% at 50% 42%, #2a0f15 0%, #0d0b10 55%, #07090c 100%)",
+      }}
       initial={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.04 }}
       transition={{ duration: SPLASH_FADE_S, ease: "easeInOut" }}
@@ -73,7 +75,11 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
             <circle cx="60" cy="6.2" r="3.5" fill="#f1f3f7" stroke="#8e95a3" strokeWidth="0.9" />
             <circle cx="58.9" cy="5.1" r="1.2" fill="#fff" />
           </motion.g>
-          <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.33, duration: 0.05 }}>
+          <motion.g
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.33, duration: 0.05 }}
+          >
             <circle cx="43" cy="11" r="1.3" fill="#1a0a0e" />
             <path d="M42.6 9.9 L43.4 12.1 L34.8 13.6 Z" fill="#d9dde5" />
           </motion.g>

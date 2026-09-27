@@ -30,11 +30,17 @@ const BILL: Record<TauntLevel, { bad: string[]; good: string[] }> = {
       "Po północy {social} min w social mediach. Dziś spróbuj odłożyć telefon wcześniej.",
       "Telefon odłożony ok. {asleep}. Krótsza noc = trudniejszy dzień. Dziś lepiej!",
     ],
-    good: ["Czysta noc - zero social mediów po północy. Świetnie!", "Telefon odłożony o {asleep}. Dobra robota!"],
+    good: [
+      "Czysta noc - zero social mediów po północy. Świetnie!",
+      "Telefon odłożony o {asleep}. Dobra robota!",
+    ],
   },
 };
 
-export function billLines(level: TauntLevel, userName: string | null): { bad: string[]; good: string[] } {
+export function billLines(
+  level: TauntLevel,
+  userName: string | null,
+): { bad: string[]; good: string[] } {
   const u = (l: string) => l.replaceAll("{u}", userName || "ty");
   const b = BILL[level];
   return { bad: b.bad.map(u), good: b.good.map(u) };
@@ -61,7 +67,8 @@ export const badNight = (r: NightReport) => (r.social ?? 0) > 0;
 /** Pick Szpila's comment for a night (deterministic per date so it doesn't flicker). */
 export function billComment(r: NightReport, level: TauntLevel, userName: string | null): string {
   const pool = billLines(level, userName)[badNight(r) ? "bad" : "good"];
-  const usable = r.asleep != null && r.asleep >= 0 ? pool : pool.filter((l) => !l.includes("{asleep}"));
+  const usable =
+    r.asleep != null && r.asleep >= 0 ? pool : pool.filter((l) => !l.includes("{asleep}"));
   let h = 0;
   for (const ch of r.date) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   return fillBill(usable[h % usable.length], r);

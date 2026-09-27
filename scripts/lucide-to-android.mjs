@@ -6,24 +6,107 @@ import path from "node:path";
 // Keep in sync with HABIT_ICONS in src/lib/habits/colors.ts. "Tooth" is NOT
 // here - it has no lucide source and ships as a hand-written ic_habit_tooth.xml.
 const ICONS = [
-  "Droplet", "Activity", "BookOpen", "Sparkles", "Apple", "Dumbbell",
-  "Brain", "Footprints", "Bike", "Heart", "Moon", "Sun", "Coffee",
-  "Leaf", "Music", "PenLine", "Phone", "Pill", "Smile", "Bed",
+  "Droplet",
+  "Activity",
+  "BookOpen",
+  "Sparkles",
+  "Apple",
+  "Dumbbell",
+  "Brain",
+  "Footprints",
+  "Bike",
+  "Heart",
+  "Moon",
+  "Sun",
+  "Coffee",
+  "Leaf",
+  "Music",
+  "PenLine",
+  "Phone",
+  "Pill",
+  "Smile",
+  "Bed",
   // Added:
-  "Droplets", "Bath", "Brush", "Hand", "HandHeart", "HeartPulse",
-  "Stethoscope", "Waves", "Flame", "Trophy", "Target", "Star", "Zap",
-  "Salad", "Carrot", "Egg", "Fish", "Cookie", "Utensils", "GlassWater",
-  "CupSoda", "GraduationCap", "NotebookPen", "Languages", "Code", "Laptop",
-  "Calculator", "Briefcase", "Wallet", "PiggyBank", "Camera", "Palette",
-  "Guitar", "Headphones", "Film", "Gamepad2", "Sprout", "Flower2",
-  "TreePine", "MountainSnow", "Sunrise", "Sunset", "CloudRain", "Wind",
-  "Dog", "Recycle", "Shirt", "Scissors", "Glasses", "Feather", "Mic",
+  "Droplets",
+  "Bath",
+  "Brush",
+  "Hand",
+  "HandHeart",
+  "HeartPulse",
+  "Stethoscope",
+  "Waves",
+  "Flame",
+  "Trophy",
+  "Target",
+  "Star",
+  "Zap",
+  "Salad",
+  "Carrot",
+  "Egg",
+  "Fish",
+  "Cookie",
+  "Utensils",
+  "GlassWater",
+  "CupSoda",
+  "GraduationCap",
+  "NotebookPen",
+  "Languages",
+  "Code",
+  "Laptop",
+  "Calculator",
+  "Briefcase",
+  "Wallet",
+  "PiggyBank",
+  "Camera",
+  "Palette",
+  "Guitar",
+  "Headphones",
+  "Film",
+  "Gamepad2",
+  "Sprout",
+  "Flower2",
+  "TreePine",
+  "MountainSnow",
+  "Sunrise",
+  "Sunset",
+  "CloudRain",
+  "Wind",
+  "Dog",
+  "Recycle",
+  "Shirt",
+  "Scissors",
+  "Glasses",
+  "Feather",
+  "Mic",
   // Loop 2.1: coding / languages and things people try to cut down on
-  "Terminal", "Globe", "Smartphone", "BedDouble", "EyeOff", "UtensilsCrossed",
-  "Hamburger", "Pizza", "Sandwich", "Candy", "Lollipop", "Donut", "IceCreamCone",
-  "Beer", "Wine", "Martini", "Cigarette", "Dice5", "Coins", "ShoppingCart",
-  "ShoppingBag", "CreditCard", "Tv", "Popcorn", "AlarmClockOff", "Hourglass",
-  "MessageCircleX", "Ban",
+  "Terminal",
+  "Globe",
+  "Smartphone",
+  "BedDouble",
+  "EyeOff",
+  "UtensilsCrossed",
+  "Hamburger",
+  "Pizza",
+  "Sandwich",
+  "Candy",
+  "Lollipop",
+  "Donut",
+  "IceCreamCone",
+  "Beer",
+  "Wine",
+  "Martini",
+  "Cigarette",
+  "Dice5",
+  "Coins",
+  "ShoppingCart",
+  "ShoppingBag",
+  "CreditCard",
+  "Tv",
+  "Popcorn",
+  "AlarmClockOff",
+  "Hourglass",
+  "MessageCircleX",
+  "Ban",
 ];
 
 const SRC = "node_modules/lucide-react/dist/esm/icons";
@@ -32,7 +115,10 @@ const OUT = "android/app/src/main/res/drawable";
 // lucide source files: dash before an uppercase AND before a trailing digit
 // (e.g. Gamepad2 -> gamepad-2.js, Flower2 -> flower-2.js).
 const pascalToKebab = (s) =>
-  s.replace(/([a-z0-9])([A-Z])/g, "$1-$2").replace(/([a-zA-Z])([0-9])/g, "$1-$2").toLowerCase();
+  s
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replace(/([a-zA-Z])([0-9])/g, "$1-$2")
+    .toLowerCase();
 // output drawable name must match WidgetShared.pascalToSnake (no separator
 // before digits): Gamepad2 -> gamepad2, HeartPulse -> heart_pulse.
 const pascalToSnake = (s) => s.replace(/([a-zA-Z0-9])([A-Z])/g, "$1_$2").toLowerCase();
@@ -53,7 +139,10 @@ function nodeToPath([type, a]) {
       return `M${num(cx - rx)} ${cy}a${rx} ${ry} 0 1 0 ${num(2 * rx)} 0a${rx} ${ry} 0 1 0 ${num(-2 * rx)} 0`;
     }
     case "rect": {
-      const x = +a.x, y = +a.y, w = +a.width, h = +a.height;
+      const x = +a.x,
+        y = +a.y,
+        w = +a.width,
+        h = +a.height;
       const rx = a.rx != null ? +a.rx : 0;
       const ry = a.ry != null ? +a.ry : rx;
       if (!rx && !ry) return `M${x} ${y}h${w}v${h}h${-w}Z`;
@@ -62,7 +151,13 @@ function nodeToPath([type, a]) {
     case "polyline":
     case "polygon": {
       const pts = a.points.trim().split(/\s+/);
-      let d = "M" + pts[0] + pts.slice(1).map((p) => "L" + p).join("");
+      let d =
+        "M" +
+        pts[0] +
+        pts
+          .slice(1)
+          .map((p) => "L" + p)
+          .join("");
       if (type === "polygon") d += "Z";
       return d;
     }

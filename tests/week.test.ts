@@ -12,7 +12,14 @@ describe("weeklyReport compares only up to the same point of the week", () => {
     const completions = [
       entry(water, addDays(now, -9), { amount: 8 }), // last Mon
       entry(water, addDays(now, -8), { amount: 8 }), // last Tue
-      entry(water, lastWed, { amount: 8, log: [[600, 3], [900, 6], [1200, 8]] }), // 6 by 15:40
+      entry(water, lastWed, {
+        amount: 8,
+        log: [
+          [600, 3],
+          [900, 6],
+          [1200, 8],
+        ],
+      }), // 6 by 15:40
       entry(water, addDays(now, -6), { amount: 8 }), // last Thu - outside the window
       entry(water, addDays(now, -5), { amount: 8 }), // last Fri - outside the window
     ];

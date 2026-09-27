@@ -6,12 +6,40 @@ import { todayKey } from "@/lib/habits/utils";
 import { entry, habit } from "./helpers";
 
 const today = new Date();
-const water = habit({ name: "Picie wody", icon: "GlassWater", color: "sky", goal: { type: "count", target: 8, step: 1, unit: "szklanek" } }, 10, today);
-const food = habit({ name: "Fast food", icon: "Hamburger", kind: "avoid", limit: { times: 1, period: "week" } }, 10, today);
-const bed = habit({ name: "Scrollowanie w łóżku", icon: "Smartphone", kind: "avoid", source: "screen", lateAfter: "00:00" }, 10, today);
+const water = habit(
+  {
+    name: "Picie wody",
+    icon: "GlassWater",
+    color: "sky",
+    goal: { type: "count", target: 8, step: 1, unit: "szklanek" },
+  },
+  10,
+  today,
+);
+const food = habit(
+  { name: "Fast food", icon: "Hamburger", kind: "avoid", limit: { times: 1, period: "week" } },
+  10,
+  today,
+);
+const bed = habit(
+  {
+    name: "Scrollowanie w łóżku",
+    icon: "Smartphone",
+    kind: "avoid",
+    source: "screen",
+    lateAfter: "00:00",
+  },
+  10,
+  today,
+);
 
 beforeEach(() => {
-  useHabits.setState({ habits: [water, food, bed], completions: [entry(water, today, { amount: 3 })], seeded: true, userName: "Ola" });
+  useHabits.setState({
+    habits: [water, food, bed],
+    completions: [entry(water, today, { amount: 3 })],
+    seeded: true,
+    userName: "Ola",
+  });
 });
 
 describe("widget snapshot (read by widgets + notifications)", () => {
@@ -20,13 +48,26 @@ describe("widget snapshot (read by widgets + notifications)", () => {
     expect(s.v).toBe(2);
     expect(s.date).toBe(todayKey(today));
     const w = s.habits.find((r) => r.id === water.id)!;
-    expect(w).toMatchObject({ kind: "build", goal: "count", amount: 3, target: 8, step: 1, done: false, units: 8 });
+    expect(w).toMatchObject({
+      kind: "build",
+      goal: "count",
+      amount: 3,
+      target: 8,
+      step: 1,
+      done: false,
+      units: 8,
+    });
     expect(w.unitForms).toEqual(["szklanka", "szklanki", "szklanek"]);
     expect(w.nag.length).toBeGreaterThan(5);
     expect(w.nag.join(" ")).not.toContain("{name}"); // resolved; amounts stay as {done}/{left}
     const f = s.habits.find((r) => r.id === food.id)!;
     // 10 unconfirmed days = slips: allowance used up, and Szpila remembers it
-    expect(f).toMatchObject({ kind: "avoid", colorHex: AVOID_HEX, status: "pending", slipsLeft: 0 });
+    expect(f).toMatchObject({
+      kind: "avoid",
+      colorHex: AVOID_HEX,
+      status: "pending",
+      slipsLeft: 0,
+    });
     expect(f.memory.join(" ")).toMatch(/wpadek z „Fast food”/);
     const b = s.habits.find((r) => r.id === bed.id)!;
     expect(b).toMatchObject({ source: "screen", lateAfter: 0, lateLimit: 15 });
@@ -34,7 +75,12 @@ describe("widget snapshot (read by widgets + notifications)", () => {
 
   test("settings are passed in minutes", () => {
     const s = buildState();
-    expect(s.settings).toMatchObject({ quietFrom: 22 * 60, quietTo: 9 * 60, reviewAt: 21 * 60 + 30, taunts: true });
+    expect(s.settings).toMatchObject({
+      quietFrom: 22 * 60,
+      quietTo: 9 * 60,
+      reviewAt: 21 * 60 + 30,
+      taunts: true,
+    });
   });
 
   test("yesterday's open forbidden habits (morning review) exclude screen-judged ones", () => {
@@ -67,6 +113,8 @@ describe("ops from widgets and notifications", () => {
     const y = todayKey(addDays(today, -1));
     useHabits.getState().setAvoid(bed.id, y, "clean"); // answered by hand
     applyPendingOps([{ habitId: bed.id, date: y, status: "slip", auto: true }]);
-    expect(useHabits.getState().completions.find((x) => x.habitId === bed.id && x.date === y)!.slipped).toBeUndefined();
+    expect(
+      useHabits.getState().completions.find((x) => x.habitId === bed.id && x.date === y)!.slipped,
+    ).toBeUndefined();
   });
 });

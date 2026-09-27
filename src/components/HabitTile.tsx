@@ -113,15 +113,15 @@ export function HabitTile({ habit, compact = false }: Props) {
     ? status === "clean"
       ? "Dziś czysto ✓"
       : status === "slip"
-      ? "Wpadka ✗"
-      : habit.source === "screen"
-      ? "📱 czeka na noc"
-      : "Przytrzymaj = dziś czysto"
+        ? "Wpadka ✗"
+        : habit.source === "screen"
+          ? "📱 czeka na noc"
+          : "Przytrzymaj = dziś czysto"
     : g.type !== "check"
-    ? amountText(habit, amount)
-    : streak > 0
-    ? `🔥 ${daysLabel(streak)}`
-    : "Przytrzymaj, by zaliczyć";
+      ? amountText(habit, amount)
+      : streak > 0
+        ? `🔥 ${daysLabel(streak)}`
+        : "Przytrzymaj, by zaliczyć";
 
   return (
     <div
@@ -144,7 +144,9 @@ export function HabitTile({ habit, compact = false }: Props) {
             cx={size / 2}
             cy={size / 2}
             r={r}
-            stroke={avoid ? `color-mix(in oklab, ${AVOID_COLOR} 30%, transparent)` : "var(--border)"}
+            stroke={
+              avoid ? `color-mix(in oklab, ${AVOID_COLOR} 30%, transparent)` : "var(--border)"
+            }
             strokeWidth={stroke}
             strokeDasharray={avoid && status === "pending" ? "4 6" : undefined}
             fill="none"
@@ -168,8 +170,8 @@ export function HabitTile({ habit, compact = false }: Props) {
             backgroundColor: done
               ? `color-mix(in oklab, ${color} 22%, transparent)`
               : avoid
-              ? `color-mix(in oklab, ${AVOID_COLOR} 8%, var(--card))`
-              : "var(--card)",
+                ? `color-mix(in oklab, ${AVOID_COLOR} 8%, var(--card))`
+                : "var(--card)",
           }}
           className="grid place-items-center rounded-full"
           style={{ width: size - stroke * 2 - 6, height: size - stroke * 2 - 6 }}
@@ -211,11 +213,15 @@ export function HabitTile({ habit, compact = false }: Props) {
       </motion.div>
 
       <div className="text-center">
-        <div className={`font-medium leading-tight ${compact ? "text-xs" : "text-sm"}`}>{habit.name}</div>
+        <div className={`font-medium leading-tight ${compact ? "text-xs" : "text-sm"}`}>
+          {habit.name}
+        </div>
         {!compact && (
           <div
             className="mt-0.5 text-xs"
-            style={{ color: avoid && status === "pending" ? AVOID_COLOR : "var(--muted-foreground)" }}
+            style={{
+              color: avoid && status === "pending" ? AVOID_COLOR : "var(--muted-foreground)",
+            }}
           >
             {sub}
           </div>

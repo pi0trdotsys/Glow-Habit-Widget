@@ -4,7 +4,10 @@ import { SOCIAL_APPS, inLiveWindow, liveLines, liveState } from "@/lib/live";
 import { useHabits } from "@/lib/habits/store";
 import { buildState } from "@/lib/widget/bridge";
 
-const JAVA = readFileSync("android/app/src/main/java/app/lovable/glow_habit_widget/LiveGuard.java", "utf8");
+const JAVA = readFileSync(
+  "android/app/src/main/java/app/lovable/glow_habit_widget/LiveGuard.java",
+  "utf8",
+);
 const MANIFEST = readFileSync("android/app/src/main/AndroidManifest.xml", "utf8");
 
 describe("night guard (Szpila na żywo)", () => {
@@ -27,15 +30,25 @@ describe("night guard (Szpila na żywo)", () => {
       // escalation lines talk about the minutes spent
       expect(lines.escalate.every((l) => l.includes("{m}"))).toBe(true);
       // only known placeholders survive (resolved natively)
-      for (const pool of Object.values(lines)) for (const l of pool) expect(l.replace(/\{(app|time|m|count)\}/g, "")).not.toMatch(/\{\w+\}/);
+      for (const pool of Object.values(lines))
+        for (const l of pool)
+          expect(l.replace(/\{(app|time|m|count)\}/g, "")).not.toMatch(/\{\w+\}/);
     }
     expect(liveLines("hard", "Piotr").generic.some((l) => l.includes("Piotr"))).toBe(true);
   });
 
   test("hard lines swear, soft ones don't", () => {
     const swear = /kurw|pierdol|jeb|gówn|wyrucha/i;
-    expect(Object.values(liveLines("hard", null)).flat().some((l) => swear.test(l))).toBe(true);
-    expect(Object.values(liveLines("soft", null)).flat().some((l) => swear.test(l))).toBe(false);
+    expect(
+      Object.values(liveLines("hard", null))
+        .flat()
+        .some((l) => swear.test(l)),
+    ).toBe(true);
+    expect(
+      Object.values(liveLines("soft", null))
+        .flat()
+        .some((l) => swear.test(l)),
+    ).toBe(false);
   });
 
   test("humor adds its own night lines", () => {
@@ -47,7 +60,13 @@ describe("night guard (Szpila na żywo)", () => {
 
   test("the snapshot carries live settings for the native guard", () => {
     const s = useHabits.getState();
-    s.setNotifications({ ...s.notifications, live: true, liveFrom: "00:30", liveUntil: "04:00", liveOff: ["com.reddit.frontpage"] });
+    s.setNotifications({
+      ...s.notifications,
+      live: true,
+      liveFrom: "00:30",
+      liveUntil: "04:00",
+      liveOff: ["com.reddit.frontpage"],
+    });
     const st = buildState();
     expect(st.live.enabled).toBe(true);
     expect(st.live.from).toBe(30);

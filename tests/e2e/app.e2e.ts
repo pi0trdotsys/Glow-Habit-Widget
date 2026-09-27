@@ -8,7 +8,13 @@ now.setHours(14, 35, 0, 0);
 const key = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const created = new Date(now.getTime() - 20 * day).toISOString();
-const H = (id: string, p: object) => ({ id, createdAt: created, schedule: { type: "daily" }, color: "mint", ...p });
+const H = (id: string, p: object) => ({
+  id,
+  createdAt: created,
+  schedule: { type: "daily" },
+  color: "mint",
+  ...p,
+});
 
 const state = {
   state: {
@@ -16,10 +22,29 @@ const state = {
     userName: "Test",
     autoBackup: true,
     habits: [
-      H("water", { name: "Picie wody", icon: "GlassWater", goal: { type: "count", target: 8, step: 1, unit: "szklanek" } }),
-      H("read", { name: "Czytanie książki", icon: "BookOpen", goal: { type: "minutes", target: 20, step: 10 } }),
-      H("food", { name: "Fast food", icon: "Hamburger", kind: "avoid", limit: { times: 1, period: "week" } }),
-      H("bed", { name: "Scrollowanie w łóżku", icon: "Smartphone", kind: "avoid", source: "screen", lateAfter: "00:00" }),
+      H("water", {
+        name: "Picie wody",
+        icon: "GlassWater",
+        goal: { type: "count", target: 8, step: 1, unit: "szklanek" },
+      }),
+      H("read", {
+        name: "Czytanie książki",
+        icon: "BookOpen",
+        goal: { type: "minutes", target: 20, step: 10 },
+      }),
+      H("food", {
+        name: "Fast food",
+        icon: "Hamburger",
+        kind: "avoid",
+        limit: { times: 1, period: "week" },
+      }),
+      H("bed", {
+        name: "Scrollowanie w łóżku",
+        icon: "Smartphone",
+        kind: "avoid",
+        source: "screen",
+        lateAfter: "00:00",
+      }),
     ],
     // Last night's bill (normally synced from the phone's usage stats).
     nightReports: {
@@ -36,11 +61,13 @@ const state = {
     completions: [
       { habitId: "water", date: key(now), amount: 2, log: [[600, 2]] },
       // 8 perfect days before today -> an 8-day forma streak (unlocks Kujon, Diabeł, Trener)
-      ...Array.from({ length: 8 }, (_, i) => key(new Date(now.getTime() - (i + 1) * day))).flatMap((d) => [
-        { habitId: "water", date: d, amount: 8 },
-        { habitId: "read", date: d, amount: 20 },
-        { habitId: "food", date: d },
-      ]),
+      ...Array.from({ length: 8 }, (_, i) => key(new Date(now.getTime() - (i + 1) * day))).flatMap(
+        (d) => [
+          { habitId: "water", date: d, amount: 8 },
+          { habitId: "read", date: d, amount: 20 },
+          { habitId: "food", date: d },
+        ],
+      ),
     ],
   },
   version: 3,
@@ -81,40 +108,60 @@ await check("Today shows greeting, progress ring and the 'Teraz' card", async ()
 });
 
 await check("screen-judged 'Scrollowanie w łóżku' is neither ticked nor missed (📱)", async () => {
-  const chip = await page.eval<string>(`(${byText("button", "Scrollowanie w łóżku")})?.textContent ?? ""`);
+  const chip = await page.eval<string>(
+    `(${byText("button", "Scrollowanie w łóżku")})?.textContent ?? ""`,
+  );
   assert(chip.includes("📱"), `chip says: ${chip}`);
-  const counter = await page.eval<string>(`document.body.innerText.match(/\\d+\\/\\d+ zrobione/)?.[0] ?? ""`);
+  const counter = await page.eval<string>(
+    `document.body.innerText.match(/\\d+\\/\\d+ zrobione/)?.[0] ?? ""`,
+  );
   assert(counter.endsWith("/3 zrobione"), `undecided night must not count: ${counter}`);
 });
 
 await check("forbidden chip opens a bottom sheet; 'Czysto' ticks it", async () => {
   await page.eval(`(${byText("button", "Fast food")}).click()`);
   await page.waitFor(`!!(${byText("button", "Czysto")})`);
-  await page.eval(`[...document.querySelectorAll("button")].find(e => e.textContent.trim().endsWith("Czysto")).click()`);
+  await page.eval(
+    `[...document.querySelectorAll("button")].find(e => e.textContent.trim().endsWith("Czysto")).click()`,
+  );
   await page.waitFor(`(${byText("button", "Fast food")}).textContent.includes("✓")`);
 });
 
 /** Drag the first live toast horizontally by dx px with the mouse (fires pointer events). */
 async function swipeToast(dx: number): Promise<void> {
-  await page.waitFor(`document.querySelectorAll("[data-sonner-toast]:not([data-removed='true'])").length > 0`);
+  await page.waitFor(
+    `document.querySelectorAll("[data-sonner-toast]:not([data-removed='true'])").length > 0`,
+  );
   const box = await page.eval<{ x: number; y: number }>(
     `(() => { const r = document.querySelector("[data-sonner-toast]:not([data-removed='true'])").getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })()`,
   );
   const mouse = (type: string, x: number) =>
-    page.send("Input.dispatchMouseEvent", { type, x, y: box.y, button: "left", buttons: type === "mouseReleased" ? 0 : 1, clickCount: 1 });
+    page.send("Input.dispatchMouseEvent", {
+      type,
+      x,
+      y: box.y,
+      button: "left",
+      buttons: type === "mouseReleased" ? 0 : 1,
+      clickCount: 1,
+    });
   await mouse("mousePressed", box.x);
   for (let step = 1; step <= 15; step++) {
     await mouse("mouseMoved", box.x + (dx * step) / 15);
     await sleep(8);
   }
   await mouse("mouseReleased", box.x + dx);
-  await page.waitFor(`document.querySelectorAll("[data-sonner-toast]:not([data-removed='true'])").length === 0`, 2000);
+  await page.waitFor(
+    `document.querySelectorAll("[data-sonner-toast]:not([data-removed='true'])").length === 0`,
+    2000,
+  );
 }
 
 async function answerChip(answer: "Czysto" | "Wpadka"): Promise<void> {
   await page.eval(`(${byText("button", "Fast food")}).click()`);
   await page.waitFor(`!!(${byText("button", answer)})`);
-  await page.eval(`[...document.querySelectorAll("button")].find(e => e.textContent.trim().endsWith(${JSON.stringify(answer)})).click()`);
+  await page.eval(
+    `[...document.querySelectorAll("button")].find(e => e.textContent.trim().endsWith(${JSON.stringify(answer)})).click()`,
+  );
 }
 
 await check("a completion toast can be swiped away to the left", async () => {
@@ -130,12 +177,19 @@ await check("toasts also have a close button and never stack above 2", async () 
   for (const answer of ["Wpadka", "Czysto", "Wpadka", "Czysto"]) {
     await page.eval(`(${byText("button", "Fast food")}).click()`);
     await page.waitFor(`!!(${byText("button", answer)})`);
-    await page.eval(`[...document.querySelectorAll("button")].find(e => e.textContent.trim().endsWith(${JSON.stringify(answer)})).click()`);
+    await page.eval(
+      `[...document.querySelectorAll("button")].find(e => e.textContent.trim().endsWith(${JSON.stringify(answer)})).click()`,
+    );
     await sleep(150);
   }
-  const visible = await page.eval<number>(`document.querySelectorAll("[data-sonner-toast][data-visible='true']").length`);
+  const visible = await page.eval<number>(
+    `document.querySelectorAll("[data-sonner-toast][data-visible='true']").length`,
+  );
   assert(visible <= 2, `${visible} toasts visible`);
-  assert(await page.eval<boolean>(`!!document.querySelector("[data-sonner-toast] [data-close-button]")`), "no close button");
+  assert(
+    await page.eval<boolean>(`!!document.querySelector("[data-sonner-toast] [data-close-button]")`),
+    "no close button",
+  );
 });
 
 await check("system back closes the open sheet first (window.__loopBack)", async () => {
@@ -148,7 +202,9 @@ await check("system back closes the open sheet first (window.__loopBack)", async
 
 await check("day plan folds open and back closes it", async () => {
   await page.eval(`(${byText("button", "Plan dnia")}).click()`);
-  await page.waitFor(`document.body.innerText.includes("Czytanie książki") && !!document.querySelector("ul.divide-y")`);
+  await page.waitFor(
+    `document.body.innerText.includes("Czytanie książki") && !!document.querySelector("ul.divide-y")`,
+  );
   assert(await page.eval<boolean>("window.__loopBack()"), "plan not closed by back");
 });
 
@@ -166,26 +222,42 @@ await check("Szpila tab: forma streak, 3 weekly challenges, unlocked faces", asy
   await page.waitFor(`/wyzwania tygodnia/i.test(document.body.innerText)`);
   const text = await page.eval<string>("document.body.innerText");
   assert(/\b8\s*dni w formie z rzędu/.test(text), `streak of 8 not shown: ${text.slice(0, 400)}`);
-  const challenges = await page.eval<number>(`document.querySelectorAll("[data-challenge]").length`);
+  const challenges = await page.eval<number>(
+    `document.querySelectorAll("[data-challenge]").length`,
+  );
   assert(challenges === 3, `${challenges} challenges`);
-  assert(await page.eval<boolean>(`!!document.querySelector('[aria-label="Mina Diabeł"]')`), "Diabeł should be unlocked");
-  assert(await page.eval<boolean>(`!!document.querySelector('[aria-label="Mina Król (zablokowana)"]')`), "Król should be locked");
+  assert(
+    await page.eval<boolean>(`!!document.querySelector('[aria-label="Mina Diabeł"]')`),
+    "Diabeł should be unlocked",
+  );
+  assert(
+    await page.eval<boolean>(`!!document.querySelector('[aria-label="Mina Król (zablokowana)"]')`),
+    "Król should be locked",
+  );
   // "kot w domu": an 8-day forma streak = groomed
-  const cond = await page.eval<string>(`document.querySelector("[data-condition]")?.dataset.condition ?? ""`);
+  const cond = await page.eval<string>(
+    `document.querySelector("[data-condition]")?.dataset.condition ?? ""`,
+  );
   assert(cond === "groomed", `cat condition: ${cond}`);
   assert(/zadbany i zadowolony/.test(text), "condition label missing");
 });
 
 await check("picking an unlocked face saves it; a locked one only explains why", async () => {
   await page.eval(`document.querySelector('[aria-label="Mina Diabeł"]').click()`);
-  await page.waitFor(`JSON.parse(localStorage.getItem("loop-habits-v1")).state.szpila.face === "diabel"`);
+  await page.waitFor(
+    `JSON.parse(localStorage.getItem("loop-habits-v1")).state.szpila.face === "diabel"`,
+  );
   await page.eval(`document.querySelector('[aria-label="Mina Król (zablokowana)"]').click()`);
   await page.waitFor(`document.body.innerText.includes("Potrzebujesz 14 dni formy")`);
-  const face = await page.eval<string>(`JSON.parse(localStorage.getItem("loop-habits-v1")).state.szpila.face`);
+  const face = await page.eval<string>(
+    `JSON.parse(localStorage.getItem("loop-habits-v1")).state.szpila.face`,
+  );
   assert(face === "diabel", `face changed to ${face}`);
   // the chosen humor: Trener is unlocked at 5 days
   await page.eval(`(${byText("button", "Drze się jak na siłowni")}).click()`);
-  await page.waitFor(`JSON.parse(localStorage.getItem("loop-habits-v1")).state.szpila.humor === "trener"`);
+  await page.waitFor(
+    `JSON.parse(localStorage.getItem("loop-habits-v1")).state.szpila.humor === "trener"`,
+  );
 });
 
 await check("Raport: 90-day trend and month comparison tabs", async () => {
@@ -193,12 +265,17 @@ await check("Raport: 90-day trend and month comparison tabs", async () => {
   await page.waitFor(`location.pathname === "/report"`);
   await page.eval(`(${byText("button", "90 dni")}).click()`);
   await page.waitFor(`!!document.querySelector('svg[aria-label="Trend z 90 dni"]')`);
-  const bars = await page.eval<number>(`document.querySelectorAll('svg[aria-label="Trend z 90 dni"] rect').length`);
+  const bars = await page.eval<number>(
+    `document.querySelectorAll('svg[aria-label="Trend z 90 dni"] rect').length`,
+  );
   assert(bars >= 9, `only ${bars} day bars`);
   // last nights from the night bill
   await page.waitFor(`!!document.querySelector("[data-night-list]")`);
   const nights = await page.eval<string>(`document.querySelector("[data-night-list]").innerText`);
-  assert(nights.includes("3× Instagram · 22 min") && nights.includes("01:40"), `night list: ${nights}`);
+  assert(
+    nights.includes("3× Instagram · 22 min") && nights.includes("01:40"),
+    `night list: ${nights}`,
+  );
   await page.eval(`(${byText("button", "Miesiące")}).click()`);
   await page.waitFor(`document.body.innerText.includes("Miesiąc do miesiąca")`);
   const months = await page.eval<number>(`document.querySelectorAll("[data-month]").length`);
@@ -206,11 +283,15 @@ await check("Raport: 90-day trend and month comparison tabs", async () => {
 });
 
 await check("CSV export produces a file (web: download + toast)", async () => {
-  await page.eval(`window.__csv = null; const o = URL.createObjectURL; URL.createObjectURL = (b) => { window.__csv = b; return o(b); }`);
+  await page.eval(
+    `window.__csv = null; const o = URL.createObjectURL; URL.createObjectURL = (b) => { window.__csv = b; return o(b); }`,
+  );
   await page.eval(`(${byText("button", "Eksport CSV")}).click()`);
   await page.waitFor(`!!window.__csv`);
   // Blob.text() strips the BOM - check the raw bytes for it (Excel needs it for Polish letters)
-  const bom = await page.eval<number[]>(`window.__csv.arrayBuffer().then((b) => [...new Uint8Array(b).slice(0, 3)])`);
+  const bom = await page.eval<number[]>(
+    `window.__csv.arrayBuffer().then((b) => [...new Uint8Array(b).slice(0, 3)])`,
+  );
   assert(bom.join() === "239,187,191", `no UTF-8 BOM: ${bom}`);
   const csv = await page.eval<string>(`window.__csv.text()`);
   assert(csv.startsWith("data;zadanie;rodzaj"), "bad CSV header");

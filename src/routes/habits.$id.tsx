@@ -75,7 +75,8 @@ function HabitDetail() {
   const rate = completionRate(habit, completions, 30);
   const todayK = todayKey();
   const g = goalOf(habit);
-  const usual = kindOf(habit) === "build" && habit.source !== "steps" ? usualMinute(habit, completions) : null;
+  const usual =
+    kindOf(habit) === "build" && habit.source !== "steps" ? usualMinute(habit, completions) : null;
 
   const tapCell = (d: (typeof heat)[number]) => {
     if (avoid) setAvoid(habit.id, d.date, d.status === "clean" ? "slip" : "clean");
@@ -123,7 +124,12 @@ function HabitDetail() {
             boxShadow: `0 0 0 2px ${color}`,
           }}
         >
-          <HabitIcon name={habit.icon} size={44} strokeWidth={1.8} style={avoid ? { color } : undefined} />
+          <HabitIcon
+            name={habit.icon}
+            size={44}
+            strokeWidth={1.8}
+            style={avoid ? { color } : undefined}
+          />
         </div>
         <h1 className="text-center font-display text-3xl font-bold">{habit.name}</h1>
         <p className="text-xs text-muted-foreground">
@@ -150,14 +156,26 @@ function HabitDetail() {
         {avoid ? (
           <AvoidCard habit={habit} />
         ) : g.type !== "check" ? (
-          <AmountEditor habit={habit} amount={amountOn(habit, completions, new Date())} color={color} />
+          <AmountEditor
+            habit={habit}
+            amount={amountOn(habit, completions, new Date())}
+            color={color}
+          />
         ) : null}
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-3 px-5">
-        <Stat label={avoid ? "Seria czystych dni" : "Obecna seria"} value={`${streak} d`} accent={color} />
+        <Stat
+          label={avoid ? "Seria czystych dni" : "Obecna seria"}
+          value={`${streak} d`}
+          accent={color}
+        />
         <Stat label="Najdłuższa seria" value={`${longest} d`} accent={color} />
-        <Stat label={avoid ? "Czyste dni w tyg." : "Zaliczone w tyg."} value={`${week}`} accent={color} />
+        <Stat
+          label={avoid ? "Czyste dni w tyg." : "Zaliczone w tyg."}
+          value={`${week}`}
+          accent={color}
+        />
         <Stat label="Skuteczność 30 dni" value={`${rate}%`} accent={color} />
       </div>
 
@@ -165,19 +183,22 @@ function HabitDetail() {
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           Ostatnie 12 tygodni · dotknij, by zmienić
         </h2>
-        <div className="grid grid-flow-col gap-1 rounded-2xl bg-card p-3" style={{ gridTemplateRows: "repeat(7, 1fr)" }}>
+        <div
+          className="grid grid-flow-col gap-1 rounded-2xl bg-card p-3"
+          style={{ gridTemplateRows: "repeat(7, 1fr)" }}
+        >
           {heat.map((d) => {
             const bg = avoid
               ? d.status === "clean"
                 ? color
                 : d.status === "slip"
-                ? d.level >= 1
-                  ? `color-mix(in oklab, ${color} 35%, transparent)` // slip within allowance
-                  : "color-mix(in oklab, var(--foreground) 30%, transparent)"
-                : "color-mix(in oklab, var(--foreground) 6%, transparent)"
+                  ? d.level >= 1
+                    ? `color-mix(in oklab, ${color} 35%, transparent)` // slip within allowance
+                    : "color-mix(in oklab, var(--foreground) 30%, transparent)"
+                  : "color-mix(in oklab, var(--foreground) 6%, transparent)"
               : d.level > 0
-              ? `color-mix(in oklab, ${color} ${Math.round(25 + d.level * 75)}%, transparent)`
-              : "color-mix(in oklab, var(--foreground) 6%, transparent)";
+                ? `color-mix(in oklab, ${color} ${Math.round(25 + d.level * 75)}%, transparent)`
+                : "color-mix(in oklab, var(--foreground) 6%, transparent)";
             return (
               <button
                 key={d.date}
@@ -255,7 +276,10 @@ function AmountEditor({ habit, amount, color }: { habit: Habit; amount: number; 
         </button>
       </div>
       <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-background">
-        <div className="h-full rounded-full transition-[width]" style={{ width: `${pct}%`, backgroundColor: color }} />
+        <div
+          className="h-full rounded-full transition-[width]"
+          style={{ width: `${pct}%`, backgroundColor: color }}
+        />
       </div>
     </div>
   );

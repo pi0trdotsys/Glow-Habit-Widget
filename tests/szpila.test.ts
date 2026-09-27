@@ -70,15 +70,22 @@ describe("tone and form", () => {
   test("soft level never swears", () => {
     for (const [name, kind] of CATEGORIES) {
       const h = habit({ name, kind, icon: "Star" });
-      for (const l of [...nagLines(h, "soft", null), ...rageLines(h, "soft", null)]) expect(l).not.toMatch(SWEAR);
+      for (const l of [...nagLines(h, "soft", null), ...rageLines(h, "soft", null)])
+        expect(l).not.toMatch(SWEAR);
     }
-    for (const l of [...allDoneLines("soft"), ...eveningLines("soft"), ...caughtLines("soft")]) expect(l).not.toMatch(SWEAR);
+    for (const l of [...allDoneLines("soft"), ...eveningLines("soft"), ...caughtLines("soft")])
+      expect(l).not.toMatch(SWEAR);
   });
 
   test("hard level has plenty to say", () => {
-    const water = habit({ name: "Picie wody", goal: { type: "count", target: 8, step: 1, unit: "szklanek" } });
+    const water = habit({
+      name: "Picie wody",
+      goal: { type: "count", target: 8, step: 1, unit: "szklanek" },
+    });
     expect(nagLines(water, "hard", null).length).toBeGreaterThanOrEqual(25);
-    expect(nagLines(water, "hard", null).filter((l) => SWEAR.test(l)).length).toBeGreaterThanOrEqual(10);
+    expect(
+      nagLines(water, "hard", null).filter((l) => SWEAR.test(l)).length,
+    ).toBeGreaterThanOrEqual(10);
   });
 
   test("no gendered past tense about the user anywhere (works for everyone)", () => {
@@ -87,7 +94,9 @@ describe("tone and form", () => {
     );
     // "zrobiłeś / zrobiłaś / byłeś / byłaś" style forms inside string literals
     // Unicode-aware word edges: JS \b doesn't know Polish letters ("właśnie" is not "...łaś").
-    const offenders = files.flatMap((src) => src.match(/"[^"\n]*(?<!\p{L})\p{L}+(łeś|łaś)(?!\p{L})[^"\n]*"/gu) ?? []);
+    const offenders = files.flatMap(
+      (src) => src.match(/"[^"\n]*(?<!\p{L})\p{L}+(łeś|łaś)(?!\p{L})[^"\n]*"/gu) ?? [],
+    );
     expect(offenders).toEqual([]);
   });
 
@@ -98,7 +107,11 @@ describe("tone and form", () => {
 
 describe("what Szpila says right now", () => {
   test("never leaks placeholders, escalates when overdue", () => {
-    const water = habit({ name: "Picie wody", goal: { type: "count", target: 8, step: 1, unit: "szklanek" } }, 30, WED_1540);
+    const water = habit(
+      { name: "Picie wody", goal: { type: "count", target: 8, step: 1, unit: "szklanek" } },
+      30,
+      WED_1540,
+    );
     const teeth = habit({ name: "Mycie zębów" }, 30, WED_1540);
     const plan = planDay([water, teeth], [], WED_1540);
     for (let seed = 0; seed < 40; seed++) {

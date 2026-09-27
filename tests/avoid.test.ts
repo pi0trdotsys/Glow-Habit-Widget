@@ -1,11 +1,22 @@
 import { describe, expect, test } from "bun:test";
 import { addDays } from "date-fns";
-import { avoidStatus, countsOn, dayScore, isDueOn, slipsInPeriod, todayProgress } from "@/lib/habits/utils";
+import {
+  avoidStatus,
+  countsOn,
+  dayScore,
+  isDueOn,
+  slipsInPeriod,
+  todayProgress,
+} from "@/lib/habits/utils";
 import { WED_1540, entry, habit } from "./helpers";
 
 describe("forbidden habits", () => {
   const now = WED_1540;
-  const ff = habit({ name: "Fast food", kind: "avoid", limit: { times: 1, period: "week" } }, 30, now);
+  const ff = habit(
+    { name: "Fast food", kind: "avoid", limit: { times: 1, period: "week" } },
+    30,
+    now,
+  );
 
   test("an unconfirmed past day is a slip, today stays pending", () => {
     expect(avoidStatus(ff, [], addDays(now, -1), now)).toBe("slip");
@@ -58,7 +69,10 @@ describe("when an unconfirmed day becomes a slip", () => {
 
   test("the creation day is never an automatic slip", () => {
     const created = new Date(2026, 8, 21, 22, 30); // Monday evening
-    const fresh = { ...habit({ name: "Fast food", kind: "avoid" }), createdAt: created.toISOString() };
+    const fresh = {
+      ...habit({ name: "Fast food", kind: "avoid" }),
+      createdAt: created.toISOString(),
+    };
     const later = new Date(2026, 8, 23, 15, 0);
     expect(avoidStatus(fresh, [], created, later)).toBe("pending");
     expect(avoidStatus(fresh, [], addDays(created, 1), later)).toBe("slip");
@@ -66,7 +80,10 @@ describe("when an unconfirmed day becomes a slip", () => {
 
   test("the creation day uses the local date, not UTC", () => {
     const justAfterMidnight = new Date(2026, 8, 22, 0, 20); // UTC is still the 21st
-    const h = { ...habit({ name: "Słodycze", kind: "avoid" }), createdAt: justAfterMidnight.toISOString() };
+    const h = {
+      ...habit({ name: "Słodycze", kind: "avoid" }),
+      createdAt: justAfterMidnight.toISOString(),
+    };
     expect(isDueOn(h, addDays(justAfterMidnight, -1))).toBe(false);
     expect(isDueOn(h, justAfterMidnight)).toBe(true);
   });

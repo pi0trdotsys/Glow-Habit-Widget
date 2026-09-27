@@ -33,7 +33,10 @@ export function AvoidCard({ habit }: { habit: Habit }) {
     setAvoid(habit.id, key, "slip");
     const { notifications, userName } = useHabits.getState();
     toast(`${SZPILA_EMOJI.angry} ${slipFor(habit, notifications.tauntLevel, userName)}`, {
-      action: { label: "Cofnij", onClick: () => setAvoid(habit.id, key, prev === "clean" ? "clean" : null) },
+      action: {
+        label: "Cofnij",
+        onClick: () => setAvoid(habit.id, key, prev === "clean" ? "clean" : null),
+      },
     });
   };
 
@@ -53,7 +56,12 @@ export function AvoidCard({ habit }: { habit: Habit }) {
           style={{ backgroundColor: `color-mix(in oklab, ${AVOID_COLOR} 20%, transparent)` }}
         >
           <HabitIcon name={habit.icon} size={20} style={{ color: AVOID_COLOR }} />
-          <Ban size={14} className="absolute -right-0.5 -top-0.5" style={{ color: AVOID_COLOR }} strokeWidth={2.8} />
+          <Ban
+            size={14}
+            className="absolute -right-0.5 -top-0.5"
+            style={{ color: AVOID_COLOR }}
+            strokeWidth={2.8}
+          />
         </Link>
         <Link to="/habits/$id" params={{ id: habit.id }} className="min-w-0 flex-1">
           <div className="truncate font-medium">{habit.name}</div>
@@ -62,7 +70,12 @@ export function AvoidCard({ habit }: { habit: Habit }) {
             {limit.times > 0 && (
               <>
                 {" · "}
-                <span style={{ color: over ? AVOID_COLOR : undefined, fontWeight: over ? 600 : undefined }}>
+                <span
+                  style={{
+                    color: over ? AVOID_COLOR : undefined,
+                    fontWeight: over ? 600 : undefined,
+                  }}
+                >
                   wykorzystane {used}/{limit.times} {PERIOD_LABEL[limit.period]}
                 </span>
               </>
@@ -99,8 +112,8 @@ export function AvoidCard({ habit }: { habit: Habit }) {
       </div>
       {status === "pending" && habit.source === "screen" ? (
         <p className="mt-2 text-[11px] text-muted-foreground">
-          📱 Ocena automatyczna: po {habit.lateAfter ?? DEFAULT_LATE_AFTER} liczę czas ekranu (tolerancja{" "}
-          {habit.lateLimit ?? DEFAULT_LATE_LIMIT} min). Przyciski nadpisują ocenę.
+          📱 Ocena automatyczna: po {habit.lateAfter ?? DEFAULT_LATE_AFTER} liczę czas ekranu
+          (tolerancja {habit.lateLimit ?? DEFAULT_LATE_LIMIT} min). Przyciski nadpisują ocenę.
         </p>
       ) : status === "pending" ? (
         <p className="mt-2 text-[11px]" style={{ color: AVOID_COLOR }}>
