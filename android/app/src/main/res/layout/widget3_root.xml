@@ -1,13 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 1x1 "Następne zadanie": the planner's pick for right now. Tap the ring to
      log it (one step / confirm clean), tap the text to open the app. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- The background is an ImageView behind the content: its alpha is the per-widget
+     opacity (WidgetPrefs.applyOpacity, chosen in WidgetConfigActivity). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/widget_bg_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget2_bg"
+        android:contentDescription="@null" />
+
+<LinearLayout
     android:id="@+id/next_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:background="@drawable/widget2_bg"
     android:padding="6dp">
 
     <FrameLayout android:id="@+id/next_ring_box"
@@ -28,10 +41,12 @@
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:gravity="center" android:maxLines="1" android:ellipsize="end"
             android:text="Szpila" android:textColor="#f4f5f9" android:textSize="11sp"
-            android:textStyle="bold" />
+            android:textStyle="bold" style="@style/WidgetTextShadow" />
         <TextView android:id="@+id/next_sub"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:gravity="center" android:maxLines="1" android:ellipsize="end"
-            android:text="" android:textColor="#60e7b4" android:textSize="9sp" />
+            android:text="" android:textColor="#60e7b4" android:textSize="9sp"
+            style="@style/WidgetTextShadow" />
     </LinearLayout>
 </LinearLayout>
+</FrameLayout>

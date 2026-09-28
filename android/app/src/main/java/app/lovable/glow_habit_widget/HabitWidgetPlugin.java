@@ -23,6 +23,58 @@ import com.getcapacitor.annotation.CapacitorPlugin;
  */
 @CapacitorPlugin(name = "HabitWidget")
 public class HabitWidgetPlugin extends Plugin {
+    /**
+     * Haptic feedback for habit taps: { kind: "tick" | "success" | "celebrate" }.
+     * Uses the view's haptics (no VIBRATE permission, respects the system setting).
+     */
+    @PluginMethod
+    public void haptic(PluginCall call) {
+        String kind = call.getString("kind", "tick");
+        android.view.View v = getBridge().getWebView();
+        getActivity().runOnUiThread(() -> {
+            int c;
+            if ("success".equals(kind)) {
+                c = Build.VERSION.SDK_INT >= 30 ? android.view.HapticFeedbackConstants.CONFIRM
+                    : android.view.HapticFeedbackConstants.LONG_PRESS;
+            } else if ("celebrate".equals(kind)) {
+                c = android.view.HapticFeedbackConstants.LONG_PRESS;
+            } else {
+                c = android.view.HapticFeedbackConstants.CLOCK_TICK;
+            }
+            v.performHapticFeedback(c);
+            if ("celebrate".equals(kind)) {
+                v.postDelayed(() -> v.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS), 140);
+                v.postDelayed(() -> v.performHapticFeedback(Build.VERSION.SDK_INT >= 30
+                    ? android.view.HapticFeedbackConstants.CONFIRM : android.view.HapticFeedbackConstants.LONG_PRESS), 300);
+            }
+        });
+        call.resolve();
+    }
+
+    /** Light or dark system bar icons to match the app theme: { light: true } = dark icons on a light app. */
+    @PluginMethod
+    public void systemBars(PluginCall call) {
+        boolean light = Boolean.TRUE.equals(call.getBoolean("light", false));
+        String bg = call.getString("background", light ? "#f6f7fb" : "#0b0d11");
+        getActivity().runOnUiThread(() -> {
+            android.view.Window w = getActivity().getWindow();
+            androidx.core.view.WindowInsetsControllerCompat c =
+                androidx.core.view.WindowCompat.getInsetsController(w, w.getDecorView());
+            c.setAppearanceLightStatusBars(light);
+            c.setAppearanceLightNavigationBars(light);
+            try {
+                int color = android.graphics.Color.parseColor(bg);
+                w.getDecorView().setBackgroundColor(color);
+                if (Build.VERSION.SDK_INT < 35) {
+                    w.setStatusBarColor(color);
+                    w.setNavigationBarColor(color);
+                }
+            } catch (Exception ignored) {
+            }
+        });
+        call.resolve();
+    }
+
     @PluginMethod
     public void refresh(PluginCall call) {
         WidgetShared.updateAll(getContext());
@@ -116,6 +168,10 @@ public class HabitWidgetPlugin extends Plugin {
             ret.put("hits", new JSObject(LiveGuard.hits(getContext()).toString()));
             ret.put("blocks", new JSObject(LiveGuard.counts(getContext(), "blocks").toString()));
             ret.put("passes", new JSObject(LiveGuard.counts(getContext(), "passes").toString()));
+            // Daily limit: social media minutes per day (05:00-bedtime) and the guard phase now.
+            ret.put("day", new JSObject(DayGuard.history(getContext()).toString()));
+            ret.put("phase", new String[]{"off", "night", "morning", "day"}[DayGuard.phase(getContext())]);
+            ret.put("morningBlocks", new JSObject(LiveGuard.counts(getContext(), "morning_blocks").toString()));
         } catch (Exception e) {
             ret.put("hits", new JSObject());
         }

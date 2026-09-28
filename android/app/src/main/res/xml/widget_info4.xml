@@ -11,4 +11,6 @@
     android:previewLayout="@layout/widget4_root"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
+    android:configure="app.lovable.glow_habit_widget.WidgetConfigActivity"
+    android:widgetFeatures="reconfigurable"
     android:description="@string/widget_szpila_desc" />

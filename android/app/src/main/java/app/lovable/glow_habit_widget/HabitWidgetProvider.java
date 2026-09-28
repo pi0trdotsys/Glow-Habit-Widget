@@ -20,12 +20,45 @@ public class HabitWidgetProvider extends AppWidgetProvider {
         for (int id : ids) updateWidget(context, mgr, id);
     }
 
+    @Override
+    public void onDeleted(Context context, int[] ids) {
+        WidgetPrefs.delete(context, ids);
+    }
+
     static void updateWidget(Context context, AppWidgetManager mgr, int widgetId) {
         WidgetShared.normalizeIfStale(context);
+        RemoteViews rv = build(context, widgetId, WidgetPrefs.opacity(context, widgetId), false);
+        mgr.updateAppWidget(widgetId, rv);
+        mgr.notifyAppWidgetViewDataChanged(widgetId, R.id.widget_list);
+        // The host caches non-collection views on a full update that re-binds the
+        // adapter; a partial update reliably refreshes the header text.
+        RemoteViews head = new RemoteViews(context.getPackageName(), R.layout.widget_root);
+        head.setTextViewText(R.id.widget_title, headerTitle(context));
+        head.setTextViewText(R.id.widget_subtitle, headerSubtitle(context));
+        mgr.partiallyUpdateAppWidget(widgetId, head);
+    }
+
+    /**
+     * The widget's views. `preview` (WidgetConfigActivity) leaves out the list
+     * adapter - a RemoteViewsService can't be bound outside a widget host - and
+     * shows the first habit names in the empty view instead.
+     */
+    static RemoteViews build(Context context, int widgetId, int opacity, boolean preview) {
         RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget_root);
+        WidgetPrefs.applyOpacity(rv, opacity);
         rv.setTextViewText(R.id.widget_title, headerTitle(context));
         rv.setTextViewText(R.id.widget_subtitle, headerSubtitle(context));
         rv.setTextViewText(R.id.widget_empty, WidgetShared.tr(context, "Brak zadań na dziś", "No habits for today"));
+        if (preview) {
+            rv.setViewVisibility(R.id.widget_list, android.view.View.GONE);
+            String names = previewNames(context);
+            if (!names.isEmpty()) {
+                rv.setTextViewText(R.id.widget_empty, names);
+                rv.setTextColor(R.id.widget_empty, 0xFFF4F5F9);
+                rv.setInt(R.id.widget_empty, "setGravity", android.view.Gravity.START | android.view.Gravity.TOP);
+            }
+            return rv;
+        }
 
         Intent open = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
         if (open != null) {
@@ -47,15 +80,20 @@ public class HabitWidgetProvider extends AppWidgetProvider {
             context, 0, hold,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
         rv.setPendingIntentTemplate(R.id.widget_list, togglePi);
+        return rv;
+    }
 
-        mgr.updateAppWidget(widgetId, rv);
-        mgr.notifyAppWidgetViewDataChanged(widgetId, R.id.widget_list);
-        // The host caches non-collection views on a full update that re-binds the
-        // adapter; a partial update reliably refreshes the header text.
-        RemoteViews head = new RemoteViews(context.getPackageName(), R.layout.widget_root);
-        head.setTextViewText(R.id.widget_title, headerTitle(context));
-        head.setTextViewText(R.id.widget_subtitle, headerSubtitle(context));
-        mgr.partiallyUpdateAppWidget(widgetId, head);
+    /** "●  Woda\n✓  Czytanie" - up to four of today's rows for the config preview. */
+    private static String previewNames(Context context) {
+        org.json.JSONArray habits = WidgetShared.habits(context);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < Math.min(4, habits.length()); i++) {
+            org.json.JSONObject h = habits.optJSONObject(i);
+            if (h == null) continue;
+            if (sb.length() > 0) sb.append('\n');
+            sb.append(WidgetShared.isDone(h) ? "✓  " : "●  ").append(h.optString("name", ""));
+        }
+        return sb.toString();
     }
 
     private static String headerTitle(Context context) {

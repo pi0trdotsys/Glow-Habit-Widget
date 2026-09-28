@@ -105,7 +105,7 @@ export function WeekDayChart({ r }: { r: WeeklyReport }) {
         {r.days.map((d) => (
           <div
             key={d.label}
-            className="flex-1 text-center text-[10px]"
+            className="flex-1 text-center text-xs"
             style={{
               color: d.isToday ? "var(--primary)" : "var(--muted-foreground)",
               fontWeight: d.isToday ? 700 : 400,
@@ -115,7 +115,7 @@ export function WeekDayChart({ r }: { r: WeeklyReport }) {
           </div>
         ))}
       </div>
-      <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-muted-foreground">
+      <div className="mt-3 flex items-center justify-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: "var(--primary)" }} />{" "}
           {L("ten tydzień", "this week")}

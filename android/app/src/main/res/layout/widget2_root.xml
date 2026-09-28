@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- The background is an ImageView behind the content: its alpha is the per-widget
+     opacity (WidgetPrefs.applyOpacity, chosen in WidgetConfigActivity). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/widget_bg_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget2_bg"
+        android:contentDescription="@null" />
+
+<LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/widget2_bg"
     android:padding="14dp">
 
     <LinearLayout android:id="@+id/widget2_header"
@@ -16,10 +29,11 @@
             android:layout_weight="1" android:layout_marginStart="12dp" android:orientation="vertical">
             <TextView android:id="@+id/widget2_title" android:layout_width="wrap_content"
                 android:layout_height="wrap_content" android:text="@string/widget_today" android:textColor="#f4f5f9"
-                android:textSize="17sp" android:textStyle="bold" />
+                android:textSize="17sp" android:textStyle="bold" style="@style/WidgetTextShadow" />
             <TextView android:id="@+id/widget2_timeleft" android:layout_width="wrap_content"
                 android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text=""
-                android:textColor="#60e7b4" android:textSize="12sp" android:textStyle="bold" />
+                android:textColor="#60e7b4" android:textSize="12sp" android:textStyle="bold"
+                style="@style/WidgetTextShadow" />
         </LinearLayout>
     </LinearLayout>
 
@@ -41,7 +55,8 @@
                 <TextView android:id="@+id/cell0_name" android:layout_width="56dp"
                     android:layout_height="wrap_content" android:layout_marginTop="3dp"
                     android:gravity="center" android:maxLines="1" android:ellipsize="end"
-                    android:textColor="#9398a5" android:textSize="9sp" />
+                    android:textColor="#9398a5" android:textSize="9sp"
+                    style="@style/WidgetTextShadow" />
             </LinearLayout>
             <LinearLayout android:id="@+id/cell1_root"
                 android:layout_width="0dp" android:layout_height="wrap_content"
@@ -58,7 +73,8 @@
                 <TextView android:id="@+id/cell1_name" android:layout_width="56dp"
                     android:layout_height="wrap_content" android:layout_marginTop="3dp"
                     android:gravity="center" android:maxLines="1" android:ellipsize="end"
-                    android:textColor="#9398a5" android:textSize="9sp" />
+                    android:textColor="#9398a5" android:textSize="9sp"
+                    style="@style/WidgetTextShadow" />
             </LinearLayout>
             <LinearLayout android:id="@+id/cell2_root"
                 android:layout_width="0dp" android:layout_height="wrap_content"
@@ -75,7 +91,8 @@
                 <TextView android:id="@+id/cell2_name" android:layout_width="56dp"
                     android:layout_height="wrap_content" android:layout_marginTop="3dp"
                     android:gravity="center" android:maxLines="1" android:ellipsize="end"
-                    android:textColor="#9398a5" android:textSize="9sp" />
+                    android:textColor="#9398a5" android:textSize="9sp"
+                    style="@style/WidgetTextShadow" />
             </LinearLayout>
             <LinearLayout android:id="@+id/cell3_root"
                 android:layout_width="0dp" android:layout_height="wrap_content"
@@ -92,7 +109,8 @@
                 <TextView android:id="@+id/cell3_name" android:layout_width="56dp"
                     android:layout_height="wrap_content" android:layout_marginTop="3dp"
                     android:gravity="center" android:maxLines="1" android:ellipsize="end"
-                    android:textColor="#9398a5" android:textSize="9sp" />
+                    android:textColor="#9398a5" android:textSize="9sp"
+                    style="@style/WidgetTextShadow" />
             </LinearLayout>
         </LinearLayout>
         <LinearLayout android:id="@+id/widget2_row2"
@@ -113,7 +131,8 @@
                 <TextView android:id="@+id/cell4_name" android:layout_width="56dp"
                     android:layout_height="wrap_content" android:layout_marginTop="3dp"
                     android:gravity="center" android:maxLines="1" android:ellipsize="end"
-                    android:textColor="#9398a5" android:textSize="9sp" />
+                    android:textColor="#9398a5" android:textSize="9sp"
+                    style="@style/WidgetTextShadow" />
             </LinearLayout>
             <LinearLayout android:id="@+id/cell5_root"
                 android:layout_width="0dp" android:layout_height="wrap_content"
@@ -130,7 +149,8 @@
                 <TextView android:id="@+id/cell5_name" android:layout_width="56dp"
                     android:layout_height="wrap_content" android:layout_marginTop="3dp"
                     android:gravity="center" android:maxLines="1" android:ellipsize="end"
-                    android:textColor="#9398a5" android:textSize="9sp" />
+                    android:textColor="#9398a5" android:textSize="9sp"
+                    style="@style/WidgetTextShadow" />
             </LinearLayout>
             <LinearLayout android:id="@+id/cell6_root"
                 android:layout_width="0dp" android:layout_height="wrap_content"
@@ -147,7 +167,8 @@
                 <TextView android:id="@+id/cell6_name" android:layout_width="56dp"
                     android:layout_height="wrap_content" android:layout_marginTop="3dp"
                     android:gravity="center" android:maxLines="1" android:ellipsize="end"
-                    android:textColor="#9398a5" android:textSize="9sp" />
+                    android:textColor="#9398a5" android:textSize="9sp"
+                    style="@style/WidgetTextShadow" />
             </LinearLayout>
             <LinearLayout android:id="@+id/cell7_root"
                 android:layout_width="0dp" android:layout_height="wrap_content"
@@ -164,12 +185,15 @@
                 <TextView android:id="@+id/cell7_name" android:layout_width="56dp"
                     android:layout_height="wrap_content" android:layout_marginTop="3dp"
                     android:gravity="center" android:maxLines="1" android:ellipsize="end"
-                    android:textColor="#9398a5" android:textSize="9sp" />
+                    android:textColor="#9398a5" android:textSize="9sp"
+                    style="@style/WidgetTextShadow" />
             </LinearLayout>
         </LinearLayout>
 
     <TextView android:id="@+id/widget2_empty"
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:layout_marginTop="8dp" android:gravity="center" android:text="@string/widget_empty"
-        android:textColor="#9398a5" android:textSize="13sp" android:visibility="gone" />
+        android:textColor="#9398a5" android:textSize="13sp" android:visibility="gone"
+        style="@style/WidgetTextShadow" />
 </LinearLayout>
+</FrameLayout>

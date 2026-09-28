@@ -53,7 +53,7 @@ export function LiveGuardCard() {
         </div>
         <Toggle checked={notif.live} onChange={(on) => update({ live: on })} />
       </div>
-      <p className="mt-2 text-[11px] text-muted-foreground">
+      <p className="mt-2 text-xs text-muted-foreground">
         {L(
           "Gdy w nocy otworzysz social media, Szpila wyskakuje od razu, a nie dopiero rano w ocenie. Siedzisz dalej - co 5 min dostajesz ostrzejszą szpilę.",
           "Open social media at night and Szpila pops up right away, not in tomorrow's review. Keep scrolling and every 5 min you get a sharper jab.",
@@ -68,7 +68,7 @@ export function LiveGuardCard() {
           className="mt-3 flex items-center justify-between gap-3 rounded-xl p-3"
           style={{ backgroundColor: "color-mix(in oklab, var(--avoid) 14%, transparent)" }}
         >
-          <span className="text-[11px]">
+          <span className="text-xs">
             {L("Wymaga „dostępu do danych o użyciu”.", "Needs “usage access”.")}
           </span>
           <button
@@ -83,7 +83,7 @@ export function LiveGuardCard() {
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
         <div className="min-w-0">
           <div className="text-sm font-medium">{L("Tryb przed snem", "Bedtime mode")}</div>
-          <div className="text-[11px] text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             {L(
               `O tej porze Szpila przypomina „odłóż telefon za ${bedLead} min” i od razu zaczyna pilnować social mediów, odliczając do ${notif.liveFrom}.`,
               `At this time Szpila says “put the phone down in ${bedLead} min” and starts watching social media right away, counting down to ${notif.liveFrom}.`,
@@ -103,9 +103,9 @@ export function LiveGuardCard() {
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
         <div className="min-w-0">
           <div className="text-sm font-medium">
-            {L("Blokada po 3. szpili", "Lock after the 3rd jab")}
+            {L("Blokada po 3. szpili", "Block after the 3rd jab")}
           </div>
-          <div className="text-[11px] text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             {L(
               "Dalej siedzisz? Pełnoekranowy kot zasłania aplikację: „Idę spać” albo przytrzymaj 10 s, jeśli naprawdę musisz.",
               "Still at it? A full-screen cat covers the app: tap “Going to bed” or hold for 10 s if you really must.",
@@ -119,10 +119,10 @@ export function LiveGuardCard() {
           className="mt-3 flex items-center justify-between gap-3 rounded-xl p-3"
           style={{ backgroundColor: "color-mix(in oklab, var(--avoid) 14%, transparent)" }}
         >
-          <span className="text-[11px]">
+          <span className="text-xs">
             {L(
               "Blokada wymaga zgody „Wyświetlanie nad innymi aplikacjami”.",
-              "The lock needs the “Display over other apps” permission.",
+              "The block needs the “Display over other apps” permission.",
             )}
           </span>
           <button

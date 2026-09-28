@@ -8,6 +8,8 @@
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import type { NotificationSettings, TauntLevel } from "@/lib/habits/store";
 import { humorLive, type HumorId } from "@/lib/habits/gamification";
+import { dayGuardState, dayLines } from "@/lib/day-guard";
+import type { Habit } from "@/lib/habits/types";
 import { L, pick } from "@/lib/i18n";
 
 /** Watched apps (package -> line key + label). Mirrors LiveGuard.SOCIAL in Java. */
@@ -274,8 +276,11 @@ export function liveState(
   level: TauntLevel,
   userName: string | null,
   humor?: HumorId,
+  habits: Habit[] = [],
 ) {
   return {
+    // Morning lock + daily limit (DayGuard.java).
+    ...dayGuardState(n, habits),
     enabled: n.live,
     block: n.liveBlock,
     bedtime: n.bedtime,
@@ -283,7 +288,7 @@ export function liveState(
     from: toMin(n.liveFrom),
     until: toMin(n.liveUntil),
     off: n.liveOff,
-    lines: liveLines(level, userName, humor),
+    lines: { ...liveLines(level, userName, humor), ...dayLines(level, userName) },
   };
 }
 
@@ -322,6 +327,11 @@ export interface LiveStatus {
   apps: LiveApp[];
   /** Night visits per habit day ("yyyy-MM-dd" -> count). */
   hits: Record<string, number>;
+  /** Social media minutes per day (05:00 .. bedtime), for the daily limit. */
+  day?: Record<string, number>;
+  /** Guard phase right now. */
+  phase?: "off" | "night" | "morning" | "day";
+  morningBlocks?: Record<string, number>;
 }
 
 interface LivePlugin {

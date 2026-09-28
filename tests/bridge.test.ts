@@ -61,12 +61,13 @@ describe("widget snapshot (read by widgets + notifications)", () => {
     expect(w.nag.length).toBeGreaterThan(5);
     expect(w.nag.join(" ")).not.toContain("{name}"); // resolved; amounts stay as {done}/{left}
     const f = s.habits.find((r) => r.id === food.id)!;
-    // 10 unconfirmed days = slips: allowance used up, and Szpila remembers it
+    // 10 unconfirmed days = slips: this week's allowance is used up (unless the week
+    // started today - on a Monday no day of it is over yet), and Szpila remembers it
     expect(f).toMatchObject({
       kind: "avoid",
       colorHex: AVOID_HEX,
       status: "pending",
-      slipsLeft: 0,
+      slipsLeft: today.getDay() === 1 ? 1 : 0,
     });
     expect(f.memory.join(" ")).toMatch(/wpadek z „Fast food”/);
     const b = s.habits.find((r) => r.id === bed.id)!;

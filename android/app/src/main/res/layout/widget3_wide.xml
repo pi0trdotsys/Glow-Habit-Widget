@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 2x1 (and wider) "Następne zadanie": the planner's pick in its ring (tap = hold-to-complete)
+     with Szpila as a badge on it, and on the right: the name, the status and a two-line rotating
+     line (tap it or the cat for the next one) or the guard's banner (morning lock, social limit,
+     bedtime). Texts shrink to fit (autoSize) instead of being cut. Same view ids as widget3_root. -->
+<!-- The background is an ImageView behind the content: its alpha is the per-widget
+     opacity (WidgetPrefs.applyOpacity, chosen in WidgetConfigActivity). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/widget_bg_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget2_bg"
+        android:contentDescription="@null" />
+
+<LinearLayout
+    android:id="@+id/next_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:baselineAligned="false"
+    android:paddingStart="8dp"
+    android:paddingEnd="10dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
+
+    <!-- ring + habit icon, the cat sits on its corner -->
+    <FrameLayout
+        android:layout_width="48dp"
+        android:layout_height="48dp">
+
+        <FrameLayout android:id="@+id/next_ring_box"
+            android:layout_width="42dp" android:layout_height="42dp"
+            android:layout_gravity="top|start">
+            <ImageView android:id="@+id/next_ring"
+                android:layout_width="match_parent" android:layout_height="match_parent"
+                android:contentDescription="@string/widget_next_progress_desc" />
+            <ImageView android:id="@+id/next_icon"
+                android:layout_width="20dp" android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_habit_sparkles"
+                android:contentDescription="@null" />
+        </FrameLayout>
+
+        <FrameLayout android:id="@+id/next_cat_box"
+            android:layout_width="22dp" android:layout_height="22dp"
+            android:layout_gravity="bottom|end">
+            <ImageView android:id="@+id/next_cat"
+                android:layout_width="match_parent" android:layout_height="match_parent"
+                android:src="@drawable/ic_szpila_smug"
+                android:contentDescription="@string/widget_next_cat_desc" />
+            <ImageView android:id="@+id/next_cond"
+                android:layout_width="match_parent" android:layout_height="match_parent"
+                android:visibility="gone"
+                android:contentDescription="@null" />
+        </FrameLayout>
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="6dp"
+        android:orientation="vertical">
+
+        <LinearLayout android:id="@+id/next_text"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView android:id="@+id/next_name"
+                android:layout_width="match_parent" android:layout_height="17dp"
+                android:maxLines="1" android:ellipsize="end"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="8.5sp" android:autoSizeMaxTextSize="13sp"
+                android:text="@string/widget_next_preview_name" android:textColor="#f4f5f9"
+                android:textStyle="bold" style="@style/WidgetTextShadow" />
+            <TextView android:id="@+id/next_sub"
+                android:layout_width="match_parent" android:layout_height="14dp"
+                android:maxLines="1" android:ellipsize="end"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="7.5sp" android:autoSizeMaxTextSize="10.5sp"
+                android:text="@string/widget_next_preview_status" android:textColor="#60e7b4"
+                style="@style/WidgetTextShadow" />
+        </LinearLayout>
+
+        <!-- the rotating line: two lines, so a jab can actually be read -->
+        <LinearLayout android:id="@+id/next_cat_row"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="3dp">
+            <TextView android:id="@+id/next_ticker"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:maxLines="2" android:ellipsize="end"
+                android:lineSpacingMultiplier="0.95"
+                android:text="@string/widget_next_preview_ticker" android:textColor="#d5d8e2"
+                android:textSize="9.5sp" style="@style/WidgetTextShadow" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
+</FrameLayout>

@@ -13,6 +13,7 @@ import { exportCsv } from "@/lib/backup";
 import { DeltaPill, deltaColor } from "@/components/WeekCompare";
 import { SZPILA_EMOJI } from "@/lib/habits/szpila";
 import { NightList } from "@/components/NightBill";
+import { DayLimitChart } from "@/components/DayLimitChart";
 import { L, intlLocale } from "@/lib/i18n";
 
 /** English "day"/"days" (the Polish copy here always says "dni"). */
@@ -60,7 +61,7 @@ export function TrendView() {
           {sum.change != null && (
             <div className="text-right">
               <DeltaPill delta={sum.change} />
-              <div className="mt-1 text-[11px] text-muted-foreground">
+              <div className="mt-1 text-xs text-muted-foreground">
                 {L("30 dni vs 30 wcześniej", "30 days vs previous 30")}
               </div>
             </div>
@@ -120,14 +121,14 @@ export function TrendView() {
               key={i}
               x={Math.min(W - 16, Math.max(0, i * step - 8))}
               y={H + 14}
-              fontSize="9"
+              fontSize="11"
               fill="var(--muted-foreground)"
             >
               {i === 89 ? L("dziś", "today") : `-${90 - (i + 1)} d`}
             </text>
           ))}
         </svg>
-        <div className="mt-2 flex items-center gap-4 text-[11px] text-muted-foreground">
+        <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <span
               className="inline-block h-2 w-2 rounded-sm"
@@ -183,6 +184,7 @@ export function TrendView() {
           hint={L("100% zadań", "100% of habits")}
         />
       </section>
+      <DayLimitChart />
       <NightList />
       <CsvActions />
     </>
@@ -242,7 +244,7 @@ export function MonthsView() {
           </div>
           {cmp.delta != null && <DeltaPill delta={cmp.delta} big />}
         </div>
-        <p className="mt-3 text-[11px] text-muted-foreground">
+        <p className="mt-3 text-xs text-muted-foreground">
           {L(
             "Porównanie tylko do tego samego dnia miesiąca - połowa września vs połowa sierpnia, a nie cały sierpień.",
             "Compared only up to the same day of the month - mid-September vs mid-August, not all of August.",
@@ -261,7 +263,7 @@ export function MonthsView() {
               className="flex h-full flex-1 flex-col items-center justify-end gap-1"
               data-month={m.key}
             >
-              <span className="text-[10px] tabular-nums text-muted-foreground">
+              <span className="text-xs tabular-nums text-muted-foreground">
                 {m.pct == null ? "" : `${m.pct}%`}
               </span>
               <div
@@ -275,7 +277,7 @@ export function MonthsView() {
                 }}
               />
               <span
-                className="text-[11px]"
+                className="text-xs"
                 style={{ color: m.current ? "var(--foreground)" : "var(--muted-foreground)" }}
               >
                 {m.label}
@@ -292,7 +294,7 @@ export function MonthsView() {
                 <span>
                   {cap(m.long)}
                   {m.current && (
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {L(" (w toku)", " (in progress)")}
                     </span>
                   )}
@@ -320,7 +322,7 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
     <div className="rounded-2xl bg-card p-4">
       <div className="text-2xl font-bold tabular-nums">{value}</div>
       <div className="text-xs font-medium">{label}</div>
-      {hint && <div className="text-[10px] text-muted-foreground">{hint}</div>}
+      {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
     </div>
   );
 }

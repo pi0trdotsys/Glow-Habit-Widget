@@ -243,6 +243,7 @@ const CSV_HEADER_PL = [
   "status",
   "procent",
   "social_w_nocy",
+  "social_dzien_min",
 ];
 
 const CSV_HEADER_EN = [
@@ -255,6 +256,7 @@ const CSV_HEADER_EN = [
   "status",
   "percent",
   "social_at_night",
+  "social_by_day_min",
 ];
 
 /** CSV words per language: Polish (the original) or English. */
@@ -295,6 +297,7 @@ export function toCsv(
   completions: Completion[],
   nightHits: Record<string, number> = {},
   now: Date = new Date(),
+  daySocial: Record<string, number> = {},
 ): string {
   const idx = indexEntries(completions);
   const first =
@@ -328,6 +331,7 @@ export function toCsv(
           status,
           String(Math.round(score * 100)),
           h.source === "screen" ? (nightHits[key] ?? 0) : "",
+          daySocial[key] ?? "",
         ]
           .map(cell)
           .join(";"),

@@ -34,7 +34,7 @@ export function LanguageCard() {
           </button>
         ))}
       </div>
-      <p className="mt-2 text-[11px] text-muted-foreground">
+      <p className="mt-2 text-xs text-muted-foreground">
         {L(
           "Zmienia całą aplikację, szpile, powiadomienia i widżety. Domyślne nazwy zadań też się przetłumaczą, własne zostają.",
           "Switches the whole app, Szpila's jabs, notifications and widgets. Default habit names get translated too; your own stay as they are.",

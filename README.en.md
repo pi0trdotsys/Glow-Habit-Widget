@@ -39,7 +39,7 @@ roast you won't want to read.
 
 Get it done and you get praise. Snarky, but praise.
 
-> **Szpila swears by default.** Prefer it polite? Settings → **"Gentle"**.
+> **Szpila swears by default.** Prefer it polite? Settings → Szpila → **"Gentle"**.
 > Plus 3, 5 or 8 jabs a day and quiet hours.
 
 ## ◉ After midnight there's no mercy
@@ -55,7 +55,18 @@ Get it done and you get praise. Snarky, but praise.
   (25 min) · 61 min on the phone after midnight · phone down around 1:40"_.
   With commentary.
 - **Fair judging.** "Scrolling in bed" counts **social media only**. An alarm,
-  music or a sleep podcast is not a slip.
+  music or a sleep podcast is not a slip. Only real phone sessions count: a
+  notification lighting up the screen or a scheduled power-off doesn't pretend
+  you're awake.
+
+## ◉ By day too
+
+- **Mornings: habits first, then Instagram.** From 5:00 social media stays
+  blocked until you tick off your morning habits (teeth and the first glass of
+  water by default) - right from the block.
+- **Daily limit**, e.g. 60 minutes of social media. A heads-up 10 minutes
+  before, jabs past the limit, the block after the third. Today shows a
+  _"42/60 min"_ counter, the report how many days you stayed within it.
 
 ## ◉ A cat that grows with you
 
@@ -79,12 +90,22 @@ Get it done and you get praise. Snarky, but praise.
 
 ## ◉ A day that plans itself
 
-Open the app and see only what matters: today's progress, one jab and **one
-habit for right now**. The rest of the day hides in a folding **plan**. Eight
-glasses of water? Spread evenly from morning to night.
+Open the app and see only what matters: today's progress, **one status card**
+(the jab, the night bill, the morning lock, the limit - swipe sideways) and
+**one habit for right now**. The rest of the day hides in a folding **plan**.
+Eight glasses of water? Spread evenly from morning to night.
 
-Hold a tile and it's done. How many times, how many minutes, how many steps -
-you set it up your way.
+- **Hold** a tile: +1, done.
+- **Hold longer**: +1 / +2 / +5 or a slider to enter an amount in one go.
+- **Swipe sideways**: undo the last entry.
+- A buzz on every step, **confetti when the day is complete**, and the cat on
+  the card cheers every tick.
+
+<div align="center">
+<img src="docs/screenshots/en/sheet.png" width="240" alt="Hold longer: +1, +2, +5 or a slider" />
+&nbsp;&nbsp;
+<img src="docs/screenshots/en/today-light.png" width="240" alt="Light theme" />
+</div>
 
 ## ◉ Forbidden. In red.
 
@@ -108,20 +129,24 @@ noon.
 
 ## ◉ No need to open the app
 
-- **Four widgets**: the mean cat 4×1, next habit 1×1, icons with a progress
-  ring, and a list. You complete by holding, so an accidental tap breaks
-  nothing.
+- **Four widgets**: the mean cat 4×1, next habit 1×1 or 2×1 (with the cat,
+  the delay and a rotating line: a jab, your streak, progress, the limit,
+  what's next), icons with a progress ring, and a list. You complete by
+  holding, so an accidental tap breaks nothing.
+- **Widget settings** when you add one: background transparency to match your
+  wallpaper, and what the rotating line shows.
 - **Ongoing notification** with a progress bar, the plan and quick buttons:
   **"+1 glass"**, **"+15 min Read"**, **"✓ Brush"**.
 - **Evening review** of forbidden habits in one notification.
 - **Steps from Health Connect**: Google Fit, Samsung Health or Mi Fitness fill
   them in for you.
 
-## ◉ Polski i English
+## ◉ Polski i English, light or dark
 
 The whole app, Szpila's jabs (yes, the swearing too), notifications and widgets
 speak **Polish and English**. Pick the language at first launch or any time in
-Settings.
+Settings. Theme: **dark, light or like your phone**. Settings are split into
+four tabs: Szpila, Guard, Notifications, Data.
 
 <br />
 
@@ -147,9 +172,10 @@ or add your own from 20+ templates.
 |     | Where                                                    | Why                                                                        |
 | --- | -------------------------------------------------------- | -------------------------------------------------------------------------- |
 | 🔔  | Allow notifications                                      | Jabs, progress bar, the night bill                                         |
-| 📱  | Settings → Automatic tracking → **Open**                 | Night guard, night bill, fair scrolling judging                            |
-| 🛑  | Settings → Night guard → **Allow**                       | Full-screen block after the 3rd jab                                        |
-| 👣  | Settings → Automatic tracking → **Connect**              | Steps fill in by themselves                                                |
+| 📱  | Settings → Guard → Automatic tracking → **Open**         | Night guard, night bill, mornings, daily limit                             |
+| 🛑  | Settings → Guard → Night guard → **Allow**               | Full-screen block after the 3rd jab                                        |
+| 🌅  | Settings → Guard → **Social media by day**               | Morning habits and the daily limit                                         |
+| 👣  | Settings → Guard → Automatic tracking → **Connect**      | Steps fill in by themselves                                                |
 | 🔋  | System settings → Battery → Szpila → **No restrictions** | Jabs and the night guard arrive on time (especially Xiaomi, POCO, Samsung) |
 | ➕  | Long-press the home screen → **Widgets** → Szpila        | The cat always in sight                                                    |
 
@@ -188,7 +214,7 @@ inline: `L("polski", "English")` ([`src/lib/i18n.ts`](src/lib/i18n.ts)), and
 ```bash
 bun install
 bun run dev              # web, http://localhost:8080
-bun run test             # logic tests (planner, forbidden habits, gamification, stats, nights, i18n)
+bun run test             # logic tests (planner, forbidden habits, gamification, stats, nights, guard, i18n, UX)
 bun run test:e2e         # build + tests on the built app in headless Edge/Chrome
 
 bun run build:cap        # static build for Capacitor

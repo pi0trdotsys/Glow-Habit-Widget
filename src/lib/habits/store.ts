@@ -5,6 +5,7 @@ import type { FaceId, HumorId } from "./gamification";
 import type { NightReport } from "@/lib/sensors";
 import { loadEnglishLines, setHumor } from "./szpila";
 import { detectLang, getLang, L, setLang, type Lang } from "@/lib/i18n";
+import type { ThemePref } from "@/lib/theme";
 import { translateHabit } from "./seed-names";
 import { goalOf, kindOf, minuteOfDay, todayKey } from "./utils";
 
@@ -45,6 +46,14 @@ export interface NotificationSettings {
   /** "Tryb przed snem": at bedtimeAt Szpila says "put the phone down in 30 min" and the guard starts. */
   bedtime: boolean;
   bedtimeAt: string;
+  /** Mornings: social media blocked until the morning habits are ticked off (05:00 .. morningUntil). */
+  morningLock: boolean;
+  morningUntil: string;
+  /** Habit ids required in the morning; null = automatic (brushing teeth + water). */
+  morningHabits: string[] | null;
+  /** Daily social media limit (05:00 .. bedtime): past it Szpila jabs and blocks. */
+  dailyLimit: boolean;
+  dailyLimitMin: number;
 }
 
 /** The cat's look + voice (unlocked by forma streaks, see gamification.ts). */
@@ -75,6 +84,11 @@ const defaultNotifications: NotificationSettings = {
   liveBlock: true,
   bedtime: true,
   bedtimeAt: "23:30",
+  morningLock: true,
+  morningUntil: "11:00",
+  morningHabits: null,
+  dailyLimit: true,
+  dailyLimitMin: 60,
 };
 
 const defaultLook: SzpilaLook = { face: "wredny", humor: "wredny" };
@@ -89,6 +103,9 @@ interface HabitsState {
   language: Lang;
   /** Switch the language; default habit names (seeds, templates) follow it. */
   setLanguage: (lang: Lang) => void;
+  /** Light / dark / like the phone. */
+  theme: ThemePref;
+  setTheme: (t: ThemePref) => void;
   notifications: NotificationSettings;
   setNotifications: (n: NotificationSettings) => void;
   /** Daily automatic backup to Download/Szpila (Android). */
@@ -100,6 +117,9 @@ interface HabitsState {
   /** "Rachunek za noc" per night (habit day of the evening). */
   nightReports: Record<string, NightReport>;
   mergeNightReports: (r: Record<string, NightReport>) => void;
+  /** Social media minutes per day (05:00 .. bedtime), from the native guard. */
+  daySocial: Record<string, number>;
+  mergeDaySocial: (m: Record<string, number>) => void;
   szpila: SzpilaLook;
   setSzpila: (look: Partial<SzpilaLook>) => void;
   addHabit: (h: Omit<Habit, "id" | "createdAt">) => string;
@@ -109,6 +129,12 @@ interface HabitsState {
   logStep: (habitId: string, date?: Date) => void;
   /** Build: set the absolute amount for a day (0 clears it). */
   setAmount: (habitId: string, dateKey: string, amount: number, minute?: number) => void;
+  /**
+   * Build: undo the last change of the day's amount (swipe on a tile). Avoid:
+   * clear the day's answer. Returns the amount/status it went back to, or null
+   * when there was nothing to undo.
+   */
+  undoLast: (habitId: string, dateKey: string) => number | "cleared" | null;
   /** Avoid: mark a day clean, admit a slip, or clear the confirmation. */
   setAvoid: (
     habitId: string,
@@ -208,6 +234,9 @@ const LEGACY_SEEDS: Record<string, Partial<Habit>> = {
   Gym: { name: "Siłownia" },
 };
 
+/** How many steps back a swipe can undo per habit and day. */
+export const UNDO_DEPTH = 10;
+
 function uid() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
@@ -237,6 +266,8 @@ export const useHabits = create<HabitsState>()(
       seeded: false,
       userName: null,
       setUserName: (name) => set({ userName: name.trim() || null }),
+      theme: "system",
+      setTheme: (t) => set({ theme: t }),
       language: detectLang(),
       setLanguage: (lang) =>
         set((s) => ({
@@ -273,6 +304,22 @@ export const useHabits = create<HabitsState>()(
           for (const k of keys.slice(0, Math.max(0, keys.length - 120))) delete next[k];
           return { nightReports: next };
         }),
+      daySocial: {},
+      mergeDaySocial: (m) =>
+        set((s) => {
+          const next = { ...s.daySocial };
+          let changed = false;
+          for (const [k, v] of Object.entries(m)) {
+            if (typeof v === "number" && v !== next[k]) {
+              next[k] = v;
+              changed = true;
+            }
+          }
+          if (!changed) return {};
+          const keys = Object.keys(next).sort();
+          for (const k of keys.slice(0, Math.max(0, keys.length - 120))) delete next[k];
+          return { daySocial: next };
+        }),
       szpila: defaultLook,
       setSzpila: (look) => set((s) => ({ szpila: { ...s.szpila, ...look } })),
       addHabit: (h) => {
@@ -306,14 +353,49 @@ export const useHabits = create<HabitsState>()(
       setAmount: (habitId, dateKey, amount, minute = minuteOfDay()) => {
         const cur = get().completions.find((c) => c.habitId === habitId && c.date === dateKey);
         const a = Math.max(0, Math.round(amount));
+        const before = cur ? (cur.amount ?? 1) : 0;
+        if (a === before && cur) return;
+        // Remember where we came from, so a swipe can go back step by step.
+        const prev = [...(cur?.prev ?? []), before].slice(-UNDO_DEPTH);
         set((s) => ({
           completions: upsert(
             s.completions,
             habitId,
             dateKey,
-            a > 0 ? { habitId, date: dateKey, amount: a, log: withLog(cur, minute, a) } : null,
+            // An explicit 0 stays (with its undo stack) so a clear can be undone too.
+            a > 0 || before > 0
+              ? { habitId, date: dateKey, amount: a, log: withLog(cur, minute, a), prev }
+              : null,
           ),
         }));
+      },
+      undoLast: (habitId, dateKey) => {
+        const h = get().habits.find((x) => x.id === habitId);
+        const cur = get().completions.find((c) => c.habitId === habitId && c.date === dateKey);
+        if (!h || !cur) return null;
+        if (kindOf(h) === "avoid") {
+          get().setAvoid(habitId, dateKey, null);
+          return "cleared";
+        }
+        const stack = cur.prev ?? [];
+        if (stack.length === 0) {
+          if ((cur.amount ?? 1) === 0) return null;
+          set((s) => ({ completions: upsert(s.completions, habitId, dateKey, null) }));
+          return 0;
+        }
+        const back = stack[stack.length - 1];
+        const rest = stack.slice(0, -1);
+        set((s) => ({
+          completions: upsert(
+            s.completions,
+            habitId,
+            dateKey,
+            back > 0 || rest.length > 0
+              ? { ...cur, amount: back, prev: rest, log: withLog(cur, minuteOfDay(), back) }
+              : null,
+          ),
+        }));
+        return back;
       },
       setAvoid: (habitId, dateKey, status, minute = minuteOfDay(), auto = false) => {
         const cur = get().completions.find((c) => c.habitId === habitId && c.date === dateKey);
@@ -362,8 +444,10 @@ export const useHabits = create<HabitsState>()(
           autoBackup: s.autoBackup,
           nightHits: s.nightHits,
           nightReports: s.nightReports,
+          daySocial: s.daySocial,
           szpila: s.szpila,
           language: s.language,
+          theme: s.theme,
           habits: s.habits,
           completions: s.completions,
         });
@@ -377,6 +461,7 @@ export const useHabits = create<HabitsState>()(
           autoBackup: boolean;
           nightHits: Record<string, number>;
           nightReports: Record<string, NightReport>;
+          daySocial: Record<string, number>;
           szpila: Partial<SzpilaLook>;
         }>;
         const valid =
@@ -405,6 +490,8 @@ export const useHabits = create<HabitsState>()(
             data.nightReports && typeof data.nightReports === "object"
               ? data.nightReports
               : s.nightReports,
+          daySocial:
+            data.daySocial && typeof data.daySocial === "object" ? data.daySocial : s.daySocial,
         }));
         return data.habits!.length;
       },
@@ -470,6 +557,7 @@ export const useHabits = create<HabitsState>()(
           szpila: { ...defaultLook, ...(p.szpila ?? {}) },
           nightHits: p.nightHits ?? {},
           nightReports: p.nightReports ?? {},
+          daySocial: p.daySocial ?? {},
         };
       },
     },

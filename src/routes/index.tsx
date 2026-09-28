@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { addDays, format } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { L, dateLocale, pick } from "@/lib/i18n";
 import { AnimatePresence, m } from "framer-motion";
 import { Plus, ChevronDown, ChevronRight, Sunrise } from "lucide-react";
@@ -8,7 +8,6 @@ import { AppShell } from "@/components/AppShell";
 import { HabitTile, praiseToast } from "@/components/HabitTile";
 import { HabitIcon } from "@/components/HabitIcon";
 import { AvoidChips } from "@/components/AvoidChips";
-import { SzpilaBubble } from "@/components/Szpila";
 import { DeltaPill } from "@/components/WeekCompare";
 import { useHabits } from "@/lib/habits/store";
 import { AVOID_COLOR, HABIT_COLOR_VAR } from "@/lib/habits/colors";
@@ -31,7 +30,14 @@ import {
   type PlanItem,
 } from "@/lib/habits/utils";
 import { szpilaNow } from "@/lib/habits/szpila";
-import { NightBillCard } from "@/components/NightBill";
+import { StatusCarousel } from "@/components/StatusCarousel";
+import { Confetti } from "@/components/Confetti";
+import { haptic } from "@/lib/haptics";
+
+/** Tests/previews can show the native guard's status slides on the web. */
+const forceGuard =
+  typeof window !== "undefined" &&
+  (window as { __szpilaForceGuard?: boolean }).__szpilaForceGuard === true;
 import { useBackHandler } from "@/lib/back";
 
 export const Route = createFileRoute("/")({
@@ -86,6 +92,18 @@ function TodayPage() {
     [seed, completions, habits, level, userName],
   );
 
+  // The whole day done: confetti + a little drum roll (only when it happens, not on load).
+  const allDone = progress.total > 0 && progress.done >= progress.total;
+  const [confetti, setConfetti] = useState(0);
+  const wasDone = useRef(allDone);
+  useEffect(() => {
+    if (allDone && !wasDone.current) {
+      setConfetti(Date.now());
+      haptic("celebrate");
+    }
+    wasDone.current = allDone;
+  }, [allDone]);
+
   // Morning review: yesterday's unconfirmed forbidden habits can be settled until noon.
   const yesterday = addDays(today, -1);
   const settleYesterday =
@@ -119,8 +137,14 @@ function TodayPage() {
       </header>
 
       <div className="space-y-3 px-5">
-        <SzpilaBubble say={say} onReroll={() => setSeed((s) => s + 1)} />
-        <NightBillCard now={today} />
+        <StatusCarousel
+          say={say}
+          onReroll={() => setSeed((s) => s + 1)}
+          now={today}
+          doneCount={progress.done}
+          allDone={allDone}
+          force={forceGuard}
+        />
         {settleYesterday.length > 0 && (
           <section
             className="rounded-2xl p-3"
@@ -185,6 +209,7 @@ function TodayPage() {
           <Plus size={26} strokeWidth={2.4} />
         </Link>
       </div>
+      <Confetti fire={confetti} />
     </AppShell>
   );
 }
@@ -280,7 +305,7 @@ function NowCard({ plan }: { plan: PlanItem[] }) {
         <HabitIcon name={next.habit.icon} size={22} style={next.avoid ? { color } : undefined} />
       </Link>
       <div className="min-w-0 flex-1">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {L("Teraz", "Now")}
         </div>
         <div className="truncate font-semibold">{next.habit.name}</div>

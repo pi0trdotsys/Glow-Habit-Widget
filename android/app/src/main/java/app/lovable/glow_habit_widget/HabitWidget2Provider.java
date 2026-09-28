@@ -45,9 +45,20 @@ public class HabitWidget2Provider extends AppWidgetProvider {
         for (int id : ids) updateWidget(context, mgr, id);
     }
 
+    @Override
+    public void onDeleted(Context context, int[] ids) {
+        WidgetPrefs.delete(context, ids);
+    }
+
     static void updateWidget(Context context, AppWidgetManager mgr, int widgetId) {
         WidgetShared.normalizeIfStale(context);
+        mgr.updateAppWidget(widgetId, build(context, widgetId, WidgetPrefs.opacity(context, widgetId)));
+    }
+
+    /** The widget's views with the given background opacity (also the WidgetConfigActivity preview). */
+    static RemoteViews build(Context context, int widgetId, int opacity) {
         RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget2_root);
+        WidgetPrefs.applyOpacity(rv, opacity);
 
         JSONArray habits = WidgetShared.habits(context);
         int total = WidgetShared.countedTotal(context);
@@ -75,8 +86,7 @@ public class HabitWidget2Provider extends AppWidgetProvider {
         rv.setViewVisibility(R.id.widget2_row1, n > 0 ? View.VISIBLE : View.GONE);
         rv.setViewVisibility(R.id.widget2_row2, n > 4 ? View.VISIBLE : View.GONE);
         rv.setViewVisibility(R.id.widget2_empty, n == 0 ? View.VISIBLE : View.GONE);
-
-        mgr.updateAppWidget(widgetId, rv);
+        return rv;
     }
 
     private static void bindCell(Context context, RemoteViews rv, int i, JSONObject h, int widgetId) {

@@ -232,7 +232,7 @@ function ReportPage() {
                           color="color-mix(in oklab, var(--foreground) 25%, transparent)"
                         />
                       </div>
-                      <div className="mt-1 text-[11px] text-muted-foreground">
+                      <div className="mt-1 text-xs text-muted-foreground">
                         {L(
                           `${fmt(p.this)}/${fmt(p.dueThis)} teraz · ${fmt(p.last)}/${fmt(p.dueLast)} tydzień temu`,
                           `${fmt(p.this)}/${fmt(p.dueThis)} now · ${fmt(p.last)}/${fmt(p.dueLast)} last week`,

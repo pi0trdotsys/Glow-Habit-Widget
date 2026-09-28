@@ -51,7 +51,7 @@ export function MonthCalendar() {
           <ChevronRight size={16} />
         </button>
       </div>
-      <div className="grid grid-cols-7 gap-1.5 text-center text-[10px] text-muted-foreground">
+      <div className="grid grid-cols-7 gap-1.5 text-center text-xs text-muted-foreground">
         {weekdays().map((d) => (
           <div key={d}>{d}</div>
         ))}
@@ -66,7 +66,7 @@ export function MonthCalendar() {
               key={d.key}
               disabled={d.future}
               onClick={() => setSelected(d.date)}
-              className="grid aspect-square place-items-center rounded-lg text-[11px] font-medium transition-transform active:scale-90 disabled:opacity-25"
+              className="grid aspect-square place-items-center rounded-lg text-xs font-medium transition-transform active:scale-90 disabled:opacity-25"
               style={{
                 backgroundColor: bg,
                 opacity: d.inMonth ? 1 : 0.35,

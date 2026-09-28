@@ -294,7 +294,7 @@ export function HabitForm({
           ))}
         </div>
         {avoid && (
-          <p className="mt-2 text-center text-[11px]" style={{ color: AVOID_COLOR }}>
+          <p className="mt-2 text-center text-xs" style={{ color: AVOID_COLOR }}>
             {L(
               "Każdego dnia potwierdzasz „dziś czysto”. Brak potwierdzenia = wpadka.",
               "Every day you confirm “clean today”. No confirmation = slip.",
@@ -375,7 +375,7 @@ export function HabitForm({
                   </Chip>
                 ))}
               </div>
-              <p className="mt-3 text-center text-[11px] text-muted-foreground">
+              <p className="mt-3 text-center text-xs text-muted-foreground">
                 {limitTimes === 0
                   ? L("Całkowity zakaz - każda wpadka się liczy.", "Total ban - every slip counts.")
                   : pick(
@@ -443,7 +443,7 @@ export function HabitForm({
                     max={Math.max(1, goalTarget)}
                   />
                 </Row>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {pick(
                     <>
                       Przytrzymaj kafelek, by dodać {goalStep}{" "}
@@ -463,7 +463,7 @@ export function HabitForm({
                       <div className="text-sm font-medium">
                         {L("Kroki z Health Connect", "Steps from Health Connect")}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         {L(
                           "Ilość uzupełnia się sama z Google Fit / Samsung Health / Mi Fitness.",
                           "Fills in by itself from Google Fit / Samsung Health / Mi Fitness.",
@@ -612,7 +612,7 @@ export function HabitForm({
               </Chip>
             ))}
           </div>
-          <p className="mt-2 text-[11px] text-muted-foreground">
+          <p className="mt-2 text-xs text-muted-foreground">
             {L(
               "Na tej podstawie widżet „Następne zadanie” i plan dnia podpowiadają, co robić teraz. „Obojętnie” = aplikacja uczy się, kiedy zwykle to robisz.",
               "The “Next habit” widget and the day plan use this to suggest what to do now. “Anytime” = the app learns when you usually do it.",
@@ -639,7 +639,7 @@ export function HabitForm({
                 />
               </div>
             )}
-            <p className="mt-2 text-[11px] text-muted-foreground">
+            <p className="mt-2 text-xs text-muted-foreground">
               {L(
                 "Powiadomienie o tej godzinie każdego dnia. Włącz powiadomienia w Ustawieniach.",
                 "A notification at this time every day. Turn on notifications in Settings.",
@@ -819,7 +819,7 @@ function ScreenSourceBox({
           <div className="text-sm font-medium">
             {L("Oceniaj z czasu ekranu", "Judge by screen time")}
           </div>
-          <div className="text-[11px] text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             {L(
               "Bez klikania i bez domyślnego zaznaczenia: nocne scrollowanie dłuższe niż tolerancja = wpadka, spokojna noc = czysto (o 5:00). Do tego czasu dzień jest nierozstrzygnięty.",
               "No tapping, no default tick: late-night scrolling longer than the tolerance = slip, a quiet night = clean (at 5:00). Until then the day is undecided.",
@@ -838,7 +838,7 @@ function ScreenSourceBox({
               className="rounded-xl border border-border bg-background px-3 py-1.5 text-sm outline-none"
             />
           </Row>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {L(
               "Godzina przed 5:00 (np. 00:00) oznacza tę noc po północy - liczy się noc z dnia na dzień.",
               "A time before 5:00 (e.g. 00:00) means that night after midnight - it's the night from one day into the next that counts.",
@@ -884,14 +884,12 @@ function ScreenSourceBox({
                   }}
                 >
                   <div className="text-xs font-semibold">{label}</div>
-                  <div className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
-                    {hint}
-                  </div>
+                  <div className="mt-0.5 text-xs leading-snug text-muted-foreground">{hint}</div>
                 </button>
               ))}
             </div>
             {lateBasis === "social" && (
-              <p className="mt-2 text-[11px] text-muted-foreground">
+              <p className="mt-2 text-xs text-muted-foreground">
                 {L(
                   "Social media = TikTok, Instagram, Facebook, YouTube, X, Reddit, Snapchat, Pinterest, Twitch, LinkedIn, Threads (oprócz wyłączonych w „Szpila na żywo”).",
                   "Social media = TikTok, Instagram, Facebook, YouTube, X, Reddit, Snapchat, Pinterest, Twitch, LinkedIn, Threads (except the ones turned off in “Night guard”).",
@@ -909,7 +907,7 @@ function ScreenSourceBox({
             </button>
           )}
           {granted && (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {L("Dostęp przyznany ✓", "Access granted ✓")}
             </p>
           )}

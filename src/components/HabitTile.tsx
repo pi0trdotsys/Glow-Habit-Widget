@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { Ban } from "lucide-react";
 import { HabitIcon } from "./HabitIcon";
 import { HOLD_TO_COMPLETE_MS, useHoldToComplete } from "@/hooks/useHoldToComplete";
+import { QuickAmountSheet } from "./QuickAmountSheet";
+import { hasQuickAmounts } from "@/lib/habits/quick";
+import { haptic } from "@/lib/haptics";
 import { useHabits } from "@/lib/habits/store";
 import type { Habit } from "@/lib/habits/types";
 import { HABIT_COLOR_VAR, AVOID_COLOR } from "@/lib/habits/colors";
@@ -42,7 +45,11 @@ export function HabitTile({ habit, compact = false }: Props) {
   const logStep = useHabits((s) => s.logStep);
   const setAmount = useHabits((s) => s.setAmount);
   const setAvoid = useHabits((s) => s.setAvoid);
+  const undoLast = useHabits((s) => s.undoLast);
   const streak = currentStreak(habit, completions);
+  const [sheet, setSheet] = useState(false);
+  const quick = hasQuickAmounts(habit) && habit.source !== "steps";
+  const toastId = `tile-${habit.id}`;
   const avoid = kindOf(habit) === "avoid";
   const color = avoid ? AVOID_COLOR : HABIT_COLOR_VAR[habit.color];
   const [celebrate, setCelebrate] = useState(false);
@@ -55,8 +62,32 @@ export function HabitTile({ habit, compact = false }: Props) {
   const done = avoid ? status === "clean" : amount >= g.target;
   const fraction = avoid ? (status === "pending" ? 0 : 1) : Math.min(1, amount / g.target);
 
-  const { handlers, progress, isHolding } = useHoldToComplete({
+  const { handlers, progress, phase2, isHolding, dx } = useHoldToComplete({
     duration: HOLD_TO_COMPLETE_MS,
+    // Keep holding: the step just logged is taken back and the quick amount sheet opens.
+    onLongHold: quick
+      ? () => {
+          toast.dismiss(toastId);
+          undoLast(habit.id, key);
+          haptic("tick");
+          setSheet(true);
+        }
+      : undefined,
+    // Swipe sideways: undo the last entry.
+    onSwipe: () => {
+      const back = undoLast(habit.id, key);
+      if (back == null) {
+        toast(L("Nie ma czego cofnąć", "Nothing to undo"), { id: toastId, duration: 1800 });
+        return;
+      }
+      haptic("tick");
+      toast(
+        `↩️ ${L("Cofnięto", "Undone")}: ${habit.name}${
+          back === "cleared" || avoid ? "" : ` → ${amountText(habit, back)}`
+        }`,
+        { id: toastId, duration: 2500 },
+      );
+    },
     onComplete: () => {
       if (avoid) {
         const prev = status;
@@ -67,6 +98,7 @@ export function HabitTile({ habit, compact = false }: Props) {
         }
         setAvoid(habit.id, key, "clean");
         pop();
+        haptic("success");
         praiseToast(habit, () => setAvoid(habit.id, key, prev === "slip" ? "slip" : null));
         return;
       }
@@ -86,9 +118,15 @@ export function HabitTile({ habit, compact = false }: Props) {
       const after = Math.min(g.target, before + g.step);
       if (after >= g.target) {
         pop();
+        haptic("success");
         praiseToast(habit, () => setAmount(habit.id, key, before));
       } else {
+        haptic("tick");
         toast(`+${g.step} · ${habit.name}: ${amountText(habit, after)}`, {
+          id: toastId,
+          description: quick
+            ? L("Trzymaj dłużej, by wpisać ilość", "Hold longer to enter an amount")
+            : undefined,
           action: { label: L("Cofnij", "Undo"), onClick: () => setAmount(habit.id, key, before) },
           duration: 2500,
         });
@@ -134,7 +172,11 @@ export function HabitTile({ habit, compact = false }: Props) {
     >
       <m.div
         {...handlers}
-        animate={{ scale: isHolding ? 0.96 : celebrate ? [1, 1.12, 1] : 1 }}
+        data-tile={habit.id}
+        animate={{
+          scale: isHolding ? 0.96 + phase2 * 0.08 : celebrate ? [1, 1.12, 1] : 1,
+          x: dx * 0.35,
+        }}
         transition={
           celebrate
             ? { duration: 0.5, ease: "easeOut" }
@@ -214,7 +256,35 @@ export function HabitTile({ habit, compact = false }: Props) {
         )}
 
         {celebrate && <Celebration />}
+        {/* second phase of the hold: a halo growing towards the quick amount sheet */}
+        {phase2 > 0 && (
+          <span
+            className="pointer-events-none absolute inset-0 rounded-full"
+            style={{
+              boxShadow: `0 0 0 ${2 + phase2 * 8}px color-mix(in oklab, ${color} ${20 + phase2 * 40}%, transparent)`,
+            }}
+          />
+        )}
       </m.div>
+      {quick && (
+        <QuickAmountSheet
+          habit={habit}
+          open={sheet}
+          onClose={() => setSheet(false)}
+          onSaved={(b, a) => {
+            if (a >= g.target && b < g.target) {
+              pop();
+              praiseToast(habit, () => setAmount(habit.id, key, b));
+            } else {
+              toast(`${habit.name}: ${amountText(habit, a)}`, {
+                id: toastId,
+                action: { label: L("Cofnij", "Undo"), onClick: () => setAmount(habit.id, key, b) },
+                duration: 2500,
+              });
+            }
+          }}
+        />
+      )}
 
       <div className="text-center">
         <div className={`font-medium leading-tight ${compact ? "text-xs" : "text-sm"}`}>

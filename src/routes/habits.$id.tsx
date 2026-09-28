@@ -241,7 +241,7 @@ function HabitDetail() {
             );
           })}
         </div>
-        <p className="mt-2 text-[11px] text-muted-foreground">
+        <p className="mt-2 text-xs text-muted-foreground">
           {avoid
             ? L(
                 "Czerwone = czysty dzień, szare = wpadka (niepotwierdzony dzień też). Dotknij, by przełączyć.",

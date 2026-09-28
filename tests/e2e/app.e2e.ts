@@ -48,6 +48,12 @@ const state = {
         lateAfter: "00:00",
       }),
     ],
+    // Social media minutes by day (the daily limit, 60 min by default).
+    daySocial: {
+      [key(now)]: 30,
+      [key(new Date(now.getTime() - day))]: 75,
+      [key(new Date(now.getTime() - 2 * day))]: 50,
+    },
     // Last night's bill (normally synced from the phone's usage stats).
     nightReports: {
       [key(new Date(now.getTime() - day))]: {
@@ -81,6 +87,8 @@ const preload = `(() => {
   const R = Date;
   class D extends R { constructor(...a) { a.length ? super(...a) : super(R.now() + OFF); } static now() { return R.now() + OFF; } }
   globalThis.Date = D;
+  // show the native guard's status slides (social media limit) on the web
+  globalThis.__szpilaForceGuard = true;
   if (!sessionStorage.getItem("seeded")) {
     localStorage.setItem("loop-habits-v1", ${JSON.stringify(JSON.stringify(state))});
     sessionStorage.setItem("seeded", "1");
@@ -276,6 +284,14 @@ await check("Raport: 90-day trend and month comparison tabs", async () => {
     `document.querySelectorAll('svg[aria-label="Trend z 90 dni"] rect').length`,
   );
   assert(bars >= 9, `only ${bars} day bars`);
+  // social media by day against the limit: 2 of 3 tracked days within 60 min
+  await page.waitFor(`!!document.querySelector("[data-day-limit-chart]")`);
+  const within = await page.eval<string>(`document.querySelector("[data-within]").innerText`);
+  assert(within.includes("2/3"), `within the limit: ${within}`);
+  const dayBars = await page.eval<number>(
+    `document.querySelectorAll("[data-day-limit-chart] rect").length`,
+  );
+  assert(dayBars === 3, `${dayBars} day bars`);
   // last nights from the night bill
   await page.waitFor(`!!document.querySelector("[data-night-list]")`);
   const nights = await page.eval<string>(`document.querySelector("[data-night-list]").innerText`);
@@ -304,6 +320,228 @@ await check("CSV export produces a file (web: download + toast)", async () => {
   assert(csv.startsWith("data;zadanie;rodzaj"), "bad CSV header");
   assert(csv.includes(";Picie wody;do zrobienia;8;"), "missing rows");
   await page.waitFor(`document.body.innerText.includes("szpila-historia-")`);
+});
+
+// ---------------------------------------------------------------- UX: status card, quick amounts, tabs, theme
+
+/** Centre of the first element matching a CSS selector. */
+async function centre(sel: string): Promise<{ x: number; y: number }> {
+  return page.eval(
+    `(() => { const r = document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })()`,
+  );
+}
+const mouse = (type: string, x: number, y: number) =>
+  page.send("Input.dispatchMouseEvent", {
+    type,
+    x,
+    y,
+    button: "left",
+    buttons: type === "mouseReleased" ? 0 : 1,
+    clickCount: 1,
+  });
+const waterAmount = `((JSON.parse(localStorage.getItem("loop-habits-v1")).state.completions.find((c) => c.habitId === "water" && c.date === "${key(now)}") || {}).amount || 0)`;
+
+await check("Today: one swipeable status card (Szpila + social media) with dots", async () => {
+  await page.goto("/");
+  await page.waitFor(`!!document.querySelector("[data-status-carousel]")`, 6000);
+  const slides = await page.eval<string>(
+    `document.querySelector("[data-status-carousel]").dataset.slides`,
+  );
+  assert(slides === "szpila,social", `slides: ${slides}`);
+  assert(
+    await page.eval<boolean>(
+      `document.querySelectorAll("[data-status-carousel] [role=tab]").length === 2`,
+    ),
+    "no dots",
+  );
+  // swipe (scroll) to the second card -> the second dot is active
+  await page.eval(
+    `(() => { const t = document.querySelector("[data-status-carousel] > div"); t.scrollTo({ left: t.clientWidth }); })()`,
+  );
+  await page.waitFor(
+    `document.querySelectorAll("[data-status-carousel] [role=tab]")[1].getAttribute("aria-selected") === "true"`,
+  );
+  const social = await page.eval<string>(`document.querySelector("[data-social-today]").innerText`);
+  assert(social.includes("30/60 min"), `social: ${social}`);
+  // the habits are visible without scrolling
+  const tileTop = await page.eval<number>(
+    `document.querySelector("[data-tile]").getBoundingClientRect().top`,
+  );
+  assert(tileTop < 844, `first tile at ${tileTop}px`);
+});
+
+await check("hold a tile longer: the quick amount sheet, +5 adds five glasses", async () => {
+  await page.waitFor(`!(${splashVisible})`, 5000); // the splash would catch the press
+  const before = await page.eval<number>(waterAmount);
+  const c = await centre('[data-tile="water"]');
+  await mouse("mousePressed", c.x, c.y);
+  await sleep(2700); // past the +1 (1.2 s) to the sheet (2.4 s)
+  await mouse("mouseReleased", c.x, c.y);
+  await page.waitFor(`!!document.querySelector("[data-quick-sheet]")`);
+  // the +1 of the normal hold was taken back when the sheet opened
+  assert((await page.eval<number>(waterAmount)) === before, "the long hold should not keep the +1");
+  await page.eval(`document.querySelector('[data-quick-add="5"]').click()`);
+  await page.waitFor(`!document.querySelector("[data-quick-sheet]")`);
+  const after = await page.eval<number>(waterAmount);
+  assert(after === before + 5, `${before} -> ${after}`);
+});
+
+await check("the sheet's slider + Ustaw sets an exact amount; Back closes it", async () => {
+  const c = await centre('[data-tile="read"]');
+  await mouse("mousePressed", c.x, c.y);
+  await sleep(2700);
+  await mouse("mouseReleased", c.x, c.y);
+  await page.waitFor(`!!document.querySelector("[data-quick-sheet]")`);
+  assert(await page.eval<boolean>("window.__loopBack()"), "back didn't close the sheet");
+  await page.waitFor(`!document.querySelector("[data-quick-sheet]")`);
+  await mouse("mousePressed", c.x, c.y);
+  await sleep(2700);
+  await mouse("mouseReleased", c.x, c.y);
+  await page.waitFor(`!!document.querySelector("[data-quick-sheet]")`);
+  await page.eval(
+    `(() => { const r = document.querySelector('[data-quick-sheet] input[type=range]'); const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set; set.call(r, "10"); r.dispatchEvent(new Event("input", { bubbles: true })); })()`,
+  );
+  await page.waitFor(`document.querySelector("[data-quick-value]").innerText.startsWith("10")`);
+  await page.eval(`document.querySelector("[data-quick-save]").click()`);
+  await page.waitFor(
+    `(JSON.parse(localStorage.getItem("loop-habits-v1")).state.completions.find((c) => c.habitId === "read" && c.date === "${key(now)}") || {}).amount === 10`,
+  );
+});
+
+await check("swipe a tile sideways: the last entry is undone", async () => {
+  // the closing sheet's backdrop must be gone first
+  await page.waitFor(
+    `!document.querySelector("[data-quick-sheet]") && !document.querySelector(".fixed.inset-0.z-50")`,
+    3000,
+  );
+  await sleep(300);
+  const before = await page.eval<number>(waterAmount);
+  const c = await centre('[data-tile="water"]');
+  await mouse("mousePressed", c.x, c.y);
+  for (let i = 1; i <= 10; i++) {
+    await mouse("mouseMoved", c.x - i * 9, c.y + 1);
+    await sleep(10);
+  }
+  await mouse("mouseReleased", c.x - 90, c.y + 1);
+  await page.waitFor(`(${waterAmount}) < ${before}`, 3000);
+  const after = await page.eval<number>(waterAmount);
+  assert(after === before - 5, `the +5 should be undone: ${before} -> ${after}`);
+});
+
+await check("completing the whole day: confetti", async () => {
+  // water to 8, read to 20 via the store, the forbidden one via its chip
+  await page.eval(
+    `(() => { const d = JSON.parse(localStorage.getItem("loop-habits-v1")); d.state.completions = d.state.completions.filter((c) => c.date !== "${key(now)}"); d.state.completions.push({ habitId: "water", date: "${key(now)}", amount: 7 }, { habitId: "read", date: "${key(now)}", amount: 20 }, { habitId: "food", date: "${key(now)}" }); localStorage.setItem("loop-habits-v1", JSON.stringify(d)); })()`,
+  );
+  await page.goto("/?confetti");
+  await page.waitFor(`!!document.querySelector('[data-tile="water"]')`, 6000);
+  await sleep(1200);
+  assert(
+    !(await page.eval<boolean>(`!!document.querySelector("canvas[data-confetti]")`)),
+    "no confetti on load",
+  );
+  const c = await centre('[data-tile="water"]');
+  await mouse("mousePressed", c.x, c.y);
+  await sleep(1400); // the last glass
+  await mouse("mouseReleased", c.x, c.y);
+  await page.waitFor(`!!document.querySelector("canvas[data-confetti]")`, 3000);
+});
+
+await check(
+  "Settings: four tabs (Szpila, Strażnik, Powiadomienia, Dane), remembered in the URL",
+  async () => {
+    await page.eval(`(${byText("a", "Ustawienia")}).click()`);
+    await page.waitFor(`location.pathname === "/settings"`);
+    const tabs = await page.eval<string[]>(
+      `[...document.querySelectorAll("[role=tablist] [data-tab]")].map((b) => b.innerText.trim())`,
+    );
+    assert(tabs.join("|") === "Szpila|Strażnik|Powiadomienia|Dane", `tabs: ${tabs}`);
+    assert(
+      await page.eval<boolean>(
+        `!!document.querySelector('[data-tab-panel="szpila"] [data-theme-option]')`,
+      ),
+      "theme card not in Szpila",
+    );
+    await page.eval(`document.querySelector('[data-tab="data"]').click()`);
+    await page.waitFor(
+      `location.search.includes("tab=data") && !!document.querySelector('[data-tab-panel="data"]')`,
+    );
+    assert(
+      await page.eval<boolean>(`document.body.innerText.includes("Przywróć z pliku")`),
+      "backup actions missing",
+    );
+    assert(
+      !(await page.eval<boolean>(`!!document.querySelector('[data-tab-panel="szpila"]')`)),
+      "other panels must be hidden",
+    );
+    await page.eval(`document.querySelector('[data-tab="notifications"]').click()`);
+    await page.waitFor(
+      `location.search.includes("tab=notifications") && document.body.innerText.includes("Wieczorne rozliczenie")`,
+    );
+    await page.goto("/settings?tab=guard");
+    await page.waitFor(`!!document.querySelector('[data-tab-panel="guard"]')`, 6000);
+  },
+);
+
+/** Visible elements whose own text is smaller than 12 px (SVG labels excluded). */
+const tinyText = `[...document.querySelectorAll("body *")].filter((el) => !el.closest("svg") && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) && el.getClientRects().length && parseFloat(getComputedStyle(el).fontSize) < 12).map((el) => el.textContent.trim().slice(0, 30) + " (" + getComputedStyle(el).fontSize + ")")`;
+
+await check(
+  "readability: no text under 12 px on Today, Raport, Szpila and Ustawienia",
+  async () => {
+    for (const [path, ready] of [
+      ["/", "[data-status-carousel]"],
+      ["/report", "[role=tablist]"],
+      ["/szpila", "[data-challenge]"],
+      ["/settings?tab=szpila", '[data-tab-panel="szpila"]'],
+      ["/settings?tab=notifications", '[data-tab-panel="notifications"]'],
+    ] as const) {
+      await page.goto(path);
+      await page.waitFor(`!!document.querySelector(${JSON.stringify(ready)})`, 6000);
+      await sleep(900); // splash gone
+      const tiny = await page.eval<string[]>(tinyText);
+      assert(tiny.length === 0, `${path}: ${tiny.slice(0, 5).join(" | ")}`);
+    }
+  },
+);
+
+/** WCAG contrast ratio of two CSS colours (resolved through a canvas). */
+const contrastJs = `(fg, bg) => { const c = document.createElement("canvas").getContext("2d"); const rgb = (col) => { c.fillStyle = "#000"; c.fillStyle = col; c.fillRect(0, 0, 1, 1); const d = c.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2]]; }; const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); }; const a = lum(rgb(fg)), b = lum(rgb(bg)); return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); }`;
+const mutedContrast = `(() => { const s = getComputedStyle(document.documentElement); return (${contrastJs})(s.getPropertyValue("--muted-foreground"), s.getPropertyValue("--background")); })()`;
+
+await check("dark theme: muted text has at least 7:1 contrast", async () => {
+  const ratio = await page.eval<number>(mutedContrast);
+  assert(ratio >= 7, `dark muted contrast ${ratio.toFixed(2)}`);
+});
+
+await check("light theme: switch in Settings, readable, kept after a reload", async () => {
+  await page.goto("/settings?tab=szpila");
+  await page.waitFor(`!!document.querySelector('[data-theme-option="light"]')`, 6000);
+  await page.eval(`document.querySelector('[data-theme-option="light"]').click()`);
+  await page.waitFor(`document.documentElement.dataset.theme === "light"`);
+  const bg = await page.eval<string>(`getComputedStyle(document.body).backgroundColor`);
+  // a light background: very high contrast against black
+  const vsBlack = await page.eval<number>(
+    `(${contrastJs})(getComputedStyle(document.body).backgroundColor, "#000")`,
+  );
+  assert(vsBlack > 15, `body background not light: ${bg} (${vsBlack.toFixed(1)}:1 vs black)`);
+  const ratio = await page.eval<number>(mutedContrast);
+  assert(ratio >= 4.5, `light muted contrast ${ratio.toFixed(2)}`);
+  const fg = await page.eval<number>(
+    `(() => { const s = getComputedStyle(document.documentElement); return (${contrastJs})(s.getPropertyValue("--foreground"), s.getPropertyValue("--card")); })()`,
+  );
+  assert(fg >= 7, `light text on cards ${fg.toFixed(2)}`);
+  // set before hydration on the next start (no dark flash)
+  await page.goto("/");
+  await page.waitFor(`document.readyState !== "loading"`);
+  assert(
+    (await page.eval<string>(`document.documentElement.dataset.theme`)) === "light",
+    "light theme lost on reload",
+  );
+  await page.goto("/settings?tab=szpila");
+  await page.waitFor(`!!document.querySelector('[data-theme-option="dark"]')`, 6000);
+  await page.eval(`document.querySelector('[data-theme-option="dark"]').click()`);
+  await page.waitFor(`document.documentElement.dataset.theme === "dark"`);
 });
 
 // ---------------------------------------------------------------- English

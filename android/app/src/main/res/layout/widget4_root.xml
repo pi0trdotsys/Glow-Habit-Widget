@@ -1,13 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 4x1 "Szpila": the mean cat and one jab. Tap the cat for another jab, tap the text to open the app.
      Jabs only come from habits to DO - forbidden habits never show up on the home screen. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- The background is an ImageView behind the content: its alpha is the per-widget
+     opacity (WidgetPrefs.applyOpacity, chosen in WidgetConfigActivity). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/widget_bg_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget2_bg"
+        android:contentDescription="@null" />
+
+<LinearLayout
     android:id="@+id/szpila_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:background="@drawable/widget2_bg"
     android:paddingStart="10dp"
     android:paddingEnd="14dp"
     android:paddingTop="6dp"
@@ -33,12 +46,15 @@
         <TextView android:id="@+id/szpila_title"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="SZPILA" android:textColor="#ff4d5e" android:textSize="9sp"
-            android:textStyle="bold" android:letterSpacing="0.15" />
+            android:textStyle="bold" android:letterSpacing="0.15"
+            style="@style/WidgetTextShadow" />
         <TextView android:id="@+id/szpila_text"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="1dp"
             android:maxLines="3" android:ellipsize="end"
             android:text="@string/widget_szpila_placeholder"
-            android:textColor="#f4f5f9" android:textSize="12sp" android:lineSpacingMultiplier="1.05" />
+            android:textColor="#f4f5f9" android:textSize="12sp" android:lineSpacingMultiplier="1.05"
+            style="@style/WidgetTextShadow" />
     </LinearLayout>
 </LinearLayout>
+</FrameLayout>

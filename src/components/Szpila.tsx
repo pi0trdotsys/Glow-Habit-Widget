@@ -292,13 +292,13 @@ export function SzpilaCard({ say, onReroll }: { say: SzpilaSay; onReroll: () => 
       <Face mood={say.mood} size={56} />
       <div className="min-w-0 flex-1">
         <div
-          className="text-[11px] font-semibold uppercase tracking-[0.16em]"
+          className="text-xs font-semibold uppercase tracking-[0.16em]"
           style={{ color: "var(--avoid)" }}
         >
           {SZPILA_NAME}
         </div>
         <Line text={say.text} className="mt-1 text-sm leading-snug" />
-        <div className="mt-1.5 text-[10px] text-muted-foreground">
+        <div className="mt-1.5 text-xs text-muted-foreground">
           {L("Dotknij po kolejną szpilę", "Tap for another jab")}
         </div>
       </div>
@@ -307,34 +307,60 @@ export function SzpilaCard({ say, onReroll }: { say: SzpilaSay; onReroll: () => 
 }
 
 /** One compact bubble for the Fokus home screen: face + two lines, tap for another jab. */
-export function SzpilaBubble({ say, onReroll }: { say: SzpilaSay; onReroll: () => void }) {
+export function SzpilaBubble({
+  say,
+  onReroll,
+  hop = false,
+}: {
+  say: SzpilaSay;
+  onReroll: () => void;
+  /** The cat hops (a step was just completed). */
+  hop?: boolean;
+}) {
   return (
     <button
       type="button"
       onClick={onReroll}
-      className="flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-left transition-transform active:scale-[0.99]"
+      data-szpila-bubble
+      data-mood={say.mood}
+      className="flex h-full w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-left transition-transform active:scale-[0.99]"
       style={{
         background: "color-mix(in oklab, var(--avoid) 9%, var(--card))",
         border: "1px solid color-mix(in oklab, var(--avoid) 22%, transparent)",
       }}
       aria-label={`${SZPILA_NAME}: ${say.text}. ${L("Dotknij po kolejną szpilę.", "Tap for another jab.")}`}
     >
-      <Face mood={say.mood} size={40} />
-      <Line text={say.text} className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-snug" />
+      <Face mood={say.mood} size={44} hop={hop} />
+      <Line text={say.text} className="line-clamp-3 min-w-0 flex-1 text-sm leading-snug" />
     </button>
   );
 }
 
-function Face({ mood, size }: { mood: SzpilaSay["mood"]; size: number }) {
+function Face({
+  mood,
+  size,
+  hop = false,
+}: {
+  mood: SzpilaSay["mood"];
+  size: number;
+  hop?: boolean;
+}) {
   const face = useHabits((s) => s.szpila.face);
   const condition = useCatCondition();
-  mood = conditionMood(condition, mood);
+  // A fresh success beats a sulk: the hop shows the pleased face even on a neglected cat.
+  if (!hop) mood = conditionMood(condition, mood);
   return (
     <m.div
-      key={mood}
-      initial={{ rotate: -10, scale: 0.85 }}
-      animate={{ rotate: 0, scale: 1 }}
-      transition={{ type: "spring", stiffness: 400, damping: 14 }}
+      key={`${mood}-${hop}`}
+      initial={{ rotate: -10, scale: 0.85, y: 0 }}
+      animate={
+        hop
+          ? { rotate: [0, -8, 8, 0], scale: 1, y: [0, -10, 0, -4, 0] }
+          : { rotate: 0, scale: 1, y: 0 }
+      }
+      transition={
+        hop ? { duration: 0.7, ease: "easeOut" } : { type: "spring", stiffness: 400, damping: 14 }
+      }
       className="shrink-0"
     >
       <SzpilaAvatar mood={mood} size={size} face={face} condition={condition} />

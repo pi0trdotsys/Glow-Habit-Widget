@@ -55,16 +55,27 @@ function SzpilaPage() {
   const completions = useHabits((s) => s.completions);
   const nightHits = useHabits((s) => s.nightHits);
   const liveOn = useHabits((s) => s.notifications.live);
+  const limitOn = useHabits((s) => s.notifications.dailyLimit);
+  const limitMin = useHabits((s) => s.notifications.dailyLimitMin);
+  const daySocial = useHabits((s) => s.daySocial);
+  // The "within the limit" challenge only once the limit is on and there's data.
+  const dayLimit = useMemo(
+    () =>
+      limitOn && Object.keys(daySocial).length > 0
+        ? { limit: limitMin, social: daySocial }
+        : undefined,
+    [limitOn, limitMin, daySocial],
+  );
   const look = useHabits((s) => s.szpila);
   const setSzpila = useHabits((s) => s.setSzpila);
 
   const p = useMemo(
-    () => progressOf(habits, completions, nightHits, liveOn),
-    [habits, completions, nightHits, liveOn],
+    () => progressOf(habits, completions, nightHits, liveOn, undefined, dayLimit),
+    [habits, completions, nightHits, liveOn, dayLimit],
   );
   const challenges = useMemo(
-    () => weeklyChallenges(habits, completions, nightHits, liveOn),
-    [habits, completions, nightHits, liveOn],
+    () => weeklyChallenges(habits, completions, nightHits, liveOn, undefined, undefined, dayLimit),
+    [habits, completions, nightHits, liveOn, dayLimit],
   );
   const next = nextUnlock(p);
   const condition = useCatCondition();
@@ -138,7 +149,7 @@ function SzpilaPage() {
             <ChallengeRow key={c.id} c={c} />
           ))}
         </ul>
-        <p className="mt-3 text-[11px] text-muted-foreground">
+        <p className="mt-3 text-xs text-muted-foreground">
           {L(
             "Nowe wyzwania w każdy poniedziałek. Komplet w jednym tygodniu odblokowuje minę DJ.",
             "New challenges every Monday. Clear all of them in one week to unlock the DJ face.",
@@ -177,7 +188,7 @@ function SzpilaPage() {
                   <SzpilaAvatar mood="smug" face={f.id} size={56} />
                 </div>
                 <span className="text-xs font-medium">{unlockName(f)}</span>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {open
                     ? active
                       ? L("wybrana", "selected")
@@ -224,7 +235,7 @@ function SzpilaPage() {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-semibold">{unlockName(h)}</span>
-                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
                       {open ? (
                         active ? (
                           L("wybrany", "selected")
@@ -239,7 +250,7 @@ function SzpilaPage() {
                       )}
                     </span>
                   </div>
-                  <div className="text-[11px] text-muted-foreground">{unlockBlurb(h)}</div>
+                  <div className="text-xs text-muted-foreground">{unlockBlurb(h)}</div>
                   {open && (
                     <p className="mt-1.5 text-xs italic leading-snug">
                       {L("„", "“")}
@@ -251,7 +262,7 @@ function SzpilaPage() {
             );
           })}
         </ul>
-        <p className="mt-3 text-[11px] text-muted-foreground">
+        <p className="mt-3 text-xs text-muted-foreground">
           {L(
             "Humor miesza się z klasycznymi szpilami (tryb „Wulgarny”) - w aplikacji, powiadomieniach, widżecie i w nocy.",
             "The mood mixes with the classic jabs (“Foul-mouthed” mode) - in the app, notifications, the widget and at night.",
@@ -289,7 +300,7 @@ function StreakCard({ p, next }: { p: Progress; next: ReturnType<typeof nextUnlo
         </div>
         <div className="text-right">
           <div className="text-lg font-semibold tabular-nums">{p.best}</div>
-          <div className="text-[11px] text-muted-foreground">{L("rekord", "best")}</div>
+          <div className="text-xs text-muted-foreground">{L("rekord", "best")}</div>
         </div>
       </div>
       <div className="mt-4 h-2 overflow-hidden rounded-full bg-background/60">
@@ -352,12 +363,12 @@ function ChallengeRow({ c }: { c: Challenge }) {
             {c.title}
           </span>
           {c.goal > 1 && (
-            <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
               {c.progress}/{c.goal}
             </span>
           )}
         </div>
-        <div className="text-[11px] text-muted-foreground">
+        <div className="text-xs text-muted-foreground">
           {c.status === "failed"
             ? L("Spieprzone. Za tydzień nowa szansa.", "Blown it. New shot next week.")
             : c.detail}

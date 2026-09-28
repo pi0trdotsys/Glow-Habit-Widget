@@ -113,13 +113,15 @@ describe("CSV export", () => {
     ];
     const csv = toCsv(habits, c, {}, now);
     const lines = csv.trim().split("\r\n");
-    expect(lines[0]).toBe("data;zadanie;rodzaj;cel;jednostka;wynik;status;procent;social_w_nocy");
+    expect(lines[0]).toBe(
+      "data;zadanie;rodzaj;cel;jednostka;wynik;status;procent;social_w_nocy;social_dzien_min",
+    );
     expect(lines).toHaveLength(1 + 121 * 2);
     const y = lines.filter((l) => l.startsWith(key(addDays(now, -1))));
     expect(y).toContain(
-      `${key(addDays(now, -1))};Picie wody;do zrobienia;8;szklanek;8;zrobione;100;`,
+      `${key(addDays(now, -1))};Picie wody;do zrobienia;8;szklanek;8;zrobione;100;;`,
     );
-    expect(y).toContain(`${key(addDays(now, -1))};"Fast food; ""XL""";zakazane;0;;0;czysto;100;`);
+    expect(y).toContain(`${key(addDays(now, -1))};"Fast food; ""XL""";zakazane;0;;0;czysto;100;;`);
     const d2 = lines.filter((l) => l.startsWith(key(addDays(now, -2))));
     expect(d2.some((l) => l.includes(";3;częściowo;38;"))).toBe(true);
     expect(d2.some((l) => l.includes(";1;wpadka;"))).toBe(true);

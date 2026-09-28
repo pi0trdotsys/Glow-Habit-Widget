@@ -81,7 +81,7 @@ export function AvoidChips({ habits, day = new Date() }: { habits: Habit[]; day?
               />
               <span className="max-w-[9rem] truncate">{h.name}</span>
               <span
-                className="grid h-4 w-4 place-items-center rounded-full text-[10px] font-bold"
+                className="grid h-4 w-4 place-items-center rounded-full text-xs font-bold"
                 style={{
                   backgroundColor:
                     st === "clean" ? AVOID_COLOR : st === "slip" ? "var(--muted)" : "transparent",
@@ -140,7 +140,7 @@ export function AvoidChips({ habits, day = new Date() }: { habits: Habit[]; day?
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-semibold">{selected.name}</div>
-                    <div className="text-[11px] text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       {todayKey(day) === todayKey(now)
                         ? L("Dziś", "Today")
                         : L("Wczoraj", "Yesterday")}{" "}

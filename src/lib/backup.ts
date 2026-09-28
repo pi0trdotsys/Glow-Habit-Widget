@@ -51,8 +51,8 @@ export async function saveBackup(share = false): Promise<string> {
 
 /** Full history as CSV (UTF-8 with BOM so Excel shows Polish letters). Returns the location. */
 export async function exportCsv(share = false): Promise<string> {
-  const { habits, completions, nightHits } = useHabits.getState();
-  const text = "﻿" + toCsv(habits, completions, nightHits);
+  const { habits, completions, nightHits, daySocial } = useHabits.getState();
+  const text = "﻿" + toCsv(habits, completions, nightHits, new Date(), daySocial);
   const name = csvFileName();
   if (Capacitor.isNativePlatform()) {
     const { location } = await Native.saveFile({ name, text, mime: "text/csv", share });

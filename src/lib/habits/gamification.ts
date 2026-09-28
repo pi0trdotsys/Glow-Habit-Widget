@@ -232,12 +232,20 @@ export function formaStreaks(
   return { current: run, best };
 }
 
+/** The daily social media limit, when it's on (for the "within the limit" challenge). */
+export interface DayLimit {
+  limit: number;
+  /** Minutes per day ("yyyy-MM-dd"). */
+  social: Record<string, number>;
+}
+
 export function progressOf(
   habits: Habit[],
   completions: Completion[],
   nightHits: Record<string, number> = {},
   liveOn = false,
   now: Date = new Date(),
+  dayLimit?: DayLimit,
 ): Progress {
   const s = formaStreaks(habits, completions, now);
   const first = todayKey(firstDay(habits, now));
@@ -246,7 +254,7 @@ export function progressOf(
   for (let w = 1; w <= 12; w++) {
     const monday = addDays(thisWeek, -7 * w);
     if (todayKey(addDays(monday, 6)) < first) break;
-    const ch = weeklyChallenges(habits, completions, nightHits, liveOn, now, monday);
+    const ch = weeklyChallenges(habits, completions, nightHits, liveOn, now, monday, dayLimit);
     if (ch.length === 3 && ch.every((c) => c.status === "done")) perfectWeeks++;
   }
   return { ...s, perfectWeeks };
@@ -339,6 +347,7 @@ export function weeklyChallenges(
   liveOn = false,
   now: Date = new Date(),
   monday: Date = startOfWeek(now, { weekStartsOn: 1 }),
+  dayLimit?: DayLimit,
 ): Challenge[] {
   const idx = indexEntries(completions);
   const seed = weekSeed(monday);
@@ -454,6 +463,31 @@ export function weeklyChallenges(
         progress: clean,
         goal: 7,
         status: bad > 0 ? "failed" : weekOver ? "done" : "active",
+      };
+    });
+  }
+
+  // Every day within the daily social media limit (needs the limit on).
+  if (dayLimit) {
+    candidates.push(() => {
+      let over = 0;
+      let within = 0;
+      for (let i = 0; i <= last; i++) {
+        const m = dayLimit.social[todayKey(day(i))];
+        if (m == null) continue;
+        if (m > dayLimit.limit) over++;
+        else if (i < sinceMonday) within++; // that day is over
+      }
+      return {
+        id: "limit7",
+        title: L("Tydzień w limicie social mediów", "A week within the social media limit"),
+        detail: L(
+          `Każdego dnia najwyżej ${dayLimit.limit} min social mediów.`,
+          `At most ${dayLimit.limit} min of social media every day.`,
+        ),
+        progress: within,
+        goal: 7,
+        status: over > 0 ? "failed" : weekOver ? "done" : "active",
       };
     });
   }

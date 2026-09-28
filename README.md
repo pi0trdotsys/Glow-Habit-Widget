@@ -38,7 +38,7 @@ robi podsumowanie tygodnia, którego nie chcesz czytać.
 
 Zrobisz swoje, dostaniesz pochwałę. Złośliwą, ale zawsze.
 
-> **Szpila domyślnie przeklina.** Wolisz grzeczniej? Ustawienia → **„Łagodny”**.
+> **Szpila domyślnie przeklina.** Wolisz grzeczniej? Ustawienia → Szpila → **„Łagodny”**.
 > Do tego 3, 5 albo 8 szpil dziennie i godziny ciszy.
 
 ## ◉ Po północy nie ma zmiłuj
@@ -57,7 +57,18 @@ Rano czeka **rachunek za noc**: _„3× Instagram (22 min) · 1× YouTube (25 mi
 · 61 min z telefonem po północy · telefon odłożony ok. 1:40”_. Z komentarzem.
 
 „Scrollowanie w łóżku” ocenia się samo i uczciwie: liczą się **tylko social
-media**. Budzik, muzyka i podcast do snu to nie wpadka.
+media**. Budzik, muzyka i podcast do snu to nie wpadka. Liczą się tylko
+prawdziwe sesje z telefonem: powiadomienie, które zapali ekran, albo
+zaplanowane wyłączenie telefonu nie udają, że nie śpisz.
+
+## ◉ W dzień też
+
+- **Rano najpierw zadania, potem Instagram.** Od 5:00 social media są
+  zablokowane, dopóki nie odhaczysz porannych zadań (domyślnie zęby i pierwsza
+  szklanka wody). Odhaczasz je prosto z blokady.
+- **Dzienny limit**, np. 60 minut social mediów. Za 10 minut do końca
+  ostrzeżenie, po limicie szpile, a po trzeciej blokada. Na ekranie Dziś
+  widzisz licznik _„42/60 min”_, a w raporcie ile dni zmieściłeś się w limicie.
 
 ## ◉ Kot, który rośnie razem z tobą
 
@@ -81,12 +92,22 @@ media**. Budzik, muzyka i podcast do snu to nie wpadka.
 
 ## ◉ Dzień, który układa się sam
 
-Otwierasz aplikację i widzisz tylko to, co ważne: postęp dnia, jedną szpilę i
+Otwierasz aplikację i widzisz tylko to, co ważne: postęp dnia, **jedną kartę
+stanu** (szpila, rachunek za noc, poranna blokada, limit - przesuwasz w bok) i
 **jedno zadanie na teraz**. Resztę dnia chowa zwijany **plan**. Osiem
 szklanek wody? Rozłożone równo od rana do wieczora.
 
-Przytrzymaj kafelek i zadanie zaliczone. Ile razy, ile minut, ile kroków,
-ustawiasz po swojemu.
+- **Przytrzymaj** kafelek: +1 i gotowe.
+- **Trzymaj dłużej**: +1 / +2 / +5 albo suwak, żeby wpisać ilość jednym ruchem.
+- **Przesuń w bok**: cofasz ostatni wpis.
+- Wibracja przy każdym kroku, **konfetti przy komplecie dnia**, a kot na
+  karcie cieszy się z każdego zaliczenia.
+
+<div align="center">
+<img src="docs/screenshots/sheet.png" width="240" alt="Przytrzymaj dłużej: +1, +2, +5 albo suwak" />
+&nbsp;&nbsp;
+<img src="docs/screenshots/today-light.png" width="240" alt="Jasny motyw" />
+</div>
 
 ## ◉ Zakazane. Na czerwono.
 
@@ -110,19 +131,24 @@ Brak potwierdzenia = wpadka. Wczoraj rozliczysz jeszcze rano, do 12:00.
 
 ## ◉ Bez otwierania aplikacji
 
-- **Cztery widżety**: wredny kot 4×1, następne zadanie 1×1, ikony z
-  pierścieniem postępu i lista. Zaliczasz przytrzymaniem, więc przypadkowe
-  dotknięcie niczego nie psuje.
+- **Cztery widżety**: wredny kot 4×1, następne zadanie 1×1 albo 2×1 (z kotem,
+  opóźnieniem i zmieniającą się linijką: szpila, seria, postęp, limit, co
+  potem), ikony z pierścieniem postępu i lista. Zaliczasz przytrzymaniem, więc
+  przypadkowe dotknięcie niczego nie psuje.
+- **Ustawienia widżetu** przy dodawaniu: przezroczystość tła pod twoją tapetę
+  i co ma pokazywać zmieniająca się linijka.
 - **Stałe powiadomienie** z paskiem postępu, planem i szybkimi przyciskami:
   **„+1 szklanka”**, **„+15 min Czytanie”**, **„✓ Mycie”**.
 - **Wieczorne rozliczenie** zakazanych jednym powiadomieniem.
 - **Kroki z Health Connect**: Google Fit, Samsung Health czy Mi Fitness wpisują je za ciebie.
 
-## ◉ Polski i English
+## ◉ Polski i English, jasno albo ciemno
 
 Cała aplikacja, szpile (tak, przekleństwa też), powiadomienia i widżety mówią
 **po polsku i po angielsku**. Język wybierasz przy pierwszym uruchomieniu albo
-w każdej chwili w Ustawieniach.
+w każdej chwili w Ustawieniach. Motyw: **ciemny, jasny albo jak telefon**.
+Ustawienia są podzielone na cztery zakładki: Szpila, Strażnik, Powiadomienia,
+Dane.
 
 <br />
 
@@ -145,14 +171,15 @@ usuwasz albo dodajesz własne z ponad 20 szablonów.
 
 ## ▸ Pierwsze 2 minuty, które robią różnicę
 
-|     | Gdzie                                                      | Po co                                                                            |
-| --- | ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 🔔  | Zgoda na powiadomienia                                     | Szpile, pasek postępu, rachunek za noc                                           |
-| 📱  | Ustawienia → Automatyczne śledzenie → **Otwórz**           | Szpila na żywo, rachunek za noc, uczciwa ocena scrollowania                      |
-| 🛑  | Ustawienia → Szpila na żywo → **Zezwól**                   | Pełnoekranowa blokada po 3. szpili                                               |
-| 👣  | Ustawienia → Automatyczne śledzenie → **Połącz**           | Kroki wpisują się same                                                           |
-| 🔋  | Ustawienia systemu → Bateria → Szpila → **Bez ograniczeń** | Szpile i nocny strażnik działają punktualnie (szczególnie Xiaomi, POCO, Samsung) |
-| ➕  | Przytrzymaj ekran główny → **Widżety** → Szpila            | Kot zawsze na widoku                                                             |
+|     | Gdzie                                                       | Po co                                                                            |
+| --- | ----------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 🔔  | Zgoda na powiadomienia                                      | Szpile, pasek postępu, rachunek za noc                                           |
+| 📱  | Ustawienia → Strażnik → Automatyczne śledzenie → **Otwórz** | Szpila na żywo, rachunek za noc, poranek, limit dzienny                          |
+| 🛑  | Ustawienia → Strażnik → Szpila na żywo → **Zezwól**         | Pełnoekranowa blokada po 3. szpili                                               |
+| 🌅  | Ustawienia → Strażnik → **Social media w dzień**            | Poranne zadania i dzienny limit                                                  |
+| 👣  | Ustawienia → Strażnik → Automatyczne śledzenie → **Połącz** | Kroki wpisują się same                                                           |
+| 🔋  | Ustawienia systemu → Bateria → Szpila → **Bez ograniczeń**  | Szpile i nocny strażnik działają punktualnie (szczególnie Xiaomi, POCO, Samsung) |
+| ➕  | Przytrzymaj ekran główny → **Widżety** → Szpila             | Kot zawsze na widoku                                                             |
 
 ## ▸ Twoje dane są twoje
 
@@ -190,7 +217,7 @@ po stronie natywnej `WidgetShared.tr()`.
 ```bash
 bun install
 bun run dev              # web, http://localhost:8080
-bun run test             # testy logiki (planer, zakazane, grywalizacja, statystyki, noce, kopie)
+bun run test             # testy logiki (planer, zakazane, grywalizacja, statystyki, noce, strażnik, i18n, UX)
 bun run test:e2e         # build + testy na zbudowanej aplikacji w headless Edge/Chrome
 
 bun run build:cap        # statyczny build dla Capacitora

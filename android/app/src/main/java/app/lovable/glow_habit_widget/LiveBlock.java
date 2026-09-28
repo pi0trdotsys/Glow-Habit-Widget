@@ -30,6 +30,9 @@ final class LiveBlock {
         void onSleep();
 
         void onHoldThrough();
+
+        /** A task button was tapped (morning lock: tick the habit off right from the block). */
+        default void onAction(String id) {}
     }
 
     private static View shown;
@@ -40,8 +43,17 @@ final class LiveBlock {
         return shown != null;
     }
 
-    @SuppressLint({"ClickableViewAccessibility", "InflateParams"})
     static boolean show(Context c, String title, String text, String sub, int catRes, Listener listener) {
+        return show(c, title, text, sub, catRes, null, null, listener);
+    }
+
+    /**
+     * @param sleepLabel label of the way-out button (null = "Idę spać")
+     * @param actions    optional task buttons: {id, label} pairs, reported via onAction
+     */
+    @SuppressLint({"ClickableViewAccessibility", "InflateParams"})
+    static boolean show(Context c, String title, String text, String sub, int catRes, String sleepLabel,
+                        java.util.List<String[]> actions, Listener listener) {
         if (shown != null) return true;
         WindowManager wm = (WindowManager) c.getSystemService(Context.WINDOW_SERVICE);
         if (wm == null || !android.provider.Settings.canDrawOverlays(c)) return false;
@@ -67,7 +79,27 @@ final class LiveBlock {
 
         // Static texts follow the app language (the layout defaults follow the system one).
         boolean en = WidgetShared.en(c);
-        ((TextView) root.findViewById(R.id.block_sleep)).setText(en ? "😴  Going to bed" : "😴  Idę spać");
+        ((TextView) root.findViewById(R.id.block_sleep)).setText(sleepLabel != null ? sleepLabel
+            : en ? "😴  Going to bed" : "😴  Idę spać");
+        android.widget.LinearLayout box = root.findViewById(R.id.block_actions);
+        if (actions != null && !actions.isEmpty()) {
+            float dp = c.getResources().getDisplayMetrics().density;
+            for (String[] a : actions) {
+                TextView b = new TextView(c);
+                b.setText(a[1]);
+                b.setTextColor(0xFFF4F5F9);
+                b.setTextSize(15);
+                b.setGravity(Gravity.CENTER);
+                b.setBackgroundResource(R.drawable.live_block_hold_bg);
+                android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT, (int) (48 * dp));
+                lp.topMargin = (int) (8 * dp);
+                b.setLayoutParams(lp);
+                b.setOnClickListener(v -> listener.onAction(a[0]));
+                box.addView(b);
+            }
+            box.setVisibility(View.VISIBLE);
+        }
         ProgressBar bar = root.findViewById(R.id.block_hold_progress);
         TextView holdText = root.findViewById(R.id.block_hold_text);
         String idle = en ? "Hold for 10 s if you really must" : "Przytrzymaj 10 s, jeśli naprawdę musisz";

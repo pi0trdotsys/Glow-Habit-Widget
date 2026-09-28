@@ -1,0 +1,201 @@
+// The guard outside the night (native side: DayGuard.java + LiveGuardService):
+// - "najpierw zadania, potem Instagram": in the morning social media stays
+//   blocked until the morning habits are ticked off (one unit is enough - the
+//   morning brush, the first glass of water);
+// - the daily social media limit: past it, Szpila jabs and blocks like at night.
+// Lines are mirrored into the widget snapshot (live.lines). Placeholders:
+// {tasks} pending morning habits, {app}, {used} / {limit} / {over} / {left}
+// minutes, {m} minutes in the app, {time}, {u} your name.
+import type { Habit } from "@/lib/habits/types";
+import type { NotificationSettings, TauntLevel } from "@/lib/habits/store";
+import { categoryOf } from "@/lib/habits/szpila";
+import { goalOf, isDueOn, kindOf, amountOn, todayKey } from "@/lib/habits/utils";
+import type { Completion } from "@/lib/habits/types";
+import { L, pick } from "@/lib/i18n";
+
+type Key = "morning" | "morningDone" | "dayOver" | "dayEscalate" | "dayWarn" | "dayBlock";
+
+const HARD: Record<Key, string[]> = {
+  morning: [
+    "Najpierw {tasks}. Potem {app}. Taka jest umowa, a ja jej pilnuję.",
+    "{app} przed {tasks}? Nie ze mną. Ogarnij się, dosłownie.",
+    "Rano najpierw ty, potem algorytm. Zostało: {tasks}.",
+    "Chcesz scrollować? Zarób na to: {tasks}. Dwie minuty i {app} jest twój.",
+    "Kurwa, jeszcze nawet {tasks} nie zrobione, a ty już w {app}. Odłóż to.",
+  ],
+  morningDone: [
+    "Zrobione. Social media odblokowane. Tylko bez przesady, wiem, gdzie mieszkasz.",
+    "Poranek ogarnięty. Możesz scrollować - z czystym sumieniem, na razie.",
+    "No proszę, najpierw obowiązki, potem przyjemności. Kot zadowolony.",
+  ],
+  dayOver: [
+    "Limit {limit} min przekroczony: dziś już {used} min social mediów. Zamykaj {app}.",
+    "{used} min scrollowania dziś. Limit był {limit}. Co ty robisz ze swoim życiem?",
+    "Dzienny limit poszedł się jebać: {used}/{limit} min. {app} na dziś wystarczy.",
+    "Przekroczone o {over} min. Każda kolejna minuta na {app} to minuta ukradziona z twojego dnia.",
+  ],
+  dayEscalate: [
+    "Wciąż {app}. {used} min dziś, limit {limit}. Serio, odłóż to.",
+    "Już {over} min ponad limit. Kciuk ci odpadnie, a mózg zgnije. Zamykaj.",
+    "{m} min w {app} od ostatniej szpili. Nie żartuję, kończ.",
+  ],
+  dayWarn: [
+    "Zostało {left} min social mediów na dziś. Wydaj je mądrze albo wcale.",
+    "Uwaga: {left} min do limitu. Potem zaczynam szpilować.",
+  ],
+  dayBlock: [
+    "Dość. {used} min social mediów dziś przy limicie {limit}. {app} ma fajrant.",
+    "Trzy szpile zignorowane, limit przekroczony o {over} min. Teraz ja zamykam {app}.",
+    "Na dziś koniec. Jutro nowy limit, dziś idź zrób coś prawdziwego.",
+  ],
+};
+
+const SOFT: Record<Key, string[]> = {
+  morning: ["Najpierw {tasks}, potem {app}. To tylko chwila!"],
+  morningDone: ["Poranek ogarnięty - social media odblokowane. Miłego dnia!"],
+  dayOver: ["Dzisiejszy limit {limit} min social mediów minął ({used} min). Może przerwa?"],
+  dayEscalate: ["Już {over} min ponad limit. Pora odłożyć telefon."],
+  dayWarn: ["Zostało {left} min social mediów na dziś."],
+  dayBlock: ["Limit na dziś wykorzystany ({used}/{limit} min). Wróć jutro!"],
+};
+
+const HARD_EN: Record<Key, string[]> = {
+  morning: [
+    "First {tasks}. Then {app}. That's the deal, and I'm enforcing it.",
+    "{app} before {tasks}? Not on my watch. Get your shit together, literally.",
+    "Mornings: you first, the algorithm second. Still left: {tasks}.",
+    "Want to scroll? Earn it: {tasks}. Two minutes and {app} is yours.",
+    "For fuck's sake, {tasks} isn't even done and you're already on {app}. Put it down.",
+  ],
+  morningDone: [
+    "Done. Social media unlocked. Don't overdo it, I know where you live.",
+    "Morning sorted. Scroll away - with a clear conscience, for now.",
+    "Look at that: duties first, fun second. The cat approves.",
+  ],
+  dayOver: [
+    "Limit of {limit} min blown: {used} min of social media today. Close {app}.",
+    "{used} min of scrolling today. The limit was {limit}. What are you doing with your life?",
+    "The daily limit just got fucked: {used}/{limit} min. That's enough {app} for today.",
+    "{over} min over. Every extra minute on {app} goes on my list of grievances.",
+  ],
+  dayEscalate: [
+    "Still on {app}. {used} min today, limit {limit}. Seriously, put it down.",
+    "{over} min over the limit already. Your thumb will fall off and your brain will rot. Close it.",
+    "{m} min on {app} since my last jab. I'm not joking - wrap it up.",
+  ],
+  dayWarn: [
+    "{left} min of social media left today. Spend them wisely - or not at all.",
+    "Heads up: {left} min to the limit. Then the jabbing starts.",
+  ],
+  dayBlock: [
+    "Enough. {used} min of social media today on a {limit} min limit. {app} is off duty.",
+    "Three jabs ignored, {over} min over the limit. Now I'm closing {app}.",
+    "That's it for today. New limit tomorrow - today, go do something real.",
+  ],
+};
+
+const SOFT_EN: Record<Key, string[]> = {
+  morning: ["First {tasks}, then {app}. It only takes a moment!"],
+  morningDone: ["Morning sorted - social media unlocked. Have a great day!"],
+  dayOver: ["Today's {limit} min social media limit is up ({used} min). Maybe take a break?"],
+  dayEscalate: ["{over} min over the limit. Time to put the phone down."],
+  dayWarn: ["{left} min of social media left today."],
+  dayBlock: ["Today's limit is used up ({used}/{limit} min). See you tomorrow!"],
+};
+
+export function dayLines(level: TauntLevel, userName: string | null): Record<Key, string[]> {
+  const base = level === "soft" ? pick(SOFT, SOFT_EN) : pick(HARD, HARD_EN);
+  const u = (l: string) => l.replaceAll("{u}", userName || L("ty", "you"));
+  const out = {} as Record<Key, string[]>;
+  for (const k of Object.keys(base) as Key[]) out[k] = base[k].map(u);
+  return out;
+}
+
+/** Morning habits by default: brushing teeth and drinking water (habits to do, due today). */
+export function autoMorningHabits(habits: Habit[], today: Date = new Date()): string[] {
+  return habits
+    .filter((h) => kindOf(h) === "build" && isDueOn(h, today))
+    .filter((h) => ["teeth", "water"].includes(categoryOf(h)))
+    .map((h) => h.id);
+}
+
+/** The chosen morning habits (null = automatic), limited to existing habits to do. */
+export function morningHabitIds(
+  n: NotificationSettings,
+  habits: Habit[],
+  today: Date = new Date(),
+): string[] {
+  if (n.morningHabits == null) return autoMorningHabits(habits, today);
+  const ok = new Set(habits.filter((h) => kindOf(h) === "build").map((h) => h.id));
+  return n.morningHabits.filter((id) => ok.has(id));
+}
+
+/** Mirrors DayGuard.morningDone: one unit logged is enough in the morning. */
+export function morningDone(h: Habit, completions: Completion[], day: Date = new Date()): boolean {
+  const g = goalOf(h);
+  const need = Math.max(1, Math.min(g.step ?? 1, g.target));
+  return amountOn(h, completions, day) >= need;
+}
+
+/** Morning habits still pending today (for the Today banner). */
+export function morningPending(
+  n: NotificationSettings,
+  habits: Habit[],
+  completions: Completion[],
+  now: Date = new Date(),
+): Habit[] {
+  const ids = morningHabitIds(n, habits, now);
+  return ids
+    .map((id) => habits.find((h) => h.id === id)!)
+    .filter((h) => h && !morningDone(h, completions, now));
+}
+
+const toMin = (t: string) => {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + (m || 0);
+};
+
+/** Is the morning lock active at this minute (05:00 .. until)? Mirrors DayGuard.phase. */
+export function morningWindow(n: NotificationSettings, nowMin: number): boolean {
+  return n.morningLock && nowMin >= 5 * 60 && nowMin < toMin(n.morningUntil);
+}
+
+/** The `morning` / `day` parts of the snapshot's `live` object (DayGuard.java). */
+export function dayGuardState(n: NotificationSettings, habits: Habit[], today: Date = new Date()) {
+  return {
+    morning: {
+      enabled: n.morningLock,
+      until: toMin(n.morningUntil),
+      habits: morningHabitIds(n, habits, today),
+    },
+    day: { enabled: n.dailyLimit, limit: n.dailyLimitMin },
+  };
+}
+
+// ---------------------------------------------------------------- stats
+
+export type LimitDay = { key: string; minutes: number | null; over: boolean };
+
+/** Social media minutes per day (last `days`, oldest first) against the limit. */
+export function limitSeries(
+  daySocial: Record<string, number>,
+  limit: number,
+  days = 14,
+  now: Date = new Date(),
+): LimitDay[] {
+  const out: LimitDay[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = todayKey(d);
+    const minutes = daySocial[key] ?? null;
+    out.push({ key, minutes, over: minutes != null && minutes > limit });
+  }
+  return out;
+}
+
+/** Days within the limit / days with data, among the given series. */
+export function limitScore(series: LimitDay[]): { within: number; tracked: number } {
+  const tracked = series.filter((d) => d.minutes != null);
+  return { within: tracked.filter((d) => !d.over).length, tracked: tracked.length };
+}

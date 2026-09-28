@@ -28,4 +28,30 @@
         <item name="android:backgroundDimEnabled">true</item>
         <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
     </style>
+
+    <!-- Widget settings (WidgetConfigActivity): opaque dark screen, but the real wallpaper
+         shows through the preview strip (transparent window background + showWallpaper),
+         so the chosen transparency is judged against the actual home screen. -->
+    <style name="Theme.Szpila.Config" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowShowWallpaper">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:colorBackground">#0b0d11</item>
+        <item name="android:statusBarColor">#0b0d11</item>
+        <item name="android:navigationBarColor">#0b0d11</item>
+        <item name="android:colorPrimary">#1b1d26</item>
+        <item name="android:colorPrimaryDark">#0b0d11</item>
+        <item name="android:colorAccent">#60e7b4</item>
+        <item name="android:textColorPrimary">#f4f5f9</item>
+        <item name="android:textColorSecondary">#9398a5</item>
+    </style>
+
+    <!-- Subtle dark shadow on widget texts: invisible on the widget's own dark background,
+         keeps them readable on a light wallpaper when the background is made transparent. -->
+    <style name="WidgetTextShadow">
+        <item name="android:shadowColor">#99000000</item>
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">1</item>
+        <item name="android:shadowRadius">3</item>
+    </style>
 </resources>

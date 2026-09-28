@@ -71,7 +71,7 @@ export function AvoidCard({ habit }: { habit: Habit }) {
         </Link>
         <Link to="/habits/$id" params={{ id: habit.id }} className="min-w-0 flex-1">
           <div className="truncate font-medium">{habit.name}</div>
-          <div className="text-[11px] text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             {limitLabel(limit)}
             {limit.times > 0 && (
               <>
@@ -119,14 +119,14 @@ export function AvoidCard({ habit }: { habit: Habit }) {
         </button>
       </div>
       {status === "pending" && habit.source === "screen" ? (
-        <p className="mt-2 text-[11px] text-muted-foreground">
+        <p className="mt-2 text-xs text-muted-foreground">
           {L(
             `📱 Ocena automatyczna: po ${habit.lateAfter ?? DEFAULT_LATE_AFTER} liczę czas ekranu (tolerancja ${habit.lateLimit ?? DEFAULT_LATE_LIMIT} min). Przyciski nadpisują ocenę.`,
             `📱 Auto-check: after ${habit.lateAfter ?? DEFAULT_LATE_AFTER} I count screen time (${habit.lateLimit ?? DEFAULT_LATE_LIMIT} min allowed). The buttons override it.`,
           )}
         </p>
       ) : status === "pending" ? (
-        <p className="mt-2 text-[11px]" style={{ color: AVOID_COLOR }}>
+        <p className="mt-2 text-xs" style={{ color: AVOID_COLOR }}>
           {L(
             "Bez potwierdzenia do północy dzień liczy się jako wpadka.",
             "Not confirmed by midnight? The day counts as a slip.",

@@ -54,6 +54,15 @@
             android:textColor="#B3F4F5F9"
             android:textSize="13sp" />
 
+        <!-- Task buttons (morning lock: tick habits off right here) -->
+        <LinearLayout
+            android:id="@+id/block_actions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="vertical"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/block_sleep"
             android:layout_width="match_parent"

@@ -75,10 +75,21 @@ public class SzpilaWidgetProvider extends AppWidgetProvider {
         return set[Math.max(0, Math.min(2, mood))];
     }
 
+    @Override
+    public void onDeleted(Context context, int[] ids) {
+        WidgetPrefs.delete(context, ids);
+    }
+
     static void updateWidget(Context context, AppWidgetManager mgr, int widgetId) {
         WidgetShared.normalizeIfStale(context);
+        mgr.updateAppWidget(widgetId, build(context, WidgetPrefs.opacity(context, widgetId)));
+    }
+
+    /** The widget's views with the given background opacity (also the WidgetConfigActivity preview). */
+    static RemoteViews build(Context context, int opacity) {
         Jab jab = currentJab(context);
         RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget4_root);
+        WidgetPrefs.applyOpacity(rv, opacity);
         rv.setTextViewText(R.id.szpila_text, jab.text);
         String cond = WidgetShared.state(context).optString("cat", "normal");
         int mood = condMood(cond, jab.mood);
@@ -99,8 +110,7 @@ public class SzpilaWidgetProvider extends AppWidgetProvider {
         rv.setOnClickPendingIntent(R.id.szpila_cat_box, rerollPi);
         PendingIntent open = WidgetShared.openAppIntent(context, 401);
         if (open != null) rv.setOnClickPendingIntent(R.id.szpila_text_box, open);
-
-        mgr.updateAppWidget(widgetId, rv);
+        return rv;
     }
 
     /** mood: 0 smug, 1 angry, 2 impressed. */

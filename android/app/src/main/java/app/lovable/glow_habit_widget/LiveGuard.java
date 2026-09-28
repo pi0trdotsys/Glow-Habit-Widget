@@ -325,8 +325,9 @@ final class LiveGuard {
 
     /** Start the guard now if it should be running (in the window, enabled, access granted). */
     static void ensure(Context c) {
-        if (!enabled(c) || LiveGuardService.running) return;
-        if (!inWindow(WidgetShared.nowMinute(), start(c), until(c))) return;
+        if (LiveGuardService.running) return;
+        // Night guard, morning lock or daily limit - whichever phase is active now.
+        if (DayGuard.phase(c) == DayGuard.OFF) return;
         try {
             Intent i = new Intent(c, LiveGuardService.class);
             if (Build.VERSION.SDK_INT >= 26) c.startForegroundService(i);
@@ -343,19 +344,20 @@ final class LiveGuard {
         Intent i = new Intent(c, NotifierReceiver.class).setAction(ACTION_START);
         PendingIntent pi = PendingIntent.getBroadcast(c, 7600, i,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        // The bedtime reminder works without usage access; the guard itself needs it.
-        if (!enabled(c) && !bedtimeOn(c)) {
+        // Next start of any phase (night / morning lock / daily limit), plus the bedtime
+        // reminder, which works without usage access.
+        java.util.List<Integer> starts = DayGuard.phaseStarts(DayGuard.config(c));
+        if (bedtimeOn(c)) starts.add(bedtimeAt(c));
+        Calendar at = Calendar.getInstance();
+        int now = at.get(Calendar.HOUR_OF_DAY) * 60 + at.get(Calendar.MINUTE);
+        int next = DayGuard.minutesToNextStart(now, starts);
+        if (next < 0) {
             am.cancel(pi);
             return;
         }
-        Calendar at = Calendar.getInstance();
-        int now = at.get(Calendar.HOUR_OF_DAY) * 60 + at.get(Calendar.MINUTE);
-        int from = start(c);
-        at.set(Calendar.HOUR_OF_DAY, from / 60);
-        at.set(Calendar.MINUTE, from % 60);
         at.set(Calendar.SECOND, 2);
         at.set(Calendar.MILLISECOND, 0);
-        if (from <= now) at.add(Calendar.DAY_OF_YEAR, 1);
+        at.add(Calendar.MINUTE, next);
         try {
             boolean exact = Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms();
             if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at.getTimeInMillis(), pi);

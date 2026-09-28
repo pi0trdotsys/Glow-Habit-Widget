@@ -42,7 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <li key={to}>
                 <Link
                   to={to}
-                  className="flex flex-col items-center gap-1 py-3 text-[10px]"
+                  className="flex flex-col items-center gap-1 py-3 text-xs"
                   style={{
                     color: active ? "var(--primary)" : "var(--muted-foreground)",
                   }}

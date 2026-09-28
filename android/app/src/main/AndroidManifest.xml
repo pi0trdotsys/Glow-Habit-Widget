@@ -37,6 +37,21 @@
             android:noHistory="true"
             android:taskAffinity="app.lovable.glow_habit_widget.hold" />
 
+        <!-- Widget settings (background transparency, ticker lines): shown by the launcher when a
+             widget is placed and on "reconfigure" (Android 12+). Exported for the launcher; it only
+             accepts appWidgetIds that belong to this app. -->
+        <activity
+            android:name=".WidgetConfigActivity"
+            android:exported="true"
+            android:label="@string/widget_config_title"
+            android:theme="@style/Theme.Szpila.Config"
+            android:excludeFromRecents="true"
+            android:taskAffinity="app.lovable.glow_habit_widget.widgetconfig">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <!-- Health Connect permission usage screen (Android 14+) opens the app -->
         <activity-alias
             android:name="ViewPermissionUsageActivity"

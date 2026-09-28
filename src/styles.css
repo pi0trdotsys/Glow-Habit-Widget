@@ -75,7 +75,7 @@
   --secondary: oklch(0.27 0.018 270);
   --secondary-foreground: oklch(0.97 0.005 270);
   --muted: oklch(0.24 0.014 270);
-  --muted-foreground: oklch(0.68 0.02 270);
+  --muted-foreground: oklch(0.76 0.02 270);
   --accent: oklch(0.74 0.18 25);
   --accent-foreground: oklch(0.18 0.02 270);
   --destructive: oklch(0.66 0.22 25);
@@ -108,6 +108,50 @@
   --habit-sand: oklch(0.78 0.07 75);
   /* Forbidden ("avoid") habits - red theme. Hex twin: AVOID_HEX in widget/bridge.ts */
   --avoid: oklch(0.67 0.22 18);
+  color-scheme: dark;
+}
+
+/* Light theme (Settings -> Szpila -> Wygląd, or "like the phone"). Accents are darker so
+   text and rings stay readable on white (contrast >= 4.5:1 for text). */
+html[data-theme="light"] {
+  --background: oklch(0.975 0.004 270);
+  --foreground: oklch(0.22 0.02 270);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.02 270);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.02 270);
+  --primary: oklch(0.52 0.12 165);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.94 0.006 270);
+  --secondary-foreground: oklch(0.22 0.02 270);
+  --muted: oklch(0.95 0.005 270);
+  --muted-foreground: oklch(0.44 0.02 270);
+  --accent: oklch(0.58 0.18 25);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.53 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0 0 0 / 10%);
+  --input: oklch(0 0 0 / 14%);
+  --ring: oklch(0.52 0.12 165);
+  --sidebar: oklch(0.97 0.004 270);
+  --sidebar-foreground: oklch(0.22 0.02 270);
+  --sidebar-primary: oklch(0.52 0.12 165);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.94 0.006 270);
+  --sidebar-accent-foreground: oklch(0.22 0.02 270);
+  --sidebar-border: oklch(0 0 0 / 10%);
+  --sidebar-ring: oklch(0.52 0.12 165);
+
+  --habit-mint: oklch(0.6 0.13 165);
+  --habit-coral: oklch(0.6 0.19 25);
+  --habit-amber: oklch(0.66 0.16 70);
+  --habit-violet: oklch(0.55 0.2 300);
+  --habit-sky: oklch(0.58 0.14 240);
+  --habit-rose: oklch(0.58 0.19 8);
+  --habit-lime: oklch(0.6 0.16 135);
+  --habit-sand: oklch(0.58 0.08 70);
+  --avoid: oklch(0.56 0.22 20);
+  color-scheme: light;
 }
 
 .dark {

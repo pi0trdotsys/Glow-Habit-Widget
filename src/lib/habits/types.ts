@@ -93,6 +93,8 @@ export interface Completion {
    * last week to the same minute. Missing on entries saved before this existed.
    */
   log?: [number, number][];
+  /** Build habits: previous amounts of the day, newest last (undo stack, max UNDO_DEPTH). */
+  prev?: number[];
   /** Set when the entry was judged automatically (screen time). Manual entries always win. */
   auto?: boolean;
 }

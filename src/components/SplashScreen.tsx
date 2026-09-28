@@ -97,7 +97,7 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
         Szpila
       </m.h1>
       <m.p
-        className="mt-2 text-[11px] font-semibold uppercase"
+        className="mt-2 text-xs font-semibold uppercase"
         style={{ color: "#ff4d5e", letterSpacing: "0.42em", paddingLeft: "0.42em" }}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

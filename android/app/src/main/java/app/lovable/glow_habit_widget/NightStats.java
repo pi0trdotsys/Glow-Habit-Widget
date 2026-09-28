@@ -126,6 +126,88 @@ final class NightStats {
         return best >= minGap ? bestStart : -1;
     }
 
+    // ------------------------------------------------------------------ real sessions (not just a lit screen)
+
+    /** Screen/device events for awakePeriods(). */
+    static final int SCREEN_ON = 1, SCREEN_OFF = 2, UNLOCK = 3, SHUTDOWN = 4, STARTUP = 5;
+    /** A screen-on without an unlock counts as use only if it lasts at least this long. */
+    static final long MIN_AWAKE_MS = 2 * 60_000L;
+
+    /**
+     * When the phone was really in use: screen-on stretches that include an
+     * unlock, or last at least MIN_AWAKE_MS. Brief wake-ups without an unlock -
+     * notifications, raise-to-wake, the "scheduled power off" prompt - don't
+     * count, and a switched-off phone (shutdown .. startup) is simply off.
+     * Returns [start, end] pairs (ms), chronological; a session still open is closed at `to`.
+     */
+    static List<long[]> awakePeriods(long[] t, int[] kind, long to) {
+        List<long[]> out = new ArrayList<>();
+        boolean on = false;
+        boolean unlocked = false;
+        long since = 0;
+        for (int i = 0; i < t.length; i++) {
+            switch (kind[i]) {
+                case SCREEN_ON:
+                    if (!on) {
+                        on = true;
+                        unlocked = false;
+                        since = t[i];
+                    }
+                    break;
+                case UNLOCK:
+                    if (!on) {
+                        on = true;
+                        since = t[i];
+                    }
+                    unlocked = true;
+                    break;
+                case SCREEN_OFF:
+                case SHUTDOWN:
+                    if (on && (unlocked || t[i] - since >= MIN_AWAKE_MS)) out.add(new long[]{since, t[i]});
+                    on = false;
+                    unlocked = false;
+                    break;
+                default: // STARTUP: the screen-on / unlock events that follow open the session
+                    break;
+            }
+        }
+        if (on && (unlocked || to - since >= MIN_AWAKE_MS)) out.add(new long[]{since, to});
+        return out;
+    }
+
+    /** Total in-use time of the periods inside [from, to] (ms). */
+    static long awakeMs(List<long[]> periods, long from, long to) {
+        long s = 0;
+        for (long[] p : periods) s += Math.max(0, Math.min(p[1], to) - Math.max(p[0], from));
+        return s;
+    }
+
+    /**
+     * When the phone went down for the night: the end of the last session before
+     * the longest stretch without use inside [from, to]; -1 if no stretch is at
+     * least `minGap` long. A session running at `from` counts from its end.
+     */
+    static long asleepAt(List<long[]> periods, long from, long to, long minGap) {
+        long cursor = from;
+        long bestStart = -1;
+        long best = 0;
+        for (long[] p : periods) {
+            if (p[1] <= from) continue;
+            if (p[0] >= to) break;
+            long gap = p[0] - cursor;
+            if (gap > best) {
+                best = gap;
+                bestStart = cursor;
+            }
+            cursor = Math.max(cursor, p[1]);
+        }
+        if (to - cursor > best) {
+            best = to - cursor;
+            bestStart = cursor;
+        }
+        return best >= minGap ? bestStart : -1;
+    }
+
     // ------------------------------------------------------------------ device reads
 
     private static long dayStart(int daysAgo) {
@@ -144,6 +226,20 @@ final class NightStats {
         final List<Boolean> resumed = new ArrayList<>();
         final List<Long> screenAt = new ArrayList<>();
         final List<Boolean> screenOn = new ArrayList<>();
+        /** Screen/unlock/shutdown events (kinds for awakePeriods). */
+        final List<Long> sessAt = new ArrayList<>();
+        final List<Integer> sessKind = new ArrayList<>();
+
+        List<long[]> awake(long to) {
+            int n = sessAt.size();
+            long[] t = new long[n];
+            int[] k = new int[n];
+            for (int i = 0; i < n; i++) {
+                t[i] = sessAt.get(i);
+                k[i] = sessKind.get(i);
+            }
+            return awakePeriods(t, k, to);
+        }
     }
 
     private static Events read(Context c, long from, long to) {
@@ -162,6 +258,11 @@ final class NightStats {
             } else if (type == UsageEvents.Event.SCREEN_INTERACTIVE || type == UsageEvents.Event.SCREEN_NON_INTERACTIVE) {
                 ev.screenAt.add(e.getTimeStamp());
                 ev.screenOn.add(type == UsageEvents.Event.SCREEN_INTERACTIVE);
+                ev.sessAt.add(e.getTimeStamp());
+                ev.sessKind.add(type == UsageEvents.Event.SCREEN_INTERACTIVE ? SCREEN_ON : SCREEN_OFF);
+            } else if (type == 18 /* KEYGUARD_HIDDEN */ || type == 26 /* DEVICE_SHUTDOWN */ || type == 27 /* DEVICE_STARTUP */) {
+                ev.sessAt.add(e.getTimeStamp());
+                ev.sessKind.add(type == 18 ? UNLOCK : type == 26 ? SHUTDOWN : STARTUP);
             }
         }
         return ev;
@@ -178,6 +279,13 @@ final class NightStats {
             r[i] = ev.resumed.get(i);
         }
         return socialUse(t, p, r, watched, from, to);
+    }
+
+    /** Social media foreground time between two instants (ms); 0 without access. */
+    static long socialMsBetween(Context c, long from, long to) {
+        if (!ScreenTime.granted(c) || to <= from) return 0;
+        Events ev = read(c, from - 6 * 3600_000L, to);
+        return totalMs(socialUse(ev, LiveGuard.watchedSet(c), from, to));
     }
 
     /**
@@ -226,15 +334,10 @@ final class NightStats {
             out.put("visits", visits);
             out.put("social", (int) Math.round(totalMs(use) / 60_000.0));
 
-            int n = ev.screenAt.size();
-            long[] st = new long[n];
-            boolean[] so = new boolean[n];
-            for (int i = 0; i < n; i++) {
-                st[i] = ev.screenAt.get(i);
-                so[i] = ev.screenOn.get(i);
-            }
-            out.put("screen", socialTo > w[0] ? (int) (ScreenTime.interactiveMs(st, so, false, w[0], socialTo) / 60_000L) : 0);
-            long asleep = sleepTo > sleepFrom ? longestOffStart(st, so, false, sleepFrom, sleepTo, MIN_SLEEP_MS) : -1;
+            // Only real sessions: brief wake-ups (notifications, the scheduled power-off prompt) don't count.
+            List<long[]> awake = ev.awake(Math.max(sleepFrom, sleepTo));
+            out.put("screen", socialTo > w[0] ? (int) (awakeMs(awake, w[0], socialTo) / 60_000L) : 0);
+            long asleep = sleepTo > sleepFrom ? asleepAt(awake, sleepFrom, sleepTo, MIN_SLEEP_MS) : -1;
             if (asleep > 0) {
                 Calendar a = Calendar.getInstance();
                 a.setTimeInMillis(asleep);

@@ -45,10 +45,10 @@ function WidgetPage() {
           {due.length > 0 && (
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+                <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
                   {L("Postęp dnia", "Today's progress")}
                 </span>
-                <span className="text-[10px] font-bold text-primary">
+                <span className="text-xs font-bold text-primary">
                   {Math.round(progressPercent)}%
                 </span>
               </div>

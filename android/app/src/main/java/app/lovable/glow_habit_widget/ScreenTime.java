@@ -86,22 +86,28 @@ final class ScreenTime {
         UsageEvents events = usm.queryEvents(from - 12 * 3600_000L, to);
         UsageEvents.Event e = new UsageEvents.Event();
         List<Long> times = new ArrayList<>();
-        List<Boolean> states = new ArrayList<>();
+        List<Integer> kinds = new ArrayList<>();
         while (events.hasNextEvent()) {
             events.getNextEvent(e);
             int type = e.getEventType();
-            if (type == UsageEvents.Event.SCREEN_INTERACTIVE || type == UsageEvents.Event.SCREEN_NON_INTERACTIVE) {
+            int kind = type == UsageEvents.Event.SCREEN_INTERACTIVE ? NightStats.SCREEN_ON
+                : type == UsageEvents.Event.SCREEN_NON_INTERACTIVE ? NightStats.SCREEN_OFF
+                : type == 18 /* KEYGUARD_HIDDEN */ ? NightStats.UNLOCK
+                : type == 26 /* DEVICE_SHUTDOWN */ ? NightStats.SHUTDOWN
+                : type == 27 /* DEVICE_STARTUP */ ? NightStats.STARTUP : 0;
+            if (kind != 0) {
                 times.add(e.getTimeStamp());
-                states.add(type == UsageEvents.Event.SCREEN_INTERACTIVE);
+                kinds.add(kind);
             }
         }
         long[] t = new long[times.size()];
-        boolean[] s = new boolean[states.size()];
+        int[] k = new int[kinds.size()];
         for (int i = 0; i < t.length; i++) {
             t[i] = times.get(i);
-            s[i] = states.get(i);
+            k[i] = kinds.get(i);
         }
-        return (int) (interactiveMs(t, s, false, from, to) / 60_000L);
+        // Real sessions only: brief wake-ups without an unlock (notifications) aren't phone use.
+        return (int) (NightStats.awakeMs(NightStats.awakePeriods(t, k, to), from, to) / 60_000L);
     }
 
     /**

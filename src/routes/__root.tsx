@@ -23,6 +23,7 @@ import {
 } from "../lib/notifications";
 import { useHabits } from "../lib/habits/store";
 import { useLinesReady } from "../lib/habits/szpila";
+import { watchTheme } from "../lib/theme";
 import { L } from "../lib/i18n";
 import { SplashScreen } from "@/components/SplashScreen";
 import { Toaster } from "@/components/ui/sonner";
@@ -139,6 +140,8 @@ export const Route = createRootRouteWithContext()({
         { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
         { rel: "apple-touch-icon", href: "/icon-192.png" },
       ],
+      // Set the theme before the first paint (no dark flash for light-theme users).
+      scripts: [{ children: THEME_BOOT }],
     };
   },
   shellComponent: RootShell,
@@ -146,6 +149,9 @@ export const Route = createRootRouteWithContext()({
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
+
+/** Inline, pre-hydration: the stored theme preference -> <html data-theme>. Mirrors resolveTheme(). */
+const THEME_BOOT = `(function(){try{var s=JSON.parse(localStorage.getItem("loop-habits-v1")||"{}").state||{};var p=s.theme||"system";var t=p==="system"?(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):p;document.documentElement.dataset.theme=t;}catch(e){}})();`;
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
@@ -168,6 +174,10 @@ function RootComponent() {
   const lang = useHabits((s) => s.language);
   // ...and once more when the (lazily loaded) English lines arrive.
   const enReady = useLinesReady((s) => s.en);
+
+  // Light / dark / like the phone.
+  const themePref = useHabits((s) => s.theme);
+  useEffect(() => watchTheme(() => themePref), [themePref]);
 
   // Background work (widget bridge, notification scheduling) waits until the
   // splash has faded out, so the first screen and the fade get the main thread.

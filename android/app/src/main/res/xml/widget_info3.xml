@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- "Następne zadanie": 1x1 minimum (widget3_root), 2x1 and wider get widget3_wide
+     (NextTaskWidgetProvider picks by size). -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="40dp"
     android:minHeight="40dp"
     android:minResizeWidth="40dp"
     android:minResizeHeight="40dp"
-    android:targetCellWidth="1"
+    android:targetCellWidth="2"
     android:targetCellHeight="1"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget3_root"
-    android:previewLayout="@layout/widget3_root"
+    android:previewLayout="@layout/widget3_wide"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
-    android:description="@string/widget_next_desc" />
+    android:configure="app.lovable.glow_habit_widget.WidgetConfigActivity"
+    android:widgetFeatures="reconfigurable"
+    android:description="@string/widget_next_desc_sizes" />

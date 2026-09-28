@@ -19,19 +19,42 @@ function readDismissed(): string {
 }
 
 /** Fokus, mornings (until noon): what last night really looked like. */
-export function NightBillCard({ now = new Date() }: { now?: Date }) {
+/** Last night's bill while it's still morning (until noon) and not dismissed; null otherwise. */
+export function useNightBill(
+  now: Date = new Date(),
+): { r: NightReport; dismiss: () => void } | null {
   const reports = useHabits((s) => s.nightReports);
-  const level = useHabits((s) => s.notifications.tauntLevel);
-  const userName = useHabits((s) => s.userName);
   const key = todayKey(addDays(now, -1));
   const [dismissed, setDismissed] = useState(readDismissed);
   const r = reports[key];
   if (now.getHours() >= 12 || !r || dismissed === key) return null;
+  return {
+    r,
+    dismiss: () => {
+      try {
+        localStorage.setItem(DISMISS_KEY, key);
+      } catch {
+        /* private mode */
+      }
+      setDismissed(key);
+    },
+  };
+}
+
+export function NightBillCard({ now = new Date() }: { now?: Date }) {
+  const bill = useNightBill(now);
+  return bill ? <NightBillView r={bill.r} onDismiss={bill.dismiss} /> : null;
+}
+
+/** The bill itself (Today's status card). */
+export function NightBillView({ r, onDismiss }: { r: NightReport; onDismiss: () => void }) {
+  const level = useHabits((s) => s.notifications.tauntLevel);
+  const userName = useHabits((s) => s.userName);
   const bad = badNight(r);
 
   return (
     <section
-      className="relative rounded-2xl p-3"
+      className="relative h-full rounded-2xl p-3"
       data-night-bill
       style={{
         background: bad
@@ -43,14 +66,7 @@ export function NightBillCard({ now = new Date() }: { now?: Date }) {
       <button
         aria-label={L("Zamknij rachunek za noc", "Close the night bill")}
         className="absolute right-2 top-2 rounded-full p-1 text-muted-foreground"
-        onClick={() => {
-          try {
-            localStorage.setItem(DISMISS_KEY, key);
-          } catch {
-            /* private mode */
-          }
-          setDismissed(key);
-        }}
+        onClick={onDismiss}
       >
         <X size={14} />
       </button>
@@ -77,7 +93,7 @@ export function NightFacts({ r }: { r: NightReport }) {
           {r.apps!.map((a) => (
             <span
               key={a.pkg}
-              className="rounded-full px-2 py-0.5 text-[11px] font-medium"
+              className="rounded-full px-2 py-0.5 text-xs font-medium"
               style={{ backgroundColor: "color-mix(in oklab, var(--avoid) 18%, transparent)" }}
             >
               {a.visits}× {a.label} · {a.minutes} min
@@ -85,11 +101,11 @@ export function NightFacts({ r }: { r: NightReport }) {
           ))}
         </div>
       ) : (
-        <div className="mt-1.5 text-[11px] text-muted-foreground">
+        <div className="mt-1.5 text-xs text-muted-foreground">
           {L("Zero social mediów po północy.", "Zero social media after midnight.")}
         </div>
       )}
-      <div className="mt-2 flex gap-4 text-[11px] text-muted-foreground">
+      <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
         <span>
           📱 {r.screen ?? 0} {L("min po północy", "min after midnight")}
         </span>

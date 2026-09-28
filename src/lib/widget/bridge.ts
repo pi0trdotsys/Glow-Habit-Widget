@@ -38,7 +38,7 @@ import type { HabitColor } from "@/lib/habits/types";
 import { BACKUP_PREF_KEY } from "@/lib/backup";
 import { liveState, liveStatus } from "@/lib/live";
 import { billLines } from "@/lib/night";
-import { catCondition } from "@/lib/habits/gamification";
+import { catCondition, formaStreaks } from "@/lib/habits/gamification";
 import { lateBasisOf } from "@/lib/sensors";
 import { getLang } from "@/lib/i18n";
 import { useLinesReady } from "@/lib/habits/szpila";
@@ -184,13 +184,15 @@ export function buildState() {
         .map((h) => ({ id: h.id, name: h.name })),
     },
     // Night guard (LiveGuardService): window, ignored apps and per-app lines.
-    live: liveState(notifications, level, userName, szpila.humor),
+    live: liveState(notifications, level, userName, szpila.humor, habits),
     // Unlocked look of the cat (widget drawables ic_szpila_<face>_<mood>).
     face: szpila.face,
     // App language for native texts (WidgetShared.tr).
     lang: getLang(),
     // "Kot w domu": groomed / normal / neglected (widget overlay + mood).
     cat: catCondition(habits, completions, today),
+    // Forma streak (current / best) for the widgets.
+    forma: formaStreaks(habits, completions, today),
     // Morning "rachunek za noc" comments (HabitNotifier.billText).
     bill: billLines(level, userName),
     allDone: allDoneLines(level),
@@ -252,6 +254,7 @@ export function applyPendingOps(ops: PendingOp[]): void {
 async function syncNightHits(): Promise<void> {
   const st = await liveStatus();
   if (st?.hits) useHabits.getState().mergeNightHits(st.hits);
+  if (st?.day) useHabits.getState().mergeDaySocial(st.day);
 }
 
 let started = false;
