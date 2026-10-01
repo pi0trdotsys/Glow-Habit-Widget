@@ -40,6 +40,8 @@ import {
 import type { Lines27 } from "./szpila-27";
 import { HARD_27X, SOFT_27X } from "./szpila-27-extra";
 import { CTX_HARD, CTX_SOFT } from "./szpila-ctx";
+import { CHAIN_CHANCE, focusPool, rescuePool } from "./chain";
+import { focusRoast, type WeeklyFocus } from "./focus";
 import { create } from "zustand";
 import { addDays } from "date-fns";
 import { L, isEn, plural } from "@/lib/i18n";
@@ -754,6 +756,7 @@ export function weeklyRoast(
   completions: Completion[],
   level: TauntLevel,
   userName: string | null,
+  focus?: WeeklyFocus | null,
 ): string {
   if (habits.length === 0) return "";
   const r = weeklyReport(habits, completions);
@@ -776,6 +779,7 @@ export function weeklyRoast(
     }
   }
   const delta = r.delta > 0 ? `+${r.delta}` : `${r.delta}`;
+  const focusLine = focusRoast(habits, completions, focus, level === "hard", now);
   const parts = [
     L(
       `${who}tydzień: ${r.thisWeek.rate}%${r.noBaseline ? "" : ` (${delta} pkt vs poprzedni)`}.`,
@@ -824,6 +828,7 @@ export function weeklyRoast(
               "Worse than last week. New week, new chance.",
             ),
     );
+  if (focusLine) parts.push(focusLine);
   return parts.join(" ");
 }
 
@@ -958,6 +963,8 @@ export function szpilaNow(
   level: TauntLevel,
   userName: string | null,
   seed?: number,
+  /** This week's focus habit id (its nags win part of the time). */
+  focusId?: string | null,
 ): SzpilaSay {
   const t = T();
   if (habits.length === 0) return { text: pick(t.EMPTY[level], seed), mood: "angry" };
@@ -983,6 +990,25 @@ export function szpilaNow(
   const ctx = contextOf(top.habit, top.amount, minuteOfDay(now));
   const ctxPool = ctx ? contextLines(top.habit, level, userName, ctx) : [];
   const roll = seed == null ? Math.floor(Math.random() * 100) : Math.abs(seed * 37) % 100;
+  // Rescue day ("nigdy dwa razy") and the weekly focus come before the situation lines.
+  const rescue = rescuePool(top.habit, completions, level, now).map((l) =>
+    personal(l, top.habit, userName),
+  );
+  if (rescue.length && roll < CHAIN_CHANCE.rescue) {
+    return {
+      text: fill(pick(rescue, seed), top.habit, top.amount),
+      mood: "angry",
+      habitId: top.habit.id,
+    };
+  }
+  const focused = focusPool(top.habit, focusId, level).map((l) => personal(l, top.habit, userName));
+  if (focused.length && roll < CHAIN_CHANCE.focus) {
+    return {
+      text: fill(pick(focused, seed), top.habit, top.amount),
+      mood: top.overdue ? "angry" : "smug",
+      habitId: top.habit.id,
+    };
+  }
   const chance = rage ? CTX_CHANCE.rage : CTX_CHANCE.normal;
   const pool =
     ctxPool.length && roll < chance

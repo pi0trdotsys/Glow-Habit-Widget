@@ -198,7 +198,7 @@ describe("daily limit", () => {
   test("CSV gets the day's social media minutes; store merges them into backups", () => {
     const d = addDays(now, -1);
     const csv = toCsv([water], [entry(water, d, { amount: 8 })], {}, now, { [key(d)]: 42 });
-    expect(csv.split("\r\n")[0].endsWith(";social_dzien_min")).toBe(true);
+    expect(csv.split("\r\n")[0].endsWith(";social_dzien_min;sen_min")).toBe(true);
     expect(csv).toContain(`${key(d)};Picie wody;do zrobienia;8;szklanek;8;zrobione;100;;42`);
     const s = useHabits.getState();
     s.mergeDaySocial({ "2026-09-20": 30 });

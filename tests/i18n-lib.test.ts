@@ -197,10 +197,10 @@ describe("stats in English", () => {
     const csv = toCsv([water, food], c, {}, now);
     const lines = csv.trim().split("\r\n");
     expect(lines[0]).toBe(
-      "date;habit;kind;target;unit;result;status;percent;social_at_night;social_by_day_min",
+      "date;habit;kind;target;unit;result;status;percent;social_at_night;social_by_day_min;sleep_min",
     );
-    expect(lines).toContain(`${key(y)};Drink water;to do;8;glasses;8;done;100;;`);
-    expect(lines).toContain(`${key(y)};Fast food;forbidden;0;;0;clean;100;;`);
+    expect(lines).toContain(`${key(y)};Drink water;to do;8;glasses;8;done;100;;;`);
+    expect(lines).toContain(`${key(y)};Fast food;forbidden;0;;0;clean;100;;;`);
     expect(lines.some((l) => l.includes(";3;partly;38;"))).toBe(true);
     expect(lines.some((l) => l.includes(";1;slip;"))).toBe(true);
     expect(csv).not.toMatch(POLISH);

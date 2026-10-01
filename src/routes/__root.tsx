@@ -25,6 +25,7 @@ import { useHabits } from "../lib/habits/store";
 import { useLinesReady } from "../lib/habits/szpila";
 import { THEME_BOOT, watchTheme } from "../lib/theme";
 import { L } from "../lib/i18n";
+import { takePendingRoute } from "../lib/shop";
 import { SplashScreen } from "@/components/SplashScreen";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -222,6 +223,20 @@ function RootComponent() {
     }, 2500);
     return () => clearTimeout(t);
   }, []);
+
+  useEffect(() => {
+    // A screen the native side asked for (the shopping block's "add to the list" -> /wishlist),
+    // read on start and whenever the app comes back to the front.
+    if (!Capacitor.isNativePlatform()) return;
+    const follow = () =>
+      void takePendingRoute().then((route) => {
+        if (route) router.history.push(route);
+      });
+    follow();
+    const onVis = () => document.visibilityState === "visible" && follow();
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [router]);
 
   useEffect(() => {
     // Tapping the weekly recap notification opens the report (native only).

@@ -17,6 +17,7 @@ import {
   ClipboardCheck,
   Footprints,
   PhoneOff,
+  BedDouble,
 } from "lucide-react";
 import {
   openUsageSettings,
@@ -47,6 +48,7 @@ import { formatMinute } from "@/lib/habits/utils";
 import { L, pick } from "@/lib/i18n";
 import { StepsSources } from "@/components/StepsSources";
 import { CurfewCard } from "@/components/CurfewCard";
+import { ShopGuardCard } from "@/components/ShopGuardCard";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: L("Ustawienia - Szpila", "Settings - Szpila") }] }),
@@ -303,6 +305,8 @@ function SettingsPage() {
             <LiveGuardCard />
 
             <CurfewCard />
+
+            <ShopGuardCard />
 
             <DayGuardCard />
           </div>
@@ -703,6 +707,49 @@ function SensorsCard({ onMessage }: { onMessage: (m: string) => void }) {
         )}
       </div>
       {steps?.granted && <StepsSources onMessage={onMessage} />}
+
+      {steps?.available && steps.sleep != null && (
+        <div className="mt-4 flex items-center gap-3" data-sleep-sensor>
+          <BedDouble size={18} className="shrink-0 text-primary" />
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-medium">
+              {L("Sen z opaski (Health Connect)", "Sleep from your band (Health Connect)")}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {steps.sleep
+                ? L(
+                    "Połączono · długość snu trafia do rachunku za noc.",
+                    "Connected · your sleep goes into the night bill.",
+                  )
+                : steps.granted
+                  ? L(
+                      "Brak zgody na odczyt snu. Mi Fitness zapisuje tam sen z opaski.",
+                      "No permission to read sleep. Mi Fitness saves your band's sleep there.",
+                    )
+                  : L("„Połącz” wyżej zapyta też o sen.", "“Connect” above asks for sleep too.")}
+            </div>
+          </div>
+          {steps.granted && !steps.sleep && (
+            <button
+              onClick={async () => {
+                // The same Health Connect screen - it asks only for what's still missing.
+                const s = await requestSteps();
+                setSteps(s);
+                if (s.sleep) {
+                  await syncSensors();
+                  onMessage(
+                    L("Sen połączony z Health Connect.", "Sleep connected to Health Connect."),
+                  );
+                }
+              }}
+              className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold"
+              style={{ backgroundColor: "var(--primary)", color: "var(--primary-foreground)" }}
+            >
+              {L("Połącz sen", "Connect sleep")}
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="mt-4 flex items-center gap-3">
         <PhoneOff size={18} className="shrink-0" style={{ color: "var(--avoid)" }} />

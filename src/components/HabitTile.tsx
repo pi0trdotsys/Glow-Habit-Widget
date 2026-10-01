@@ -22,6 +22,9 @@ import {
   todayKey,
 } from "@/lib/habits/utils";
 import { SZPILA_EMOJI, praiseFor } from "@/lib/habits/szpila";
+import { minimumLabel, minimumOf, rescueOn } from "@/lib/habits/rescue";
+import { focusHabit } from "@/lib/habits/focus";
+import { focusPraise, minimumPraise } from "@/lib/habits/chain";
 import { L } from "@/lib/i18n";
 
 interface Props {
@@ -31,17 +34,22 @@ interface Props {
 
 const CELEBRATE_EMOJI = ["🎉", "✨", "💪", "🔥", "🌟", "🙌"];
 
-/** Shows Szpila's back-handed compliment with an undo action. */
+/** Shows Szpila's back-handed compliment with an undo action (the weekly focus gets its own). */
 export function praiseToast(habit: Habit, undo: () => void) {
-  const { notifications, userName } = useHabits.getState();
-  toast(`${SZPILA_EMOJI.impressed} ${praiseFor(habit, notifications.tauntLevel, userName)}`, {
-    action: { label: L("Cofnij", "Undo"), onClick: undo },
-  });
+  const { notifications, userName, habits, focus } = useHabits.getState();
+  const text =
+    focusHabit(habits, focus)?.id === habit.id
+      ? `🎯 ${focusPraise(habit, notifications.tauntLevel)}`
+      : `${SZPILA_EMOJI.impressed} ${praiseFor(habit, notifications.tauntLevel, userName)}`;
+  toast(text, { action: { label: L("Cofnij", "Undo"), onClick: undo } });
 }
 
 export function HabitTile({ habit, compact = false }: Props) {
   const navigate = useNavigate();
   const completions = useHabits((s) => s.completions);
+  const habits = useHabits((s) => s.habits);
+  const focus = useHabits((s) => s.focus);
+  const level = useHabits((s) => s.notifications.tauntLevel);
   const logStep = useHabits((s) => s.logStep);
   const setAmount = useHabits((s) => s.setAmount);
   const setAvoid = useHabits((s) => s.setAvoid);
@@ -61,6 +69,13 @@ export function HabitTile({ habit, compact = false }: Props) {
   const status = avoid ? avoidStatus(habit, completions, today, today) : null;
   const done = avoid ? status === "clean" : amount >= g.target;
   const fraction = avoid ? (status === "pending" ? 0 : 1) : Math.min(1, amount / g.target);
+  // "Nigdy dwa razy": yesterday was missed -> today the minimum saves the chain.
+  const min = minimumOf(habit);
+  const rescue = rescueOn(habit, completions, today);
+  const isFocus = focusHabit(habits, focus, today)?.id === habit.id;
+  /** A rescue day's minimum reached (below the goal): its own praise instead of "+1". */
+  const savedByMinimum = (before: number, after: number) =>
+    rescue && min > 0 && before < min && after >= min && after < g.target;
 
   const { handlers, progress, phase2, isHolding, dx } = useHoldToComplete({
     duration: HOLD_TO_COMPLETE_MS,
@@ -120,6 +135,13 @@ export function HabitTile({ habit, compact = false }: Props) {
         pop();
         haptic("success");
         praiseToast(habit, () => setAmount(habit.id, key, before));
+      } else if (savedByMinimum(before, after)) {
+        haptic("success");
+        toast(`🛟 ${minimumPraise(habit, level)}`, {
+          id: toastId,
+          action: { label: L("Cofnij", "Undo"), onClick: () => setAmount(habit.id, key, before) },
+          duration: 3500,
+        });
       } else {
         haptic("tick");
         toast(`+${g.step} · ${habit.name}: ${amountText(habit, after)}`, {
@@ -159,11 +181,13 @@ export function HabitTile({ habit, compact = false }: Props) {
         : habit.source === "screen"
           ? L("📱 czeka na noc", "📱 waiting for the night")
           : L("Przytrzymaj = dziś czysto", "Hold = clean today")
-    : g.type !== "check"
-      ? amountText(habit, amount)
-      : streak > 0
-        ? `🔥 ${daysLabel(streak)}`
-        : L("Przytrzymaj, by zaliczyć", "Hold to complete");
+    : rescue && min > 0 && amount < min
+      ? `🛟 ${L("ratunek: min.", "rescue: min.")} ${minimumLabel(habit)}`
+      : g.type !== "check"
+        ? amountText(habit, amount)
+        : streak > 0
+          ? `🔥 ${daysLabel(streak)}`
+          : L("Przytrzymaj, by zaliczyć", "Hold to complete");
 
   return (
     <div
@@ -209,6 +233,18 @@ export function HabitTile({ habit, compact = false }: Props) {
             strokeDashoffset={c * (1 - ringProgress)}
             style={{ transition: isHolding ? "none" : "stroke-dashoffset 250ms ease-out" }}
           />
+          {/* the minimum version: a notch on the ring */}
+          {!avoid && min > 0 && !done && !compact && (
+            <circle
+              data-min-notch
+              cx={size / 2 + r * Math.cos((2 * Math.PI * min) / g.target)}
+              cy={size / 2 + r * Math.sin((2 * Math.PI * min) / g.target)}
+              r={stroke / 2 + 1.5}
+              fill={amount >= min ? color : "var(--muted-foreground)"}
+              stroke="var(--background)"
+              strokeWidth={1.5}
+            />
+          )}
         </svg>
 
         <m.div
@@ -237,6 +273,21 @@ export function HabitTile({ habit, compact = false }: Props) {
             style={{ backgroundColor: AVOID_COLOR, color: "var(--background)" }}
           >
             <Ban size={15} strokeWidth={2.6} />
+          </span>
+        )}
+
+        {(isFocus || rescue) && !done && (
+          <span
+            data-chain={isFocus ? "focus" : "rescue"}
+            title={
+              isFocus
+                ? L("Cel tygodnia", "This week's focus")
+                : L("Ratunek: nie dwa razy z rzędu", "Rescue: not twice in a row")
+            }
+            className="absolute -top-0.5 -right-0.5 grid h-7 w-7 place-items-center rounded-full text-sm"
+            style={{ backgroundColor: "var(--card)", border: "1px solid var(--border)" }}
+          >
+            {isFocus ? "🎯" : "🛟"}
           </span>
         )}
 
@@ -275,6 +326,13 @@ export function HabitTile({ habit, compact = false }: Props) {
             if (a >= g.target && b < g.target) {
               pop();
               praiseToast(habit, () => setAmount(habit.id, key, b));
+            } else if (savedByMinimum(b, a)) {
+              haptic("success");
+              toast(`🛟 ${minimumPraise(habit, level)}`, {
+                id: toastId,
+                action: { label: L("Cofnij", "Undo"), onClick: () => setAmount(habit.id, key, b) },
+                duration: 3500,
+              });
             } else {
               toast(`${habit.name}: ${amountText(habit, a)}`, {
                 id: toastId,
@@ -294,7 +352,10 @@ export function HabitTile({ habit, compact = false }: Props) {
           <div
             className="mt-0.5 text-xs"
             style={{
-              color: avoid && status === "pending" ? AVOID_COLOR : "var(--muted-foreground)",
+              color:
+                (avoid && status === "pending") || (rescue && !done)
+                  ? AVOID_COLOR
+                  : "var(--muted-foreground)",
             }}
           >
             {sub}

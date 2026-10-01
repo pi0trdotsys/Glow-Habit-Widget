@@ -53,10 +53,14 @@ object HealthSteps {
 
     private fun client(ctx: Context) = HealthConnectClient.getOrCreate(ctx)
 
-    /** Permissions to request: steps, plus background reads (widgets/notifications) when supported. */
+    /**
+     * Permissions to request: steps and sleep (HealthSleep, the night bill), plus
+     * background reads (widgets/notifications) when supported. Health Connect's
+     * screen asks only for what's still missing, so one "Connect" covers both.
+     */
     @JvmStatic
     fun permissions(ctx: Context): Set<String> {
-        val perms = mutableSetOf(READ_STEPS)
+        val perms = mutableSetOf(READ_STEPS, HealthSleep.READ_SLEEP)
         try {
             val f = client(ctx).features
             if (f.getFeatureStatus(HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_IN_BACKGROUND) ==
@@ -77,7 +81,7 @@ object HealthSteps {
     @JvmStatic
     fun backgroundGranted(ctx: Context): Boolean = hasPermission(ctx, READ_BACKGROUND)
 
-    private fun hasPermission(ctx: Context, p: String): Boolean {
+    internal fun hasPermission(ctx: Context, p: String): Boolean {
         if (!available(ctx)) return false
         return try {
             runBlocking { client(ctx).permissionController.getGrantedPermissions().contains(p) }

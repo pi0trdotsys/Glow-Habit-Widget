@@ -43,7 +43,10 @@ import java.util.Set;
  * - MORNING (05:00 .. e.g. 11:00, while morning habits are pending): social media
  *   is blocked right away - tick the habits off from the block or hold 10 s;
  * - DAY: counts today's social media minutes; past the daily limit it jabs and
- *   blocks like at night.
+ *   blocks like at night (also a shopping-only DAY phase at any hour, see below);
+ * - in every phase, with "24 h do namysłu" on (ShopGuard): a shopping app is
+ *   covered at once - write the thing on the wishlist, leave, or hold 20 s for
+ *   a short pass.
  * Polls the foreground app every POLL_MS only while the screen is on (a
  * screen-on receiver wakes it up); stops itself when no phase is active.
  */
@@ -74,6 +77,12 @@ public class LiveGuardService extends Service {
     private java.util.Set<String> essential;
     private long essentialAt;
     private long unplugJabAt;
+    /** Settings the phase depends on (refreshed with the phase). */
+    private DayGuard.Config cfg = new DayGuard.Config();
+    /** The block on screen is the shopping one (it stays only over a shopping app). */
+    private boolean shopShown;
+    /** Shopping app already noted this visit (no overlay permission: one notification per visit). */
+    private String shopNoted;
 
     private final BroadcastReceiver screen = new BroadcastReceiver() {
         @Override
@@ -122,6 +131,7 @@ public class LiveGuardService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         ensureChannels(this);
         phase = DayGuard.phase(this);
+        cfg = DayGuard.config(this);
         Notification n = guardNotification();
         try {
             if (Build.VERSION.SDK_INT >= 34) {
@@ -185,6 +195,7 @@ public class LiveGuardService extends Service {
             if (nowMs - configAt > CONFIG_MS) {
                 configAt = nowMs;
                 int p = DayGuard.phase(c);
+                cfg = DayGuard.config(c);
                 if (p == DayGuard.OFF) {
                     stopForeground(true);
                     stopSelf();
@@ -262,10 +273,12 @@ public class LiveGuardService extends Service {
         long passMs = LiveGuard.CURFEW_PASS_MIN * 60_000L;
         if (passing && LiveGuard.curfewDim(c)) LiveDim.set(c, LiveGuard.dimAlpha(nowMs - (passUntil - passMs), passMs));
         else LiveDim.hide(c);
+        // "24 h do namysłu": a shopping app (any phase; the curfew block wins after the deadline).
+        boolean shopHit = !curfewHit && ShopGuard.blocks(foreground, cfg.shop, ShopGuard.off(c), nowMs, ShopGuard.passUntil(c));
 
-        // The day count runs outside the night (05:00 .. bedtime), whatever the phase.
+        // The day count runs outside the night (05:00 .. bedtime) while the morning lock or the limit is on.
         if (!usedDay.equals(WidgetShared.today())) seedUsed();
-        if (phase != DayGuard.NIGHT && WidgetShared.nowMinute() >= DayGuard.DAY_START) {
+        if (DayGuard.countsSocial(phase, cfg, nowMin)) {
             usedMs += DayGuard.tickMs(lastPoll, nowMs, watched, 10_000L);
             saveUsed(false);
         }
@@ -273,19 +286,35 @@ public class LiveGuardService extends Service {
 
         if (LiveBlock.isShown()) {
             // Left the app some other way (gesture home, recents): drop the block.
-            if (!watched && !curfewHit) LiveBlock.hide(c);
+            if (shopShown ? !shopHit : (!watched && !curfewHit)) LiveBlock.hide(c);
             return;
         }
+        shopShown = false;
         if (passing) return; // an urgent pass: quiet until it runs out
         if (curfewHit) {
             if (LiveGuard.blockEnabled(c) && curfewBlock(c)) return;
             watched = true; // no overlay permission: jab like for social media
         }
+        if (shopHit) {
+            if (shopBlock(c)) return;
+            // No overlay permission: one note per visit.
+            if (!foreground.equals(shopNoted)) {
+                shopNoted = foreground;
+                shopNote(c, "shop", HabitNotifier.EMOJI_ANGRY, "{app}? Dopisz to do listy w Szpili i wróć za 24 h.",
+                    "{app}? Write it on the list in Szpila and come back in 24 h.", 60_000L, true);
+            }
+            return;
+        }
+        if (!ShopGuard.isShop(foreground)) shopNoted = null;
         if (phase == DayGuard.MORNING) {
             morning(c, watched, nowMs);
             return;
         }
         if (phase == DayGuard.DAY) {
+            if (!DayGuard.limitActive(cfg, nowMin)) {
+                tracker.reset(); // only the shopping guard runs now
+                return;
+            }
             int state = DayGuard.limitState((int) (usedMs / 60_000L), DayGuard.limit(c));
             if (state == DayGuard.LIMIT_WARN && watched && DayGuard.onceToday(c, "day_warn")) warn(c);
             if (state != DayGuard.LIMIT_OVER) {
@@ -408,6 +437,11 @@ public class LiveGuardService extends Service {
         if (text.isEmpty()) text = WidgetShared.tr(c, pl, en);
         int now = WidgetShared.nowMinute();
         text = curfewFill(text, "", now, LiveGuard.until(c), LiveGuard.tonight(c, "curfew_passes"));
+        note(c, emoji, text, timeout, loud);
+    }
+
+    /** A short Szpila notification (silent unless `loud`). */
+    private void note(Context c, String emoji, String text, long timeout, boolean loud) {
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_LIVE)
             .setSmallIcon(R.drawable.ic_stat_szpila)
             .setColor(WidgetShared.AVOID)
@@ -422,6 +456,93 @@ public class LiveGuardService extends Service {
             NotificationManagerCompat.from(c).notify(ID_LIVE, b.build());
         } catch (SecurityException ignored) {
         }
+    }
+
+    // ------------------------------------------------------------------ shopping: 24 h do namysłu
+
+    /** The shopping block: straight away, over a watched shopping app (no pass active). */
+    private boolean shopBlock(Context c) {
+        boolean en = WidgetShared.en(c);
+        String pkg = foreground;
+        String label = ShopGuard.label(pkg);
+        JSONObject lines = LiveGuard.settings(c).optJSONObject("lines");
+        String text = lines != null ? WidgetShared.pick(lines.optJSONArray("shop")) : "";
+        if (text.isEmpty()) {
+            text = en ? "{app} at {time}? Write it on the list and decide in 24 hours."
+                : "{app} o {time}? Dopisz to do listy i zdecyduj za 24 h.";
+        }
+        int passMin = ShopGuard.passMin(c);
+        String time = WidgetShared.fmtMinute(WidgetShared.nowMinute());
+        text = ShopGuard.fill(text, label, time, ShopGuard.today(c, "shop_blocks") + 1, passMin);
+        JSONObject s = ShopGuard.settings(c);
+        String sub = ShopGuard.sub(en, s.optInt("waiting"), s.optInt("ready"), s.optInt("saved"), s.optInt("savedMoney"));
+        String idle = en
+            ? "Must buy it right now? Hold " + ShopGuard.HOLD_MS / 1000 + " s for " + passMin + " min"
+            : "Konieczny zakup? Przytrzymaj " + ShopGuard.HOLD_MS / 1000 + " s na " + passMin + " min";
+        List<String[]> actions = new ArrayList<>();
+        actions.add(new String[]{"wish", en ? "🛒  Add to the list (24 h)" : "🛒  Dopisz do listy (24 h)"});
+        int cat = SzpilaWidgetProvider.catDrawable(WidgetShared.state(c).optString("face"), 1);
+        boolean ok = LiveBlock.show(c, "SZPILA  🛒", text, sub, cat, en ? "🏃  I'm leaving" : "🏃  Wychodzę", actions,
+            ShopGuard.HOLD_MS, idle, new LiveBlock.Listener() {
+                @Override
+                public void onSleep() {
+                    ShopGuard.countDay(c, "shop_left");
+                    LiveBlock.goHome(c);
+                }
+
+                @Override
+                public void onHoldThrough() {
+                    ShopGuard.countDay(c, "shop_passes");
+                    ShopGuard.pass(c, passMin);
+                    shopNote(c, "shopPass", HabitNotifier.EMOJI_ANGRY,
+                        "Dobra, {min} min na konieczny zakup. Tylko to, po co tu wchodzisz.",
+                        "Fine, {min} min for a must-buy. Only what you came here for.", 60_000L, false, label, passMin);
+                }
+
+                @Override
+                public void onAction(String id) {
+                    ShopGuard.countDay(c, "shop_wish");
+                    // Szpila opens on the wishlist (src/routes/wishlist.tsx reads the route on start/resume).
+                    ShopGuard.setPendingRoute(c, "/wishlist?add=1&app=" + pkg);
+                    if (!openSzpila(c)) LiveBlock.goHome(c);
+                    LiveBlock.hide(c);
+                }
+            });
+        if (ok) {
+            ShopGuard.countDay(c, "shop_blocks");
+            shopShown = true;
+            NotificationManagerCompat.from(c).cancel(ID_LIVE);
+        }
+        return ok;
+    }
+
+    /** Bring Szpila to the front (allowed from the background while our overlay is visible). */
+    private static boolean openSzpila(Context c) {
+        try {
+            Intent i = c.getPackageManager().getLaunchIntentForPackage(c.getPackageName());
+            if (i == null) return false;
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+            c.startActivity(i);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void shopNote(Context c, String pool, String emoji, String pl, String en, long timeout, boolean loud) {
+        shopNote(c, pool, emoji, pl, en, timeout, loud, ShopGuard.label(foreground), ShopGuard.passMin(c));
+    }
+
+    /** A shopping note from a snapshot pool: {app} {time} {count} {min}. */
+    private void shopNote(Context c, String pool, String emoji, String pl, String en, long timeout, boolean loud,
+                          String label, int passMin) {
+        if (!canNotify(c)) return;
+        JSONObject lines = LiveGuard.settings(c).optJSONObject("lines");
+        String text = lines != null ? WidgetShared.pick(lines.optJSONArray(pool)) : "";
+        if (text.isEmpty()) text = WidgetShared.tr(c, pl, en);
+        text = ShopGuard.fill(text, label != null ? label : "", WidgetShared.fmtMinute(WidgetShared.nowMinute()),
+            ShopGuard.today(c, "shop_blocks"), passMin);
+        note(c, emoji, text, timeout, loud);
     }
 
     // ------------------------------------------------------------------ morning lock
@@ -655,7 +776,7 @@ public class LiveGuardService extends Service {
     // ------------------------------------------------------------------ the ongoing notification
 
     private void refreshNotification() {
-        String key = phase + "|" + usedMin() + "|" + DayGuard.limit(this) + "|" + curfewNow(this) + "|"
+        String key = phase + "|" + shopOnly() + "|" + usedMin() + "|" + DayGuard.limit(this) + "|" + curfewNow(this) + "|"
             + (phase == DayGuard.MORNING ? DayGuard.names(DayGuard.morningPending(this)) : "");
         if (key.equals(notifKey)) return;
         notifKey = key;
@@ -704,6 +825,24 @@ public class LiveGuardService extends Service {
             (en ? "Watching: " : "Pilnuję: ") + watching};
     }
 
+    /** The ongoing notification while only the shopping guard runs (pure, for tests). */
+    static String[] shopGuardText(boolean en, String shops) {
+        return new String[]{
+            "🛒 " + (en ? "24 h to think it over" : "24 h do namysłu"),
+            (en ? "Watching the shops: " : "Pilnuję sklepów: ") + shops
+                + (en ? ". Impulse buys go on the list first." : ". Zachcianki najpierw na listę.")};
+    }
+
+    /** The service runs now only for the shopping guard (no night / morning / limit phase). */
+    private boolean shopOnly() {
+        return phase == DayGuard.DAY && !DayGuard.limitActive(cfg, WidgetShared.nowMinute());
+    }
+
+    private static String shortList(List<String> list, boolean en, String none) {
+        if (list.isEmpty()) return none;
+        return String.join(", ", list.subList(0, Math.min(4, list.size()))) + (list.size() > 4 ? (en ? " and more" : " i inne") : "");
+    }
+
     private Notification guardNotification() {
         Set<String> labels = new LinkedHashSet<>();
         for (String pkg : LiveGuard.SOCIAL.keySet()) {
@@ -715,8 +854,17 @@ public class LiveGuardService extends Service {
             + (list.size() > 4 ? (en ? " and more" : " i inne") : "");
         int until = phase == DayGuard.MORNING ? DayGuard.morningSettings(this).optInt("until", 11 * 60) : LiveGuard.until(this);
         String pending = phase == DayGuard.MORNING ? DayGuard.names(DayGuard.morningPending(this)) : "";
-        String[] t = guardText(phase, en, until, watching, pending, usedMin(), DayGuard.limit(this),
-            curfewNow(this), LiveGuard.curfewAllowed(this).size());
+        String[] t;
+        if (shopOnly()) {
+            List<String> shops = new ArrayList<>();
+            for (String pkg : ShopGuard.SHOP.keySet()) {
+                if (ShopGuard.watched(this, pkg) && LiveGuard.installed(this, pkg)) shops.add(ShopGuard.label(pkg));
+            }
+            t = shopGuardText(en, shortList(shops, en, en ? "shopping apps" : "aplikacje zakupowe"));
+        } else {
+            t = guardText(phase, en, until, watching, pending, usedMin(), DayGuard.limit(this),
+                curfewNow(this), LiveGuard.curfewAllowed(this).size());
+        }
         PendingIntent open = WidgetShared.openAppIntent(this, 7502);
         NotificationCompat.Builder b = new NotificationCompat.Builder(this, CH_GUARD)
             .setSmallIcon(R.drawable.ic_stat_szpila)
@@ -738,8 +886,8 @@ public class LiveGuardService extends Service {
         // Names follow the app language: upsertChannel re-creates a channel whose name changed.
         NotificationChannel guard = new NotificationChannel(CH_GUARD,
             WidgetShared.tr(c, "Szpila czuwa", "Szpila on guard"), NotificationManager.IMPORTANCE_MIN);
-        guard.setDescription(WidgetShared.tr(c, "Ciche powiadomienie, gdy strażnik social mediów jest aktywny (noc, poranek, dzienny limit)",
-            "Silent notification while the social media guard is active (night, morning, daily limit)"));
+        guard.setDescription(WidgetShared.tr(c, "Ciche powiadomienie, gdy strażnik jest aktywny (noc, poranek, dzienny limit, zakupy)",
+            "Silent notification while the guard is active (night, morning, daily limit, shopping)"));
         guard.setShowBadge(false);
         WidgetShared.upsertChannel(nm, guard);
         NotificationChannel live = new NotificationChannel(CH_LIVE,

@@ -40,7 +40,10 @@ import { liveState, liveStatus } from "@/lib/live";
 import { billLines } from "@/lib/night";
 import { catCondition, formaStreaks } from "@/lib/habits/gamification";
 import { lateBasisOf } from "@/lib/sensors";
-import { getLang } from "@/lib/i18n";
+import { getLang, L } from "@/lib/i18n";
+import { chainLines, focusPool } from "@/lib/habits/chain";
+import { focusHabit } from "@/lib/habits/focus";
+import { minimumOf, rescueOn } from "@/lib/habits/rescue";
 import { isLightTheme, resolveTheme, systemPrefersDark } from "@/lib/theme";
 import { contextPools, useLinesReady } from "@/lib/habits/szpila";
 
@@ -115,12 +118,13 @@ export function themeFields() {
 
 /** The snapshot every native surface reads (widgets, notifications). Exported for tests. */
 export function buildState() {
-  const { habits, completions, userName, notifications, autoBackup, szpila, stepsSource } =
+  const { habits, completions, userName, notifications, autoBackup, szpila, stepsSource, focus } =
     useHabits.getState();
   const level = notifications.tauntLevel;
   const today = new Date();
   const key = todayKey(today);
   const idx = indexEntries(completions);
+  const focusId = focusHabit(habits, focus, today)?.id ?? null;
   const due = habits.filter((h) => isDueOn(h, today));
   const rows = due.map((h) => {
     const avoid = kindOf(h) === "avoid";
@@ -154,6 +158,16 @@ export function buildState() {
       // Situation pools (zero / almost / late / morning), picked by HabitNotifier.contextOf().
       ctx: contextPools(h, level, userName),
       praise: praiseFor(h, level, userName),
+      // "Nigdy dwa razy" + the weekly focus (HabitNotifier.lineFor, WidgetShared.boosted).
+      minimum: minimumOf(h),
+      // the flag is re-derived natively on a new day (WidgetShared.normalizeIfStale)
+      rescue: rescueOn(h, idx, today),
+      rescueLines: chainLines(h, level).map((l) => l.replaceAll("{u}", userName || L("ty", "you"))),
+      focus: h.id === focusId,
+      focusLines: focusPool(h, focusId, level).map((l) =>
+        l.replaceAll("{u}", userName || L("ty", "you")),
+      ),
+      boost: h.id === focusId || rescueOn(h, idx, today),
       source: h.source ?? "",
       ...(h.source === "screen"
         ? {
@@ -183,7 +197,7 @@ export function buildState() {
       review: notifications.review,
       reviewAt: toMin(notifications.reviewAt),
     },
-    roast: weeklyRoast(habits, completions, level, userName),
+    roast: weeklyRoast(habits, completions, level, userName, focus),
     // Forbidden habits from yesterday still waiting for an answer (open until noon) - morning review.
     yesterday: {
       date: todayKey(addDays(today, -1)),
@@ -195,7 +209,14 @@ export function buildState() {
         .map((h) => ({ id: h.id, name: h.name })),
     },
     // Night guard (LiveGuardService): window, ignored apps and per-app lines.
-    live: liveState(notifications, level, userName, szpila.humor, habits),
+    live: liveState(
+      notifications,
+      level,
+      userName,
+      szpila.humor,
+      habits,
+      useHabits.getState().wishlist,
+    ),
     // Unlocked look of the cat (widget drawables ic_szpila_<face>_<mood>).
     face: szpila.face,
     // App language for native texts (WidgetShared.tr).

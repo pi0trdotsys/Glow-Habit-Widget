@@ -210,7 +210,7 @@ export function goalLabel(h: Habit): string {
 // Entries
 // ---------------------------------------------------------------------------
 
-type EntryIndex = Map<string, Completion>;
+export type EntryIndex = Map<string, Completion>;
 
 /** Index completions by `${habitId}|${date}` for O(1) lookups in hot loops. */
 export function indexEntries(completions: Completion[]): EntryIndex {
@@ -767,6 +767,14 @@ export function rankKey(dueMin: number, nowMin: number, avoid: boolean, multi = 
   return d;
 }
 
+/**
+ * Rescue-day and weekly-focus habits jump to the front once they're due (or
+ * overdue); later ones keep their place. Mirrored in WidgetShared.boosted (Java).
+ */
+export function boostKey(key: number, boost: boolean): number {
+  return boost && key < 62 ? key / 1000 - 3 : key;
+}
+
 export interface PlanItem {
   habit: Habit;
   /** Suggested minute of day for the next action. */
@@ -784,6 +792,8 @@ export function planDay(
   habits: Habit[],
   completions: Completion[],
   now: Date = new Date(),
+  /** Habit ids that go first when due: rescue day, weekly focus (see boostKey). */
+  boost?: ReadonlySet<string>,
 ): PlanItem[] {
   const idx = indexEntries(completions);
   const nowMin = minuteOfDay(now);
@@ -806,7 +816,7 @@ export function planDay(
         left: 0,
         avoid,
         overdue: at <= nowMin,
-        key: rankKey(at, nowMin, true),
+        key: boostKey(rankKey(at, nowMin, true), !!boost?.has(h.id)),
       });
       continue;
     }
@@ -827,7 +837,7 @@ export function planDay(
       left: g.target - amount,
       avoid,
       overdue: at <= nowMin,
-      key: rankKey(at, nowMin, false, units > 1),
+      key: boostKey(rankKey(at, nowMin, false, units > 1), !!boost?.has(h.id)),
     });
   }
   return out.sort((a, b) => a.key - b.key);

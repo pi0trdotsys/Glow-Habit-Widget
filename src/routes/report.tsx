@@ -4,7 +4,7 @@ import { HabitIcon } from "@/components/HabitIcon";
 import { DeltaPill, WeekBars, WeekDayChart, deltaColor, verdict } from "@/components/WeekCompare";
 import { useHabits } from "@/lib/habits/store";
 import { weeklyReport, kindOf, formatMinute } from "@/lib/habits/utils";
-import { habitInsights, trackedDays, usualMinute } from "@/lib/habits/insights";
+import { habitInsights, sleepInsights, trackedDays, usualMinute } from "@/lib/habits/insights";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { AVOID_COLOR, HABIT_COLOR_VAR } from "@/lib/habits/colors";
 import { MonthsView, TrendView } from "@/components/LongStats";
@@ -41,7 +41,13 @@ function ReportPage() {
   const habits = useHabits((s) => s.habits);
   const completions = useHabits((s) => s.completions);
   const r = weeklyReport(habits, completions);
-  const insights = habitInsights(habits, completions);
+  const nightReports = useHabits((s) => s.nightReports);
+  const insights = [
+    ...habitInsights(habits, completions),
+    ...sleepInsights(habits, completions, nightReports),
+  ]
+    .sort((a, b) => b.strength - a.strength)
+    .slice(0, 5);
   const tracked = trackedDays(completions);
   const usual = new Map(habits.map((h) => [h.id, usualMinute(h, completions)]));
   const diffScore = Math.round((r.thisWeek.score - r.lastWeek.score) * 10) / 10;

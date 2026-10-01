@@ -155,6 +155,8 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Steps from Health Connect (incl. background reads for widgets/notifications) -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <!-- Sleep from the band (Mi Fitness -> Health Connect) for the night bill -->
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
     <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
     <!-- Late-night screen time; granted by the user under "Usage access" -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"

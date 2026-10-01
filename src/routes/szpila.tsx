@@ -24,6 +24,7 @@ import {
   type Unlockable,
 } from "@/lib/habits/gamification";
 import { L, pick } from "@/lib/i18n";
+import { focusChallenge, focusHabit } from "@/lib/habits/focus";
 
 export const Route = createFileRoute("/szpila")({
   head: () => ({
@@ -78,6 +79,8 @@ function SzpilaPage() {
     [habits, completions, nightHits, liveOn, dayLimit],
   );
   const next = nextUnlock(p);
+  const focus = useHabits((s) => s.focus);
+  const focusH = focusHabit(habits, focus);
   const condition = useCatCondition();
   const sampleHabit = habits.find((h) => h.kind !== "avoid")?.name ?? L("Czytanie", "Reading");
 
@@ -148,6 +151,12 @@ function SzpilaPage() {
           {challenges.map((c) => (
             <ChallengeRow key={c.id} c={c} />
           ))}
+          {focusH && (
+            <ChallengeRow
+              key="focus"
+              c={focusChallenge(focusH, completions, undefined, focus?.since)}
+            />
+          )}
         </ul>
         <p className="mt-3 text-xs text-muted-foreground">
           {L(

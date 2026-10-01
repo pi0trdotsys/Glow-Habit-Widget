@@ -54,6 +54,11 @@ export interface Habit {
   kind?: HabitKind;
   /** Daily goal for build habits. Missing = a single check per day. */
   goal?: HabitGoal;
+  /**
+   * Build habits: the "minimum version" for a bad day (e.g. 5 of 20 min) that keeps
+   * the chain alive. Missing = automatic (a quarter of the goal), 0 = none.
+   */
+  minimum?: number;
   /** Allowance for avoid habits. Missing = total ban. */
   limit?: HabitLimit;
   /** Preferred part of the day - feeds the "next task" planner. */

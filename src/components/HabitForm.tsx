@@ -15,6 +15,7 @@ import { getLang, L, pick } from "@/lib/i18n";
 import { useHabits } from "@/lib/habits/store";
 import { goalOf } from "@/lib/habits/utils";
 import { inThousands, stepsGoal } from "@/lib/steps";
+import { autoMinimum } from "@/lib/habits/rescue";
 import type {
   GoalType,
   HabitSource,
@@ -186,6 +187,10 @@ export function HabitForm({
   const [goalTarget, setGoalTarget] = useState(initial?.goal?.target ?? 8);
   const [goalStep, setGoalStep] = useState(initial?.goal?.step ?? 1);
   const [goalUnit, setGoalUnit] = useState(initial?.goal?.unit ?? "");
+  /** null = automatic (a quarter of the goal), 0 = no minimum. */
+  const [minimum, setMinimum] = useState<number | null>(initial?.minimum ?? null);
+  const autoMin = autoMinimum(goalType === "minutes" ? "minutes" : "count", goalTarget, goalStep);
+  const shownMin = Math.min(minimum ?? autoMin, Math.max(0, goalTarget - 1));
   const [limitTimes, setLimitTimes] = useState(initial?.limit?.times ?? 0);
   const [limitPeriod, setLimitPeriod] = useState<LimitPeriod>(initial?.limit?.period ?? "week");
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>(initial?.timeOfDay ?? "anytime");
@@ -253,6 +258,7 @@ export function HabitForm({
               unit: goalType === "count" ? goalUnit.trim() || undefined : undefined,
             },
       limit: avoid ? { times: limitTimes, period: limitPeriod } : undefined,
+      minimum: avoid || goalType === "check" || minimum == null ? undefined : shownMin,
       timeOfDay,
       // A source only makes sense for its kind: steps -> build count, screen -> avoid.
       source:
@@ -447,6 +453,24 @@ export function HabitForm({
                       className="w-40 rounded-xl border border-border bg-background px-3 py-1.5 text-right text-sm outline-none"
                     />
                   </Row>
+                )}
+                {goalTarget > 1 && (
+                  <div data-minimum>
+                    <Row label={L("Wersja minimum", "Minimum version")}>
+                      <NumberInput
+                        value={shownMin}
+                        onChange={setMinimum}
+                        max={Math.max(0, goalTarget - 1)}
+                        allowZero
+                      />
+                    </Row>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {L(
+                        `Na gorszy dzień: ${shownMin || "brak"}${shownMin ? (goalType === "minutes" ? " min" : ` ${goalUnit}`.trimEnd()) : ""} też ratuje serię. Nigdy dwa razy z rzędu - po opuszczonym dniu Szpila pilnuje właśnie minimum.${minimum == null ? " (ustawione automatycznie)" : ""}`,
+                        `For a bad day: ${shownMin || "none"}${shownMin ? (goalType === "minutes" ? " min" : ` ${goalUnit}`.trimEnd()) : ""} still saves the streak. Never twice in a row - after a missed day Szpila pushes exactly the minimum.${minimum == null ? " (set automatically)" : ""}`,
+                      )}
+                    </p>
+                  </div>
                 )}
                 <Row label={L("Jedno przytrzymanie dodaje", "One long-press adds")}>
                   <NumberInput
@@ -731,22 +755,24 @@ function NumberInput({
   value,
   onChange,
   max,
+  allowZero = false,
 }: {
   value: number;
   onChange: (n: number) => void;
   max: number;
+  allowZero?: boolean;
 }) {
   return (
     <input
       type="number"
       inputMode="numeric"
-      min={1}
+      min={allowZero ? 0 : 1}
       max={max}
       value={Number.isFinite(value) ? value : ""}
       onChange={(e) =>
         onChange(Math.max(0, Math.min(max, Math.round(Number(e.target.value) || 0))))
       }
-      onBlur={() => value < 1 && onChange(1)}
+      onBlur={() => !allowZero && value < 1 && onChange(1)}
       className="w-28 rounded-xl border border-border bg-background px-3 py-1.5 text-right text-sm tabular-nums outline-none"
     />
   );

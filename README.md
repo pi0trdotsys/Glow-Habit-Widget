@@ -130,6 +130,22 @@ szklanek wody? Rozłożone równo od rana do wieczora.
 <img src="docs/screenshots/today-light.png" width="240" alt="Jasny motyw" />
 </div>
 
+## ◉ Żeby cele naprawdę się działy
+
+- **Nigdy dwa razy z rzędu.** Każde zadanie ma **wersję minimum** na gorszy
+  dzień (np. 5 z 20 min czytania), która ratuje serię. Po opuszczonym dniu
+  przychodzi **dzień ratunkowy** 🛟: zadanie idzie na początek planu, a Szpila
+  pilnuje właśnie minimum.
+- **Cel tygodnia** 🎯: jedno zadanie, które w tym tygodniu jest najważniejsze.
+  Ma odznakę, pierwszeństwo w planie, własne szpile, osobne wyzwanie i ocenę
+  w niedzielnym podsumowaniu.
+- **24 h do namysłu** 🛒: Allegro, AliExpress, Vinted, OLX, Zalando i inne
+  sklepy zasłania kot. Dopisujesz rzecz do listy i wracasz po 24 godzinach:
+  „Kupuję” albo „Już nie chcę” (Szpila liczy uratowane złotówki).
+- **Sen z opaski** 😴: Mi Fitness zapisuje sen w Health Connect, a rachunek
+  za noc pokazuje, ile naprawdę śpisz i ile minut po odłożeniu telefonu
+  zasypiasz.
+
 ## ◉ Zakazane. Na czerwono.
 
 Fast food, scrollowanie w łóżku, słodycze, pornografia, pomijanie posiłków,

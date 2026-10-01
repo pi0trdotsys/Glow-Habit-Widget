@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as WidgetRouteImport } from './routes/widget'
 import { Route as SzpilaRouteImport } from './routes/szpila'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -19,6 +20,11 @@ import { Route as HabitsIndexRouteImport } from './routes/habits.index'
 import { Route as HabitsNewRouteImport } from './routes/habits.new'
 import { Route as HabitsIdRouteImport } from './routes/habits.$id'
 
+const WishlistRoute = WishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WidgetRoute = WidgetRouteImport.update({
   id: '/widget',
   path: '/widget',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/szpila': typeof SzpilaRoute
   '/widget': typeof WidgetRoute
+  '/wishlist': typeof WishlistRoute
   '/habits/$id': typeof HabitsIdRoute
   '/habits/new': typeof HabitsNewRoute
   '/habits/': typeof HabitsIndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/szpila': typeof SzpilaRoute
   '/widget': typeof WidgetRoute
+  '/wishlist': typeof WishlistRoute
   '/habits/$id': typeof HabitsIdRoute
   '/habits/new': typeof HabitsNewRoute
   '/habits': typeof HabitsIndexRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/szpila': typeof SzpilaRoute
   '/widget': typeof WidgetRoute
+  '/wishlist': typeof WishlistRoute
   '/habits/$id': typeof HabitsIdRoute
   '/habits/new': typeof HabitsNewRoute
   '/habits/': typeof HabitsIndexRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/szpila'
     | '/widget'
+    | '/wishlist'
     | '/habits/$id'
     | '/habits/new'
     | '/habits/'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/szpila'
     | '/widget'
+    | '/wishlist'
     | '/habits/$id'
     | '/habits/new'
     | '/habits'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/szpila'
     | '/widget'
+    | '/wishlist'
     | '/habits/$id'
     | '/habits/new'
     | '/habits/'
@@ -140,10 +152,18 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SzpilaRoute: typeof SzpilaRoute
   WidgetRoute: typeof WidgetRoute
+  WishlistRoute: typeof WishlistRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wishlist': {
+      id: '/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/widget': {
       id: '/widget'
       path: '/widget'
@@ -232,6 +252,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SzpilaRoute: SzpilaRoute,
   WidgetRoute: WidgetRoute,
+  WishlistRoute: WishlistRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

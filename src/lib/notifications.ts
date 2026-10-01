@@ -18,6 +18,8 @@ import type { LocalNotificationSchema } from "@capacitor/local-notifications";
 import { useHabits } from "@/lib/habits/store";
 import { formatMinute, kindOf, planDay, weeklyReport } from "@/lib/habits/utils";
 import { SZPILA_EMOJI, SZPILA_NAME, szpilaNow } from "@/lib/habits/szpila";
+import { boostSet } from "@/lib/habits/chain";
+import { focusHabit } from "@/lib/habits/focus";
 import { isEn, L } from "@/lib/i18n";
 
 export type PermissionState = "granted" | "denied" | "default" | "unsupported";
@@ -333,9 +335,18 @@ function webTick(): void {
     );
     for (const m of slots) {
       if (formatMinute(m) !== hhmm) continue;
-      const plan = planDay(habits, completions, now);
+      const { focus } = useHabits.getState();
+      const plan = planDay(habits, completions, now, boostSet(habits, completions, focus, now));
       if (plan.length === 0) continue;
-      const say = szpilaNow(habits, completions, plan, notifications.tauntLevel, userName, m);
+      const say = szpilaNow(
+        habits,
+        completions,
+        plan,
+        notifications.tauntLevel,
+        userName,
+        m,
+        focusHabit(habits, focus, now)?.id,
+      );
       fire(
         `taunt-${m}`,
         `${say.mood === "angry" ? SZPILA_EMOJI.angry : SZPILA_EMOJI.normal} ${SZPILA_NAME}`,

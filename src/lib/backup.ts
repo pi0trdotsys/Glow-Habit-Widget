@@ -7,6 +7,7 @@ import { Capacitor, registerPlugin } from "@capacitor/core";
 import { useHabits } from "@/lib/habits/store";
 import { todayKey } from "@/lib/habits/utils";
 import { csvFileName, toCsv } from "@/lib/habits/stats";
+import { sleepByDate } from "@/lib/night";
 import { L, pick } from "@/lib/i18n";
 
 /** Where a browser download lands, for the confirmation message. */
@@ -51,8 +52,9 @@ export async function saveBackup(share = false): Promise<string> {
 
 /** Full history as CSV (UTF-8 with BOM so Excel shows Polish letters). Returns the location. */
 export async function exportCsv(share = false): Promise<string> {
-  const { habits, completions, nightHits, daySocial } = useHabits.getState();
-  const text = "﻿" + toCsv(habits, completions, nightHits, new Date(), daySocial);
+  const { habits, completions, nightHits, daySocial, nightReports } = useHabits.getState();
+  const text =
+    "﻿" + toCsv(habits, completions, nightHits, new Date(), daySocial, sleepByDate(nightReports));
   const name = csvFileName();
   if (Capacitor.isNativePlatform()) {
     const { location } = await Native.saveFile({ name, text, mime: "text/csv", share });

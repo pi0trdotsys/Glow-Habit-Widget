@@ -178,9 +178,41 @@ public class HabitWidgetPlugin extends Plugin {
             int base = DayGuard.baseLimit(getContext());
             ret.put("limitBase", base);
             ret.put("debt", DayGuard.debt(getContext(), base));
+            // "24 h do namysłu": per calendar day, the shopping apps and an active pass.
+            ret.put("shopBlocks", new JSObject(LiveGuard.counts(getContext(), "shop_blocks").toString()));
+            ret.put("shopPasses", new JSObject(LiveGuard.counts(getContext(), "shop_passes").toString()));
+            ret.put("shopWish", new JSObject(LiveGuard.counts(getContext(), "shop_wish").toString()));
+            ret.put("shopPassUntil", ShopGuard.passUntil(getContext()));
+            JSArray shops = new JSArray();
+            for (java.util.Map.Entry<String, String> e : ShopGuard.SHOP.entrySet()) {
+                JSObject a = new JSObject();
+                a.put("pkg", e.getKey());
+                a.put("label", e.getValue());
+                a.put("installed", LiveGuard.installed(getContext(), e.getKey()));
+                shops.put(a);
+            }
+            ret.put("shopApps", shops);
         } catch (Exception e) {
             ret.put("hits", new JSObject());
         }
+        call.resolve(ret);
+    }
+
+    /** "Kupuję" on a wishlist item that waited 24 h: { minutes } of shopping without the block. */
+    @PluginMethod
+    public void shopPass(PluginCall call) {
+        int minutes = call.getInt("minutes", ShopGuard.passMin(getContext()));
+        ShopGuard.pass(getContext(), minutes);
+        JSObject ret = new JSObject();
+        ret.put("until", ShopGuard.passUntil(getContext()));
+        call.resolve(ret);
+    }
+
+    /** A screen the native side wants opened (e.g. the shopping block's "add to the list"): { route } once, "" if none. */
+    @PluginMethod
+    public void pendingRoute(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("route", ShopGuard.takePendingRoute(getContext()));
         call.resolve(ret);
     }
 
@@ -274,6 +306,8 @@ public class HabitWidgetPlugin extends Plugin {
         ret.put("available", HealthSteps.available(getContext()));
         ret.put("granted", HealthSteps.granted(getContext()));
         ret.put("background", HealthSteps.backgroundGranted(getContext()));
+        // Sleep (night bill): requestSteps asks for it too - Health Connect shows only what's missing.
+        ret.put("sleep", HealthSleep.granted(getContext()));
         return ret;
     }
 
@@ -282,7 +316,7 @@ public class HabitWidgetPlugin extends Plugin {
         call.resolve(stepsState());
     }
 
-    /** Opens Health Connect's permission screen; resolves with the new status. */
+    /** Opens Health Connect's permission screen (steps + sleep + background); resolves with the new status. */
     @PluginMethod
     public void requestSteps(PluginCall call) {
         if (!HealthSteps.available(getContext())) {

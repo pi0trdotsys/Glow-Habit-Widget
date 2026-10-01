@@ -138,12 +138,14 @@ await check("screen-judged 'Scrollowanie w łóżku' is neither ticked nor misse
 });
 
 await check("forbidden chip opens a bottom sheet; 'Czysto' ticks it", async () => {
-  await page.eval(`(${byText("button", "Fast food")}).click()`);
+  await page.eval(`(${byText("button:not([data-focus-pick])", "Fast food")}).click()`);
   await page.waitFor(`!!(${byText("button", "Czysto")})`);
   await page.eval(
     `[...document.querySelectorAll("button")].find(e => e.textContent.trim().endsWith("Czysto")).click()`,
   );
-  await page.waitFor(`(${byText("button", "Fast food")}).textContent.includes("✓")`);
+  await page.waitFor(
+    `(${byText("button:not([data-focus-pick])", "Fast food")}).textContent.includes("✓")`,
+  );
 });
 
 /** Drag the first live toast horizontally by dx px with the mouse (fires pointer events). */
@@ -176,7 +178,7 @@ async function swipeToast(dx: number): Promise<void> {
 }
 
 async function answerChip(answer: "Czysto" | "Wpadka"): Promise<void> {
-  await page.eval(`(${byText("button", "Fast food")}).click()`);
+  await page.eval(`(${byText("button:not([data-focus-pick])", "Fast food")}).click()`);
   await page.waitFor(`!!(${byText("button", answer)})`);
   await page.eval(
     `[...document.querySelectorAll("button")].find(e => e.textContent.trim().endsWith(${JSON.stringify(answer)})).click()`,
@@ -194,7 +196,7 @@ await check("... and to the right", async () => {
 
 await check("toasts also have a close button and never stack above 2", async () => {
   for (const answer of ["Wpadka", "Czysto", "Wpadka", "Czysto"]) {
-    await page.eval(`(${byText("button", "Fast food")}).click()`);
+    await page.eval(`(${byText("button:not([data-focus-pick])", "Fast food")}).click()`);
     await page.waitFor(`!!(${byText("button", answer)})`);
     await page.eval(
       `[...document.querySelectorAll("button")].find(e => e.textContent.trim().endsWith(${JSON.stringify(answer)})).click()`,
@@ -212,7 +214,7 @@ await check("toasts also have a close button and never stack above 2", async () 
 });
 
 await check("system back closes the open sheet first (window.__loopBack)", async () => {
-  await page.eval(`(${byText("button", "Fast food")}).click()`);
+  await page.eval(`(${byText("button:not([data-focus-pick])", "Fast food")}).click()`);
   await page.waitFor(`!!(${byText("button", "Wpadka")})`);
   assert(await page.eval<boolean>("window.__loopBack()"), "back not consumed");
   await page.waitFor(`!(${byText("button", "Wpadka")})`, 2000);
@@ -354,10 +356,10 @@ await check("Today: one swipeable status card (Szpila + social media) with dots"
   const slides = await page.eval<string>(
     `document.querySelector("[data-status-carousel]").dataset.slides`,
   );
-  assert(slides === "szpila,social", `slides: ${slides}`);
+  assert(slides === "szpila,social,focus", `slides: ${slides}`);
   assert(
     await page.eval<boolean>(
-      `document.querySelectorAll("[data-status-carousel] [role=tab]").length === 2`,
+      `document.querySelectorAll("[data-status-carousel] [role=tab]").length === 3`,
     ),
     "no dots",
   );
@@ -657,7 +659,7 @@ await check("English: Today, Habits, Report tabs, Szpila - no Polish left", asyn
 await check("English: forbidden habit sheet and Szpila's jab", async () => {
   await page.eval(`(${byText("a", "Today")}).click()`);
   await page.waitFor(`location.pathname === "/"`);
-  await page.eval(`(${byText("button", "Fast food")}).click()`);
+  await page.eval(`(${byText("button:not([data-focus-pick])", "Fast food")}).click()`);
   await page.waitFor(`!!(${byText("button", "Slip")})`);
   await noPolish("avoid sheet");
   assert(await page.eval<boolean>("window.__loopBack()"), "back not consumed");

@@ -127,6 +127,23 @@ Eight glasses of water? Spread evenly from morning to night.
 <img src="docs/screenshots/en/today-light.png" width="240" alt="Light theme" />
 </div>
 
+## ◉ So the goals actually happen
+
+- **Never twice in a row.** Every habit has a **minimum version** for a bad
+  day (e.g. 5 of 20 min of reading) that saves the streak. After a missed day
+  comes a **rescue day** 🛟: the habit goes to the top of the plan and Szpila
+  pushes exactly the minimum.
+- **Weekly focus** 🎯: one habit that matters most this week. A badge, first
+  place in the plan, its own jabs, a bonus challenge and a verdict in Sunday's
+  roast.
+- **24 h to think it over** 🛒: Allegro, AliExpress, Vinted, Zalando and other
+  shops get covered by the cat. Put the thing on a list and come back after
+  24 hours: "Buying it" or "Don't want it anymore" (Szpila counts the money
+  saved).
+- **Sleep from your band** 😴: Mi Fitness writes sleep to Health Connect, and
+  the night bill shows how long you really slept and how many minutes after
+  putting the phone down you fall asleep.
+
 ## ◉ Forbidden. In red.
 
 Fast food, scrolling in bed, sweets, porn, skipping meals, impulse shopping,

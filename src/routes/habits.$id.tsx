@@ -26,6 +26,7 @@ import {
   unitLabel,
 } from "@/lib/habits/utils";
 import { L } from "@/lib/i18n";
+import { doubleMisses, minimumLabel, minimumOf, neverTwiceStreak } from "@/lib/habits/rescue";
 
 export const Route = createFileRoute("/habits/$id")({
   head: () => ({ meta: [{ title: L("Zadanie - Szpila", "Habit - Szpila") }] }),
@@ -73,6 +74,7 @@ function HabitDetail() {
   const color = avoid ? AVOID_COLOR : HABIT_COLOR_VAR[habit.color];
   const heat = heatmapData(habit, completions, 84);
   const streak = currentStreak(habit, completions);
+  // "Nigdy dwa razy": the minimum keeps the chain, two misses in a row break it.
   const longest = longestStreak(habit, completions);
   const week = thisWeekCount(habit, completions);
   const rate = completionRate(habit, completions, 30);
@@ -199,6 +201,23 @@ function HabitDetail() {
           accent={color}
         />
         <Stat label={L("Skuteczność 30 dni", "30-day success")} value={`${rate}%`} accent={color} />
+        <Stat
+          label={L("Nigdy dwa razy z rzędu", "Never twice in a row")}
+          value={`${neverTwiceStreak(habit, completions)} d`}
+          accent={color}
+        />
+        <Stat
+          label={
+            minimumOf(habit) > 0
+              ? L(
+                  `Minimum: ${minimumLabel(habit)} · dziury x2 (30 d)`,
+                  `Minimum: ${minimumLabel(habit)} · double gaps (30 d)`,
+                )
+              : L("Dwie dziury z rzędu (30 d)", "Two gaps in a row (30 d)")
+          }
+          value={`${doubleMisses(habit, completions)}`}
+          accent={color}
+        />
       </div>
 
       <section className="mt-8 px-5">

@@ -2,10 +2,13 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { SzpilaBubble } from "./Szpila";
 import { NightBillView, useNightBill } from "./NightBill";
 import { MorningLockCard, SocialTodayCard, useGuardStatus } from "./TodayGuard";
+import { FocusCard } from "./FocusCard";
+import { useHabits } from "@/lib/habits/store";
+import { WishReadyCard, useWishReady } from "./WishReadyCard";
 import type { SzpilaSay } from "@/lib/habits/szpila";
 import { L } from "@/lib/i18n";
 
-export type SlideId = "morning" | "bill" | "szpila" | "social";
+export type SlideId = "morning" | "bill" | "szpila" | "social" | "focus" | "wish";
 
 /**
  * Order of Today's status slides: what needs you first (the morning lock),
@@ -15,12 +18,18 @@ export function statusSlideIds(has: {
   morning: boolean;
   bill: boolean;
   social: boolean;
+  /** The weekly focus (a picker until it's set, then progress). */
+  focus?: boolean;
+  /** Wishlist items that waited their 24 h ("24 h do namysłu"). */
+  wish?: boolean;
 }): SlideId[] {
   const out: SlideId[] = [];
   if (has.morning) out.push("morning");
   if (has.bill) out.push("bill");
   out.push("szpila");
+  if (has.wish) out.push("wish");
   if (has.social) out.push("social");
+  if (has.focus) out.push("focus");
   return out;
 }
 
@@ -61,10 +70,14 @@ export function StatusCarousel({
 }) {
   const bill = useNightBill(now);
   const guard = useGuardStatus(now, force);
+  const hasHabits = useHabits((s) => s.habits.length > 0);
+  const wishReady = useWishReady(now);
   const ids = statusSlideIds({
     morning: guard.morning.length > 0,
     bill: !!bill,
     social: !!guard.social,
+    focus: hasHabits,
+    wish: wishReady.length > 0,
   });
   const track = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
@@ -88,6 +101,8 @@ export function StatusCarousel({
     bill: bill ? <NightBillView r={bill.r} onDismiss={bill.dismiss} /> : null,
     szpila: <SzpilaBubble say={{ ...say, mood }} onReroll={onReroll} hop={reacting} />,
     social: guard.social ? <SocialTodayCard {...guard.social} /> : null,
+    focus: <FocusCard now={now} />,
+    wish: <WishReadyCard ready={wishReady} />,
   };
 
   const onScroll = () => {

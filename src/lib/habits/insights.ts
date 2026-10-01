@@ -18,6 +18,8 @@ import {
   unitLabel,
 } from "./utils";
 import { isEn } from "@/lib/i18n";
+import type { NightReport } from "@/lib/sensors";
+import { fmtSleep } from "@/lib/night";
 
 export interface Insight {
   text: string;
@@ -184,4 +186,97 @@ export function monthGrid(
     });
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// Sleep from the band (night reports) - "Po nocy z social mediami po północy
+// śpisz średnio 52 min krócej", "Po nocy krótszej niż 6 h: „Kroki” średnio ...".
+// ---------------------------------------------------------------------------
+
+/** Nights per side needed before a sleep insight shows up. */
+const MIN_NIGHTS_PER_SIDE = 4;
+/** Sleep differences smaller than this aren't worth a line. */
+const MIN_SLEEP_DIFF = 20;
+
+/** A night filed under day key `k` (evening of k → morning of k+1) with sleep minutes from the band. */
+interface SleepNight {
+  key: string;
+  minutes: number;
+  social: number;
+}
+
+function sleepNights(reports: Record<string, NightReport>, days: number, now: Date): SleepNight[] {
+  const since = todayKey(addDays(now, -days));
+  const todayK = todayKey(now);
+  return Object.values(reports)
+    .filter((r) => r.date >= since && r.date < todayK && r.sleep && r.sleep.minutes >= 0)
+    .map((r) => ({ key: r.date, minutes: r.sleep!.minutes, social: r.social ?? 0 }));
+}
+
+const mean = (v: number[]) => v.reduce((a, b) => a + b, 0) / v.length;
+
+/**
+ * Insights from the band's sleep: social media after midnight vs sleep length,
+ * and short nights (< 6 h) vs the next day's habits. Same shape as habitInsights.
+ */
+export function sleepInsights(
+  habits: Habit[],
+  completions: Completion[],
+  reports: Record<string, NightReport>,
+  days = 60,
+  now = new Date(),
+): Insight[] {
+  const nights = sleepNights(reports, days, now);
+  const out: Insight[] = [];
+
+  // 1) Scrolling after midnight vs how long you sleep.
+  const scrolled = nights.filter((n) => n.social > 0).map((n) => n.minutes);
+  const clean = nights.filter((n) => n.social === 0).map((n) => n.minutes);
+  if (scrolled.length >= MIN_NIGHTS_PER_SIDE && clean.length >= MIN_NIGHTS_PER_SIDE) {
+    const bad = mean(scrolled);
+    const good = mean(clean);
+    const diff = Math.round(Math.abs(bad - good));
+    if (diff >= MIN_SLEEP_DIFF) {
+      const less = bad < good;
+      out.push({
+        text: isEn()
+          ? `After a night with social media past midnight you sleep ${diff} min ${less ? "less" : "more"} on average (${fmtSleep(bad)} instead of ${fmtSleep(good)}).`
+          : `Po nocy z social mediami po północy śpisz średnio ${diff} min ${less ? "krócej" : "dłużej"} (${fmtSleep(bad)} zamiast ${fmtSleep(good)}).`,
+        strength: (diff / 120) * Math.sqrt(Math.min(scrolled.length, clean.length)),
+        negative: less,
+        causeId: "night-social",
+        effectId: "sleep",
+      });
+    }
+  }
+
+  // 2) Short nights vs the next day's habits (night filed under D -> day D+1).
+  const idx = indexEntries(completions);
+  const todayK = todayKey(now);
+  for (const effect of habits) {
+    if (effect.schedule.type === "timesPerWeek") continue;
+    const shortVals: number[] = [];
+    const okVals: number[] = [];
+    for (const n of nights) {
+      const [y, m, d] = n.key.split("-").map(Number);
+      const e = addDays(new Date(y, m - 1, d), 1);
+      if (todayKey(e) >= todayK || !countsOn(effect, idx, e, now)) continue;
+      (n.minutes < 6 * 60 ? shortVals : okVals).push(effectValue(effect, idx, e, now));
+    }
+    if (shortVals.length < MIN_NIGHTS_PER_SIDE || okVals.length < MIN_NIGHTS_PER_SIDE) continue;
+    const bad = mean(shortVals);
+    const good = mean(okVals);
+    const isRate = !(kindOf(effect) === "build" && goalOf(effect).type !== "check");
+    const relative = Math.abs(bad - good) / Math.max(Math.abs(good), Math.abs(bad), 1);
+    if (relative < MIN_RELATIVE || (isRate && Math.abs(bad - good) < MIN_RATE_POINTS)) continue;
+    const lead = isEn() ? "After a night under 6 h of sleep" : "Po nocy krótszej niż 6 h snu";
+    out.push({
+      text: `${lead}: ${effectPhrase(effect, bad, good)}.`,
+      strength: relative * Math.sqrt(Math.min(shortVals.length, okVals.length)),
+      negative: bad < good,
+      causeId: "sleep-short",
+      effectId: effect.id,
+    });
+  }
+  return out.sort((a, b) => b.strength - a.strength).slice(0, 3);
 }

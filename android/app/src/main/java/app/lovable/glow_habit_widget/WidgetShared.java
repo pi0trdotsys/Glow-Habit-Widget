@@ -240,7 +240,13 @@ final class WidgetShared {
     }
 
     static double rankKey(JSONObject h, int now) {
-        return rankKey(nextMinute(h), now, isAvoid(h), !isAvoid(h) && h.optInt("units", 1) > 1);
+        return boosted(rankKey(nextMinute(h), now, isAvoid(h), !isAvoid(h) && h.optInt("units", 1) > 1),
+            h.optBoolean("boost", false));
+    }
+
+    /** Rescue-day / weekly-focus rows ("boost") go first once due. Mirrors boostKey() in utils.ts. */
+    static double boosted(double key, boolean boost) {
+        return boost && key < 62 ? key / 1000.0 - 3 : key;
     }
 
     /** Pending rows sorted by what to do next. */
@@ -314,6 +320,10 @@ final class WidgetShared {
                     if (dateKey(1).equals(oldDate) && isAvoid(h) && !isAutoScreen(h) && isPending(h)) {
                         open.put(new JSONObject().put("id", h.optString("id")).put("name", h.optString("name")));
                     }
+                    // "Nigdy dwa razy": yesterday below the minimum (or a slip) = a rescue day today.
+                    boolean rescue = dateKey(1).equals(oldDate) && missed(h);
+                    h.put("rescue", rescue);
+                    h.put("boost", rescue || h.optBoolean("focus", false));
                     h.put("done", false);
                     h.put("amount", 0);
                     if (isAvoid(h)) h.put("status", "pending");
@@ -325,6 +335,25 @@ final class WidgetShared {
             p.edit().putString(STATE_KEY, o.toString()).apply();
         } catch (Exception ignored) {
         }
+    }
+
+    /**
+     * The row's day didn't keep the chain: a build habit below its minimum (or the
+     * goal when it has none), an avoid habit with a slip. Pending avoid = unknown, not a miss.
+     */
+    static boolean missed(JSONObject h) {
+        if (h == null) return false;
+        if (isAvoid(h)) return "slip".equals(h.optString("status"));
+        int min = h.optInt("minimum", 0);
+        return amount(h) < (min > 0 ? Math.min(min, target(h)) : target(h));
+    }
+
+    /** Today is still a rescue day for this row (flag set and the minimum not reached yet). */
+    static boolean rescueNow(JSONObject h) {
+        if (h == null || !h.optBoolean("rescue", false)) return false;
+        if (isAvoid(h)) return !"clean".equals(h.optString("status"));
+        int min = h.optInt("minimum", 0);
+        return amount(h) < (min > 0 ? Math.min(min, target(h)) : target(h));
     }
 
     static int doneCount(Context c) {

@@ -16,6 +16,8 @@ export interface StepsStatus {
   available: boolean;
   granted: boolean;
   background: boolean;
+  /** Sleep (Health Connect, for the night bill); absent on older native builds. */
+  sleep?: boolean;
 }
 
 interface SensorsPlugin {
@@ -61,6 +63,24 @@ export interface NightReport {
   unplugs?: number;
   /** Minute of day the phone went on the charger that night, -1 = not seen. */
   charged?: number;
+  /** Sleep from the band (Health Connect), when granted and synced. */
+  sleep?: NightSleep;
+}
+
+/** The night's main sleep (HealthSleep / SleepCalc on the native side). */
+export interface NightSleep {
+  /** Minutes of day the sleep started / ended. */
+  start: number;
+  end: number;
+  /** Minutes asleep (awake stages left out). */
+  minutes: number;
+  /** Stage minutes, only when the source wrote stages. */
+  deep?: number;
+  rem?: number;
+  light?: number;
+  awake?: number;
+  /** Package that wrote it (e.g. com.xiaomi.wearable = Mi Fitness). */
+  source: string;
 }
 
 const isNative = () => Capacitor.isNativePlatform();

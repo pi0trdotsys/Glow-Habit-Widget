@@ -8,6 +8,8 @@ import { detectLang, getLang, L, setLang, type Lang } from "@/lib/i18n";
 import { isThemePref, type ThemePref } from "@/lib/theme";
 import { translateHabit } from "./seed-names";
 import { linkStepsPatch } from "@/lib/steps";
+import { normalizeWishlist, wishReady, type WishItem } from "@/lib/shop";
+import { weekKey, type WeeklyFocus } from "./focus";
 import { goalOf, kindOf, minuteOfDay, todayKey } from "./utils";
 
 export type TauntLevel = "hard" | "soft";
@@ -66,6 +68,12 @@ export interface NotificationSettings {
   curfewDim: boolean;
   /** "Noc kosztuje dzień": last night's scrolling and passes come off today's limit. */
   nightDebt: boolean;
+  /** "24 h do namysłu": shopping apps are blocked; impulses go on the wishlist first (src/lib/shop.ts). */
+  shopGuard: boolean;
+  /** Shopping packages the guard ignores. */
+  shopOff: string[];
+  /** Minutes of shopping a pass gives (hold-through or "Kupuję" after 24 h). */
+  shopPassMin: number;
 }
 
 /** The cat's look + voice (unlocked by forma streaks, see gamification.ts). */
@@ -105,6 +113,9 @@ const defaultNotifications: NotificationSettings = {
   curfewAllow: [],
   curfewDim: true,
   nightDebt: true,
+  shopGuard: false,
+  shopOff: [],
+  shopPassMin: 15,
 };
 
 const defaultLook: SzpilaLook = { face: "wredny", humor: "wredny" };
@@ -124,6 +135,10 @@ interface HabitsState {
   setTheme: (t: ThemePref) => void;
   notifications: NotificationSettings;
   setNotifications: (n: NotificationSettings) => void;
+  /** "Cel tygodnia": one habit that gets the most attention this week. */
+  focus: WeeklyFocus | null;
+  /** Set this week's focus (null clears it). */
+  setFocus: (habitId: string | null) => void;
   /** Where steps come from: "auto" or the package of one Health Connect source (e.g. Mi Fitness). */
   stepsSource: string;
   setStepsSource: (source: string) => void;
@@ -143,6 +158,12 @@ interface HabitsState {
   mergeDaySocial: (m: Record<string, number>) => void;
   szpila: SzpilaLook;
   setSzpila: (look: Partial<SzpilaLook>) => void;
+  /** "24 h do namysłu": things to buy wait a day before they can be bought (src/lib/shop.ts). */
+  wishlist: WishItem[];
+  addWish: (w: { name: string; price?: number; app?: string }, now?: Date) => string;
+  /** "Kupuję" (only once ready, see wishReady) or "Już nie chcę" (any time). */
+  decideWish: (id: string, status: "bought" | "dropped", now?: Date) => void;
+  removeWish: (id: string) => void;
   addHabit: (h: Omit<Habit, "id" | "createdAt">) => string;
   updateHabit: (id: string, patch: Partial<Omit<Habit, "id">>) => void;
   removeHabit: (id: string) => void;
@@ -287,6 +308,15 @@ export const useHabits = create<HabitsState>()(
       seeded: false,
       userName: null,
       setUserName: (name) => set({ userName: name.trim() || null }),
+      focus: null,
+      setFocus: (habitId) =>
+        set((s) => {
+          if (!habitId) return { focus: null };
+          const week = weekKey();
+          // Re-picking the same habit keeps its start; a new pick is judged from today.
+          const same = s.focus?.week === week && s.focus.habitId === habitId;
+          return { focus: { week, habitId, since: same ? s.focus!.since : todayKey() } };
+        }),
       stepsSource: "auto",
       setStepsSource: (source) => set({ stepsSource: source || "auto" }),
       linkSteps: (habitId) =>
@@ -334,6 +364,11 @@ export const useHabits = create<HabitsState>()(
       mergeNightReports: (r) =>
         set((s) => {
           const next = { ...s.nightReports, ...r };
+          // A fresh read without sleep (band not synced / permission gone) keeps the sleep seen earlier.
+          for (const [k, v] of Object.entries(r)) {
+            const old = s.nightReports[k]?.sleep;
+            if (!v.sleep && old) next[k] = { ...v, sleep: old };
+          }
           // keep ~120 nights
           const keys = Object.keys(next).sort();
           for (const k of keys.slice(0, Math.max(0, keys.length - 120))) delete next[k];
@@ -357,6 +392,32 @@ export const useHabits = create<HabitsState>()(
         }),
       szpila: defaultLook,
       setSzpila: (look) => set((s) => ({ szpila: { ...s.szpila, ...look } })),
+      wishlist: [],
+      addWish: (w, now = new Date()) => {
+        const id = uid();
+        const name = w.name.trim().slice(0, 80);
+        if (!name) return "";
+        const item: WishItem = {
+          id,
+          name,
+          addedAt: now.toISOString(),
+          status: "waiting",
+          ...(w.price != null && w.price > 0 ? { price: w.price } : {}),
+          ...(w.app ? { app: w.app } : {}),
+        };
+        // keep the newest 200
+        set((s) => ({ wishlist: [...s.wishlist, item].slice(-200) }));
+        return id;
+      },
+      decideWish: (id, status, now = new Date()) =>
+        set((s) => ({
+          wishlist: s.wishlist.map((w) =>
+            w.id !== id || w.status !== "waiting" || (status === "bought" && !wishReady(w, now))
+              ? w
+              : { ...w, status, decidedAt: now.toISOString() },
+          ),
+        })),
+      removeWish: (id) => set((s) => ({ wishlist: s.wishlist.filter((w) => w.id !== id) })),
       addHabit: (h) => {
         const id = uid();
         const habit: Habit = { ...h, id, createdAt: new Date().toISOString() };
@@ -481,6 +542,8 @@ export const useHabits = create<HabitsState>()(
           nightReports: s.nightReports,
           daySocial: s.daySocial,
           stepsSource: s.stepsSource,
+          wishlist: s.wishlist,
+          focus: s.focus,
           szpila: s.szpila,
           language: s.language,
           theme: s.theme,
@@ -499,6 +562,8 @@ export const useHabits = create<HabitsState>()(
           nightReports: Record<string, NightReport>;
           daySocial: Record<string, number>;
           stepsSource: string;
+          wishlist: unknown;
+          focus: WeeklyFocus | null;
           szpila: Partial<SzpilaLook>;
         }>;
         const valid =
@@ -530,6 +595,13 @@ export const useHabits = create<HabitsState>()(
           daySocial:
             data.daySocial && typeof data.daySocial === "object" ? data.daySocial : s.daySocial,
           stepsSource: typeof data.stepsSource === "string" ? data.stepsSource : s.stepsSource,
+          wishlist: Array.isArray(data.wishlist) ? normalizeWishlist(data.wishlist) : s.wishlist,
+          focus:
+            data.focus &&
+            typeof data.focus.habitId === "string" &&
+            typeof data.focus.week === "string"
+              ? data.focus
+              : s.focus,
         }));
         return data.habits!.length;
       },
@@ -599,6 +671,8 @@ export const useHabits = create<HabitsState>()(
           // A palette this version does not know (e.g. from a newer backup) = like the phone.
           theme: isThemePref(p.theme) ? p.theme : "system",
           stepsSource: p.stepsSource || "auto",
+          wishlist: normalizeWishlist(p.wishlist),
+          focus: p.focus ?? null,
         };
       },
     },

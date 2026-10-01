@@ -33,6 +33,8 @@ import { szpilaNow } from "@/lib/habits/szpila";
 import { StatusCarousel } from "@/components/StatusCarousel";
 import { Confetti } from "@/components/Confetti";
 import { haptic } from "@/lib/haptics";
+import { boostSet } from "@/lib/habits/chain";
+import { focusHabit } from "@/lib/habits/focus";
 
 /** Tests/previews can show the native guard's status slides on the web. */
 const forceGuard =
@@ -76,6 +78,7 @@ function TodayPage() {
   const completions = useHabits((s) => s.completions);
   const userName = useHabits((s) => s.userName);
   const level = useHabits((s) => s.notifications.tauntLevel);
+  const focus = useHabits((s) => s.focus);
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1000));
 
   const today = new Date();
@@ -83,13 +86,16 @@ function TodayPage() {
   const build = due.filter((h) => kindOf(h) === "build");
   const avoid = due.filter((h) => kindOf(h) === "avoid");
   const progress = todayProgress(habits, completions, today);
-  const plan = planDay(habits, completions, today);
+  // Rescue days ("nigdy dwa razy") and the weekly focus go first once due.
+  const boost = boostSet(habits, completions, focus, today);
+  const focusH = focusHabit(habits, focus, today);
+  const plan = planDay(habits, completions, today, boost);
   const report = weeklyReport(habits, completions, today);
   const topStreak = habits.reduce((acc, h) => Math.max(acc, currentStreak(h, completions)), 0);
   const say = useMemo(
-    () => szpilaNow(habits, completions, plan, level, userName, seed),
+    () => szpilaNow(habits, completions, plan, level, userName, seed, focusH?.id),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [seed, completions, habits, level, userName],
+    [seed, completions, habits, level, userName, focusH?.id],
   );
 
   // The whole day done: confetti + a little drum roll (only when it happens, not on load).

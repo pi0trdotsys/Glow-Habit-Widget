@@ -426,6 +426,25 @@ final class HabitNotifier {
         return contextOf(WidgetShared.isAvoid(h), WidgetShared.amount(h), WidgetShared.target(h), now);
     }
 
+    /** Mirrors CHAIN_CHANCE in src/lib/habits/chain.ts. */
+    static final int CHAIN_RESCUE = 60, CHAIN_FOCUS = 45;
+
+    /**
+     * "Nigdy dwa razy" / weekly focus: the rescue pool on a rescue day (minimum not
+     * reached yet) or the focus pool for this week's focus, when the roll (0..99) says so.
+     */
+    static JSONArray chainPool(JSONObject h, int roll) {
+        if (WidgetShared.rescueNow(h) && roll < CHAIN_RESCUE) {
+            JSONArray p = h.optJSONArray("rescueLines");
+            if (p != null && p.length() > 0) return p;
+        }
+        if (h.optBoolean("focus", false) && roll < CHAIN_FOCUS) {
+            JSONArray p = h.optJSONArray("focusLines");
+            if (p != null && p.length() > 0) return p;
+        }
+        return null;
+    }
+
     /** Chance (percent) that a jab uses the context pool, per escalation tier. */
     static int ctxChance(int tier) {
         return tier == 1 ? CTX_CHANCE_RAGE : CTX_CHANCE;
@@ -451,6 +470,8 @@ final class HabitNotifier {
         }
         int now = WidgetShared.nowMinute();
         int tier = tier(now - WidgetShared.nextMinute(h), jabs);
+        JSONArray chain = chainPool(h, RNG.nextInt(100));
+        if (chain != null) return WidgetShared.fill(WidgetShared.pick(chain), h);
         JSONArray ctx = contextPool(h, now);
         if (ctx != null && RNG.nextInt(100) < ctxChance(tier)) {
             return WidgetShared.fill(WidgetShared.pick(ctx), h);
@@ -642,17 +663,40 @@ final class HabitNotifier {
         if (asleep >= 0) {
             body.append(en ? "\n🌙 Phone down around " : "\n🌙 Telefon odłożony ok. ").append(WidgetShared.fmtMinute(asleep));
         }
-        JSONArray pool = new JSONArray();
-        JSONArray all = lines != null ? lines.optJSONArray(bad ? "bad" : "good") : null;
-        for (int i = 0; all != null && i < all.length(); i++) {
-            String l = all.optString(i);
-            if (asleep >= 0 || !l.contains("{asleep}")) pool.put(l);
+        // Sleep from the band (Health Connect), when it synced in time.
+        JSONObject sleep = r.optJSONObject("sleep");
+        int sleepMin = NightStats.sleepMinutes(r);
+        if (sleep != null && sleepMin >= 0) {
+            body.append("\n😴 ").append(SleepCalc.duration(sleepMin)).append(en ? " of sleep (" : " snu (")
+                .append(SleepCalc.range(sleep.optInt("start"), sleep.optInt("end"))).append(")");
+            int fell = NightStats.fellAfter(r);
+            if (fell != SleepCalc.UNKNOWN) {
+                body.append("\n💤 ").append(fell >= 0
+                    ? (en ? "Asleep " + fell + " min after the phone went down" : "Zasypiasz " + fell + " min po odłożeniu telefonu")
+                    : (en ? "Phone down " + (-fell) + " min after falling asleep?!" : "Telefon odłożony " + (-fell) + " min po zaśnięciu?!"));
+            }
         }
+        // Comment pools (mirrors billPools in night.ts); older snapshots without sleep pools fall back to bad/good.
+        JSONArray pool = billPool(r, lines, SleepCalc.billPools(social, sleepMin));
+        if (pool.length() == 0) pool = billPool(r, lines, new String[]{bad ? "bad" : "good"});
         String line = WidgetShared.pick(pool);
         if (!line.isEmpty()) body.append("\n\n").append(NightStats.fill(line, r));
         String title = (en ? "🧾 Night bill · " : "🧾 Rachunek za noc · ")
             + (bad ? r.optInt("visits") + "× social media, " + social + " min" : en ? "clean" : "czysto");
         return new String[]{title, body.toString()};
+    }
+
+    /** The snapshot's lines of the given pools whose placeholders this night can fill. */
+    static JSONArray billPool(JSONObject r, JSONObject lines, String[] keys) {
+        JSONArray pool = new JSONArray();
+        for (String k : keys) {
+            JSONArray all = lines != null ? lines.optJSONArray(k) : null;
+            for (int i = 0; all != null && i < all.length(); i++) {
+                String l = all.optString(i);
+                if (NightStats.usable(l, r)) pool.put(l);
+            }
+        }
+        return pool;
     }
 
     private static void billPost(Context c, JSONObject r) {

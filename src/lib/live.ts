@@ -10,6 +10,7 @@ import type { NotificationSettings, TauntLevel } from "@/lib/habits/store";
 import { humorLive, type HumorId } from "@/lib/habits/gamification";
 import { dayGuardState, dayLines } from "@/lib/day-guard";
 import { curfewLines } from "@/lib/curfew";
+import { shopLines, shopState, type WishItem } from "@/lib/shop";
 import type { Habit } from "@/lib/habits/types";
 import { L, pick } from "@/lib/i18n";
 
@@ -420,10 +421,13 @@ export function liveState(
   userName: string | null,
   humor?: HumorId,
   habits: Habit[] = [],
+  wishlist: WishItem[] = [],
 ) {
   return {
     // Morning lock + daily limit (DayGuard.java).
     ...dayGuardState(n, habits),
+    // "24 h do namysłu" for shopping apps (ShopGuard.java).
+    shop: shopState(n, wishlist),
     enabled: n.live,
     block: n.liveBlock,
     bedtime: n.bedtime,
@@ -439,6 +443,7 @@ export function liveState(
       ...liveLines(level, userName, humor),
       ...dayLines(level, userName),
       ...curfewLines(level),
+      ...shopLines(level),
     },
   };
 }
@@ -488,6 +493,13 @@ export interface LiveStatus {
   /** The daily limit as set, and what last night took off it today. */
   limitBase?: number;
   debt?: number;
+  /** "24 h do namysłu", per calendar day: blocks, held-through passes, "add to the list" taps. */
+  shopBlocks?: Record<string, number>;
+  shopPasses?: Record<string, number>;
+  shopWish?: Record<string, number>;
+  /** Shopping pass end (ms), 0 = none. */
+  shopPassUntil?: number;
+  shopApps?: LiveApp[];
 }
 
 interface LivePlugin {

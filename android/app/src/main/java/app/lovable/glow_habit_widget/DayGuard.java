@@ -36,27 +36,46 @@ final class DayGuard {
         boolean morning;
         int morningUntil = 11 * 60;
         boolean day;
+        /** "24 h do namysłu": shopping apps are guarded around the clock (ShopGuard). */
+        boolean shop;
     }
 
     /**
      * Which guard runs now: the night guard wins inside its window; then the
      * morning lock while morning habits are pending (DAY_START..morningUntil);
      * then the daily limit for the rest of the day (not between midnight and
-     * DAY_START - that's the night).
+     * DAY_START - that's the night). The shopping guard alone keeps a DAY
+     * phase at any hour (the daily limit then stays off - see limitActive).
      */
     static int phase(int now, Config cfg, boolean morningPending) {
         if (cfg.night && LiveGuard.inWindow(now, cfg.nightStart, cfg.nightEnd)) return NIGHT;
         boolean dayTime = now >= DAY_START;
         if (cfg.morning && morningPending && dayTime && now < cfg.morningUntil) return MORNING;
         if (cfg.day && dayTime) return DAY;
+        if (cfg.shop) return DAY;
         return OFF;
+    }
+
+    /** The daily social media limit counts and jabs only when it's on and the night is over. */
+    static boolean limitActive(Config cfg, int now) {
+        return cfg.day && now >= DAY_START;
+    }
+
+    /**
+     * Count today's social media minutes on this poll? Outside the night from
+     * DAY_START on, while the morning lock or the daily limit runs - not when
+     * the service only runs for the shopping guard.
+     */
+    static boolean countsSocial(int phase, Config cfg, int now) {
+        if (phase == NIGHT || phase == OFF || now < DAY_START) return false;
+        return phase == MORNING || cfg.day;
     }
 
     /** Minutes of day at which some phase may begin (for the start alarm). */
     static List<Integer> phaseStarts(Config cfg) {
         List<Integer> out = new ArrayList<>();
         if (cfg.night) out.add(cfg.nightStart);
-        if (cfg.morning || cfg.day) out.add(DAY_START);
+        if (cfg.morning || cfg.day || cfg.shop) out.add(DAY_START);
         return out;
     }
 
@@ -192,6 +211,7 @@ final class DayGuard {
         cfg.morning = granted && morningSettings(c).optBoolean("enabled", false);
         cfg.morningUntil = morningSettings(c).optInt("until", 11 * 60);
         cfg.day = granted && daySettings(c).optBoolean("enabled", false);
+        cfg.shop = granted && ShopGuard.enabled(c);
         return cfg;
     }
 

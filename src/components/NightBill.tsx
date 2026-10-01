@@ -3,7 +3,18 @@ import { X } from "lucide-react";
 import { addDays } from "date-fns";
 import { useHabits } from "@/lib/habits/store";
 import { formatMinute, todayKey } from "@/lib/habits/utils";
-import { badNight, billComment } from "@/lib/night";
+import {
+  RESTED_SLEEP_MIN,
+  SHORT_SLEEP_MIN,
+  badNight,
+  billComment,
+  fellAfter,
+  fellLine,
+  fmtSleep,
+  sleepMinutes,
+  sleepRange,
+  sleepWeeks,
+} from "@/lib/night";
 import { cleanNightStreak, nightDebt } from "@/lib/curfew";
 import { SZPILA_EMOJI } from "@/lib/habits/szpila";
 import type { NightReport } from "@/lib/sensors";
@@ -140,6 +151,7 @@ export function NightFacts({ r }: { r: NightReport }) {
           </span>
         )}
       </div>
+      <SleepFacts r={r} />
       {((r.charged ?? -1) >= 0 || (r.curfewBlocks ?? 0) > 0 || (r.unplugs ?? 0) > 0) && (
         <div
           className="mt-1 flex flex-wrap gap-x-4 text-xs text-muted-foreground"
@@ -168,6 +180,73 @@ export function NightFacts({ r }: { r: NightReport }) {
   );
 }
 
+/** Sleep from the band: "😴 6 h 12 min snu (00:48–07:00)", stages, phone-down vs asleep. */
+function SleepFacts({ r }: { r: NightReport }) {
+  const minutes = sleepMinutes(r);
+  if (minutes == null || !r.sleep) return null;
+  const s = r.sleep;
+  const fell = fellAfter(r);
+  const stages =
+    s.deep != null && s.rem != null
+      ? L(
+          `głęboki ${fmtSleep(s.deep)} · REM ${fmtSleep(s.rem)}`,
+          `deep ${fmtSleep(s.deep)} · REM ${fmtSleep(s.rem)}`,
+        )
+      : null;
+  return (
+    <div className="mt-1 flex flex-wrap gap-x-4 text-xs text-muted-foreground" data-sleep-facts>
+      <span
+        className="font-medium"
+        style={{
+          color:
+            minutes < SHORT_SLEEP_MIN
+              ? "var(--avoid)"
+              : minutes >= RESTED_SLEEP_MIN
+                ? "var(--primary)"
+                : undefined,
+        }}
+      >
+        😴 {L(`${fmtSleep(minutes)} snu`, `${fmtSleep(minutes)} of sleep`)} ({sleepRange(r)})
+      </span>
+      {stages && <span>{stages}</span>}
+      {fell != null && (
+        <span data-sleep-fell style={fell < 0 ? { color: "var(--avoid)" } : undefined}>
+          💤 {fellLine(r)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** "Sen: śr. 6 h 40 min (7 nocy) · +12 min vs poprzednie 7" (NightList header). */
+function SleepWeekStat() {
+  const reports = useHabits((s) => s.nightReports);
+  const w = sleepWeeks(reports);
+  if (!w.last) return null;
+  const d = w.delta;
+  return (
+    <div className="mb-2 text-xs text-muted-foreground" data-sleep-week>
+      😴{" "}
+      <span className="font-semibold text-foreground">
+        {L(`Sen: śr. ${fmtSleep(w.last.avg)}`, `Sleep: avg ${fmtSleep(w.last.avg)}`)}
+      </span>{" "}
+      {L(
+        `(${w.last.nights} ${plPlural(w.last.nights, ["noc", "noce", "nocy"])})`,
+        `(${w.last.nights} ${w.last.nights === 1 ? "night" : "nights"})`,
+      )}
+      {d != null && (
+        <span
+          className="ml-1 font-semibold"
+          style={{ color: d > 0 ? "var(--primary)" : d < 0 ? "var(--avoid)" : undefined }}
+        >
+          · {d > 0 ? "+" : d < 0 ? "−" : "±"}
+          {fmtSleep(Math.abs(d))} {L("vs poprzednie 7", "vs the 7 before")}
+        </span>
+      )}
+    </div>
+  );
+}
+
 /** Report: the last nights, newest first. */
 export function NightList({ max = 7 }: { max?: number }) {
   const reports = useHabits((s) => s.nightReports);
@@ -180,6 +259,7 @@ export function NightList({ max = 7 }: { max?: number }) {
       <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
         {L("Ostatnie noce", "Recent nights")}
       </h2>
+      <SleepWeekStat />
       <ul className="divide-y divide-border">
         {nights.map((r) => (
           <li key={r.date} className="py-2.5">

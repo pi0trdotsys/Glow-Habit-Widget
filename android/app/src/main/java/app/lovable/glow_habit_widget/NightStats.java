@@ -352,6 +352,9 @@ final class NightStats {
             out.put("curfewPasses", LiveGuard.counts(c, "curfew_passes").optInt(key, 0));
             out.put("unplugs", LiveGuard.counts(c, "unplugs").optInt(key, 0));
             out.put("charged", LiveGuard.counts(c, "charged").optInt(key, -1));
+            // Sleep from the band (Health Connect), when granted and already synced.
+            JSONObject sleep = HealthSleep.night(c, day);
+            if (sleep != null) out.put("sleep", sleep);
         } catch (Exception ignored) {
         }
         return out;
@@ -374,13 +377,37 @@ final class NightStats {
         return sb.toString();
     }
 
-    /** Resolve {social} {screen} {asleep} {visits} {apps} in a Szpila line. */
+    /** Minutes slept (band), -1 = unknown. */
+    static int sleepMinutes(JSONObject r) {
+        JSONObject s = r.optJSONObject("sleep");
+        return s != null ? s.optInt("minutes", -1) : -1;
+    }
+
+    /** Minutes from the phone going down to falling asleep (SleepCalc.fellAfter), UNKNOWN when not both known. */
+    static int fellAfter(JSONObject r) {
+        JSONObject s = r.optJSONObject("sleep");
+        return s == null ? SleepCalc.UNKNOWN : SleepCalc.fellAfter(r.optInt("asleep", -1), s.optInt("start", -1));
+    }
+
+    /** Whether a line's placeholders can be filled for this night ({asleep}, {sleep}, {fell} may be unknown). */
+    static boolean usable(String line, JSONObject r) {
+        if (line.contains("{asleep}") && r.optInt("asleep", -1) < 0) return false;
+        if (line.contains("{sleep}") && sleepMinutes(r) < 0) return false;
+        int fell = fellAfter(r);
+        return !line.contains("{fell}") || (fell != SleepCalc.UNKNOWN && fell >= 0);
+    }
+
+    /** Resolve {social} {screen} {asleep} {visits} {apps} {sleep} {fell} in a Szpila line. */
     static String fill(String line, JSONObject r) {
         int asleep = r.optInt("asleep", -1);
+        int sleep = sleepMinutes(r);
+        int fell = fellAfter(r);
         return line.replace("{social}", String.valueOf(r.optInt("social")))
             .replace("{screen}", String.valueOf(r.optInt("screen")))
             .replace("{visits}", String.valueOf(r.optInt("visits")))
             .replace("{asleep}", asleep < 0 ? "?" : WidgetShared.fmtMinute(asleep))
+            .replace("{sleep}", sleep < 0 ? "?" : SleepCalc.duration(sleep))
+            .replace("{fell}", fell == SleepCalc.UNKNOWN ? "?" : String.valueOf(Math.abs(fell)))
             .replace("{apps}", appsLine(r.optJSONArray("apps")));
     }
 }

@@ -244,6 +244,7 @@ const CSV_HEADER_PL = [
   "procent",
   "social_w_nocy",
   "social_dzien_min",
+  "sen_min",
 ];
 
 const CSV_HEADER_EN = [
@@ -257,6 +258,7 @@ const CSV_HEADER_EN = [
   "percent",
   "social_at_night",
   "social_by_day_min",
+  "sleep_min",
 ];
 
 /** CSV words per language: Polish (the original) or English. */
@@ -298,6 +300,8 @@ export function toCsv(
   nightHits: Record<string, number> = {},
   now: Date = new Date(),
   daySocial: Record<string, number> = {},
+  /** Minutes slept the night after each day (band, see night.ts sleepByDate). */
+  sleep: Record<string, number> = {},
 ): string {
   const idx = indexEntries(completions);
   const first =
@@ -332,6 +336,7 @@ export function toCsv(
           String(Math.round(score * 100)),
           h.source === "screen" ? (nightHits[key] ?? 0) : "",
           daySocial[key] ?? "",
+          sleep[key] ?? "",
         ]
           .map(cell)
           .join(";"),
