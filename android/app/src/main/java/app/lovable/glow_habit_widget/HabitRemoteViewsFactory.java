@@ -3,7 +3,6 @@ package app.lovable.glow_habit_widget;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
@@ -14,16 +13,16 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Builds one row per habit from the "widget_state" snapshot. */
+/** Builds one row per habit from the "widget_state" snapshot, in the widget's palette (WidgetTheme). */
 public class HabitRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
-    private static final int NAME_ACTIVE = Color.parseColor("#f4f5f9");
-    private static final int NAME_DONE = Color.parseColor("#9398a5");
-
     private final Context context;
+    private final int widgetId;
     private final List<JSONObject> items = new ArrayList<>();
+    private WidgetTheme theme = WidgetTheme.DARK;
 
-    HabitRemoteViewsFactory(Context context) {
+    HabitRemoteViewsFactory(Context context, int widgetId) {
         this.context = context;
+        this.widgetId = widgetId;
     }
 
     @Override
@@ -63,6 +62,7 @@ public class HabitRemoteViewsFactory implements RemoteViewsService.RemoteViewsFa
     @Override
     public void onDataSetChanged() {
         items.clear();
+        theme = WidgetTheme.forWidget(context, widgetId);
         JSONArray habits = WidgetShared.habits(context);
         for (int i = 0; i < habits.length(); i++) {
             items.add(habits.optJSONObject(i));
@@ -77,12 +77,12 @@ public class HabitRemoteViewsFactory implements RemoteViewsService.RemoteViewsFa
         String name = h.optString("name", "");
         boolean done = WidgetShared.isDone(h);
         boolean avoid = WidgetShared.isAvoid(h);
-        int color = WidgetShared.color(h);
+        int color = theme.habit(WidgetShared.color(h));
         String amount = WidgetShared.amountText(h);
 
         rv.setTextViewText(R.id.row_name, avoid ? "⛔ " + name : name);
         rv.setInt(R.id.row_dot, "setTextColor", color);
-        rv.setInt(R.id.row_name, "setTextColor", done ? NAME_DONE : NAME_ACTIVE);
+        rv.setInt(R.id.row_name, "setTextColor", done ? theme.muted : theme.text);
         String check = done ? "✓" : "slip".equals(h.optString("status")) ? "✗" : amount.isEmpty() ? "" : amount;
         rv.setTextViewText(R.id.row_check, check);
         rv.setFloat(R.id.row_check, "setTextSize", check.length() > 2 ? 11f : 16f);

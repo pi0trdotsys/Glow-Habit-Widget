@@ -51,9 +51,18 @@ final class LiveBlock {
      * @param sleepLabel label of the way-out button (null = "Idę spać")
      * @param actions    optional task buttons: {id, label} pairs, reported via onAction
      */
-    @SuppressLint({"ClickableViewAccessibility", "InflateParams"})
     static boolean show(Context c, String title, String text, String sub, int catRes, String sleepLabel,
                         java.util.List<String[]> actions, Listener listener) {
+        return show(c, title, text, sub, catRes, sleepLabel, actions, LiveGuard.HOLD_THROUGH_MS, null, listener);
+    }
+
+    /**
+     * @param holdMs   how long "if you really must" has to be held
+     * @param holdIdle its label (null = "Przytrzymaj 10 s, jeśli naprawdę musisz")
+     */
+    @SuppressLint({"ClickableViewAccessibility", "InflateParams"})
+    static boolean show(Context c, String title, String text, String sub, int catRes, String sleepLabel,
+                        java.util.List<String[]> actions, long holdMs, String holdIdle, Listener listener) {
         if (shown != null) return true;
         WindowManager wm = (WindowManager) c.getSystemService(Context.WINDOW_SERVICE);
         if (wm == null || !android.provider.Settings.canDrawOverlays(c)) return false;
@@ -102,15 +111,16 @@ final class LiveBlock {
         }
         ProgressBar bar = root.findViewById(R.id.block_hold_progress);
         TextView holdText = root.findViewById(R.id.block_hold_text);
-        String idle = en ? "Hold for 10 s if you really must" : "Przytrzymaj 10 s, jeśli naprawdę musisz";
+        String idle = holdIdle != null ? holdIdle
+            : en ? "Hold for 10 s if you really must" : "Przytrzymaj 10 s, jeśli naprawdę musisz";
         holdText.setText(idle);
         ValueAnimator anim = ValueAnimator.ofInt(0, 1000);
-        anim.setDuration(LiveGuard.HOLD_THROUGH_MS);
+        anim.setDuration(holdMs);
         anim.setInterpolator(new LinearInterpolator());
         anim.addUpdateListener(a -> {
             int p = (int) a.getAnimatedValue();
             bar.setProgress(p);
-            long left = (long) Math.ceil(LiveGuard.HOLD_THROUGH_MS * (1000 - p) / 1000.0 / 1000.0);
+            long left = (long) Math.ceil(holdMs * (1000 - p) / 1000.0 / 1000.0);
             holdText.setText(p >= 1000 ? (en ? "Fine…" : "No dobra…")
                 : en ? "Keep holding, " + left + " s more… seriously?" : "Trzymaj jeszcze " + left + " s… serio?");
             if (p >= 1000 && shown != null) {

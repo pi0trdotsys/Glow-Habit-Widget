@@ -1,6 +1,12 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+/* Pixel font of the Glitch Pixel theme, bundled (offline); latin-ext has ąćęłńóśźż.
+   Only downloaded when a glitch heading is on screen. */
+@import "@fontsource/pixelify-sans/latin-400.css";
+@import "@fontsource/pixelify-sans/latin-ext-400.css";
+@import "@fontsource/pixelify-sans/latin-700.css";
+@import "@fontsource/pixelify-sans/latin-ext-700.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -61,7 +67,8 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-:root {
+:root,
+[data-theme="dark"] {
   --radius: 1.25rem;
   /* Dark by default — habit tracker is mobile-first nocturnal */
   --background: oklch(0.16 0.012 270);
@@ -113,7 +120,8 @@
 
 /* Light theme (Settings -> Szpila -> Wygląd, or "like the phone"). Accents are darker so
    text and rings stay readable on white (contrast >= 4.5:1 for text). */
-html[data-theme="light"] {
+[data-theme="light"] {
+  --radius: 1.25rem;
   --background: oklch(0.975 0.004 270);
   --foreground: oklch(0.22 0.02 270);
   --card: oklch(1 0 0);
@@ -152,6 +160,392 @@ html[data-theme="light"] {
   --habit-sand: oklch(0.58 0.08 70);
   --avoid: oklch(0.56 0.22 20);
   color-scheme: light;
+}
+
+/* ------------------------------------------------------------------ more palettes
+   Settings -> Szpila -> Wygląd. Each one declares every variable of the light block and its
+   color-scheme, and has twins in src/lib/theme.ts (THEME_META: light flag + --background hex)
+   and android/.../WidgetTheme.java. tests/theme.test.ts checks the contrast of each. */
+
+/* AMOLED: pure black for OLED screens and the night. */
+[data-theme="amoled"] {
+  --radius: 1.25rem;
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.97 0.005 270);
+  --card: oklch(0.17 0.006 270);
+  --card-foreground: oklch(0.97 0.005 270);
+  --popover: oklch(0.17 0.006 270);
+  --popover-foreground: oklch(0.97 0.005 270);
+  --primary: oklch(0.84 0.14 165);
+  --primary-foreground: oklch(0.16 0.02 270);
+  --secondary: oklch(0.22 0.008 270);
+  --secondary-foreground: oklch(0.97 0.005 270);
+  --muted: oklch(0.2 0.006 270);
+  --muted-foreground: oklch(0.78 0.015 270);
+  --accent: oklch(0.74 0.18 25);
+  --accent-foreground: oklch(0.16 0.02 270);
+  --destructive: oklch(0.66 0.22 25);
+  --destructive-foreground: oklch(0.98 0.003 270);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.84 0.14 165);
+  --sidebar: oklch(0.1 0.004 270);
+  --sidebar-foreground: oklch(0.97 0.005 270);
+  --sidebar-primary: oklch(0.84 0.14 165);
+  --sidebar-primary-foreground: oklch(0.16 0.02 270);
+  --sidebar-accent: oklch(0.22 0.008 270);
+  --sidebar-accent-foreground: oklch(0.97 0.005 270);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.84 0.14 165);
+
+  --habit-mint: oklch(0.82 0.14 165);
+  --habit-coral: oklch(0.74 0.18 25);
+  --habit-amber: oklch(0.83 0.16 80);
+  --habit-violet: oklch(0.72 0.18 300);
+  --habit-sky: oklch(0.78 0.13 235);
+  --habit-rose: oklch(0.76 0.17 8);
+  --habit-lime: oklch(0.86 0.18 130);
+  --habit-sand: oklch(0.78 0.07 75);
+  --avoid: oklch(0.68 0.22 18);
+  color-scheme: dark;
+}
+
+/* Glitch Pixel: black, white outlines, magenta #FF2BD6 / cyan #14F0FF chromatic fringes,
+   pixel headings (Pixelify Sans) and a few tear bands behind the content (rules below). */
+[data-theme="glitch"] {
+  --radius: 0.25rem;
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.99 0 0);
+  --card: oklch(0.15 0.012 290);
+  --card-foreground: oklch(0.99 0 0);
+  --popover: oklch(0.15 0.012 290);
+  --popover-foreground: oklch(0.99 0 0);
+  --primary: oklch(0.871 0.147 203);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0.21 0.014 290);
+  --secondary-foreground: oklch(0.99 0 0);
+  --muted: oklch(0.19 0.012 290);
+  --muted-foreground: oklch(0.836 0.014 286);
+  --accent: oklch(0.691 0.282 338.1);
+  --accent-foreground: oklch(0 0 0);
+  --destructive: oklch(0.663 0.229 12.6);
+  --destructive-foreground: oklch(0 0 0);
+  --border: oklch(1 0 0 / 28%);
+  --input: oklch(1 0 0 / 34%);
+  --ring: oklch(0.691 0.282 338.1);
+  --sidebar: oklch(0.12 0.01 290);
+  --sidebar-foreground: oklch(0.99 0 0);
+  --sidebar-primary: oklch(0.871 0.147 203);
+  --sidebar-primary-foreground: oklch(0 0 0);
+  --sidebar-accent: oklch(0.21 0.014 290);
+  --sidebar-accent-foreground: oklch(0.99 0 0);
+  --sidebar-border: oklch(1 0 0 / 28%);
+  --sidebar-ring: oklch(0.691 0.282 338.1);
+
+  --habit-mint: oklch(0.871 0.147 203);
+  --habit-coral: oklch(0.72 0.2 25);
+  --habit-amber: oklch(0.9 0.17 100);
+  --habit-violet: oklch(0.72 0.2 305);
+  --habit-sky: oklch(0.78 0.14 240);
+  --habit-rose: oklch(0.75 0.24 345);
+  --habit-lime: oklch(0.88 0.2 140);
+  --habit-sand: oklch(0.85 0.03 290);
+  --avoid: oklch(0.691 0.282 338.1);
+  --glitch-magenta: oklch(0.691 0.282 338.1);
+  --glitch-cyan: oklch(0.871 0.147 203);
+  color-scheme: dark;
+}
+
+/* Terminal: green phosphor on a black-green CRT. */
+[data-theme="terminal"] {
+  --radius: 0.5rem;
+  --background: oklch(0.13 0.025 150);
+  --foreground: oklch(0.9 0.2 145);
+  --card: oklch(0.18 0.035 150);
+  --card-foreground: oklch(0.9 0.2 145);
+  --popover: oklch(0.18 0.035 150);
+  --popover-foreground: oklch(0.9 0.2 145);
+  --primary: oklch(0.87 0.22 145);
+  --primary-foreground: oklch(0.14 0.03 150);
+  --secondary: oklch(0.23 0.04 150);
+  --secondary-foreground: oklch(0.9 0.2 145);
+  --muted: oklch(0.21 0.035 150);
+  --muted-foreground: oklch(0.76 0.14 145);
+  --accent: oklch(0.84 0.16 80);
+  --accent-foreground: oklch(0.14 0.03 150);
+  --destructive: oklch(0.7 0.19 30);
+  --destructive-foreground: oklch(0.14 0.03 150);
+  --border: oklch(0.87 0.22 145 / 18%);
+  --input: oklch(0.87 0.22 145 / 24%);
+  --ring: oklch(0.87 0.22 145);
+  --sidebar: oklch(0.15 0.03 150);
+  --sidebar-foreground: oklch(0.9 0.2 145);
+  --sidebar-primary: oklch(0.87 0.22 145);
+  --sidebar-primary-foreground: oklch(0.14 0.03 150);
+  --sidebar-accent: oklch(0.23 0.04 150);
+  --sidebar-accent-foreground: oklch(0.9 0.2 145);
+  --sidebar-border: oklch(0.87 0.22 145 / 18%);
+  --sidebar-ring: oklch(0.87 0.22 145);
+
+  --habit-mint: oklch(0.87 0.22 145);
+  --habit-coral: oklch(0.76 0.17 40);
+  --habit-amber: oklch(0.84 0.16 80);
+  --habit-violet: oklch(0.78 0.13 300);
+  --habit-sky: oklch(0.84 0.12 200);
+  --habit-rose: oklch(0.77 0.15 10);
+  --habit-lime: oklch(0.92 0.2 125);
+  --habit-sand: oklch(0.82 0.08 95);
+  --avoid: oklch(0.72 0.18 35);
+  color-scheme: dark;
+}
+
+/* Ocean: deep navy with aqua. */
+[data-theme="ocean"] {
+  --radius: 1.25rem;
+  --background: oklch(0.19 0.04 240);
+  --foreground: oklch(0.97 0.01 220);
+  --card: oklch(0.245 0.045 240);
+  --card-foreground: oklch(0.97 0.01 220);
+  --popover: oklch(0.245 0.045 240);
+  --popover-foreground: oklch(0.97 0.01 220);
+  --primary: oklch(0.83 0.12 195);
+  --primary-foreground: oklch(0.2 0.04 240);
+  --secondary: oklch(0.3 0.05 240);
+  --secondary-foreground: oklch(0.97 0.01 220);
+  --muted: oklch(0.27 0.045 240);
+  --muted-foreground: oklch(0.8 0.035 225);
+  --accent: oklch(0.78 0.14 35);
+  --accent-foreground: oklch(0.2 0.04 240);
+  --destructive: oklch(0.68 0.2 25);
+  --destructive-foreground: oklch(0.98 0.005 240);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.83 0.12 195);
+  --sidebar: oklch(0.21 0.042 240);
+  --sidebar-foreground: oklch(0.97 0.01 220);
+  --sidebar-primary: oklch(0.83 0.12 195);
+  --sidebar-primary-foreground: oklch(0.2 0.04 240);
+  --sidebar-accent: oklch(0.3 0.05 240);
+  --sidebar-accent-foreground: oklch(0.97 0.01 220);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.83 0.12 195);
+
+  --habit-mint: oklch(0.83 0.12 175);
+  --habit-coral: oklch(0.76 0.16 30);
+  --habit-amber: oklch(0.85 0.15 85);
+  --habit-violet: oklch(0.74 0.15 295);
+  --habit-sky: oklch(0.8 0.12 225);
+  --habit-rose: oklch(0.78 0.15 5);
+  --habit-lime: oklch(0.87 0.16 135);
+  --habit-sand: oklch(0.8 0.06 80);
+  --avoid: oklch(0.72 0.19 20);
+  color-scheme: dark;
+}
+
+/* Sunset: dusky plum with a warm orange glow. */
+[data-theme="sunset"] {
+  --radius: 1.25rem;
+  --background: oklch(0.19 0.045 330);
+  --foreground: oklch(0.97 0.012 60);
+  --card: oklch(0.245 0.05 330);
+  --card-foreground: oklch(0.97 0.012 60);
+  --popover: oklch(0.245 0.05 330);
+  --popover-foreground: oklch(0.97 0.012 60);
+  --primary: oklch(0.82 0.14 60);
+  --primary-foreground: oklch(0.2 0.04 330);
+  --secondary: oklch(0.3 0.055 330);
+  --secondary-foreground: oklch(0.97 0.012 60);
+  --muted: oklch(0.27 0.05 330);
+  --muted-foreground: oklch(0.81 0.035 340);
+  --accent: oklch(0.76 0.16 355);
+  --accent-foreground: oklch(0.2 0.04 330);
+  --destructive: oklch(0.68 0.21 22);
+  --destructive-foreground: oklch(0.98 0.005 60);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.82 0.14 60);
+  --sidebar: oklch(0.21 0.047 330);
+  --sidebar-foreground: oklch(0.97 0.012 60);
+  --sidebar-primary: oklch(0.82 0.14 60);
+  --sidebar-primary-foreground: oklch(0.2 0.04 330);
+  --sidebar-accent: oklch(0.3 0.055 330);
+  --sidebar-accent-foreground: oklch(0.97 0.012 60);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.82 0.14 60);
+
+  --habit-mint: oklch(0.82 0.12 170);
+  --habit-coral: oklch(0.76 0.17 35);
+  --habit-amber: oklch(0.84 0.15 75);
+  --habit-violet: oklch(0.74 0.16 305);
+  --habit-sky: oklch(0.79 0.11 230);
+  --habit-rose: oklch(0.77 0.16 0);
+  --habit-lime: oklch(0.86 0.16 125);
+  --habit-sand: oklch(0.8 0.07 65);
+  --avoid: oklch(0.72 0.19 15);
+  color-scheme: dark;
+}
+
+/* Sakura: light, pastel pink with deep rose accents (text-safe on white). */
+[data-theme="sakura"] {
+  --radius: 1.25rem;
+  --background: oklch(0.97 0.014 350);
+  --foreground: oklch(0.25 0.04 350);
+  --card: oklch(0.995 0.004 350);
+  --card-foreground: oklch(0.25 0.04 350);
+  --popover: oklch(0.995 0.004 350);
+  --popover-foreground: oklch(0.25 0.04 350);
+  --primary: oklch(0.53 0.18 355);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.94 0.02 350);
+  --secondary-foreground: oklch(0.25 0.04 350);
+  --muted: oklch(0.95 0.016 350);
+  --muted-foreground: oklch(0.46 0.06 350);
+  --accent: oklch(0.52 0.11 165);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.52 0.21 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.45 0.1 350 / 14%);
+  --input: oklch(0.45 0.1 350 / 20%);
+  --ring: oklch(0.53 0.18 355);
+  --sidebar: oklch(0.965 0.016 350);
+  --sidebar-foreground: oklch(0.25 0.04 350);
+  --sidebar-primary: oklch(0.53 0.18 355);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.94 0.02 350);
+  --sidebar-accent-foreground: oklch(0.25 0.04 350);
+  --sidebar-border: oklch(0.45 0.1 350 / 14%);
+  --sidebar-ring: oklch(0.53 0.18 355);
+
+  --habit-mint: oklch(0.58 0.12 165);
+  --habit-coral: oklch(0.6 0.18 30);
+  --habit-amber: oklch(0.64 0.15 70);
+  --habit-violet: oklch(0.55 0.19 305);
+  --habit-sky: oklch(0.57 0.13 240);
+  --habit-rose: oklch(0.56 0.2 0);
+  --habit-lime: oklch(0.58 0.15 135);
+  --habit-sand: oklch(0.57 0.08 60);
+  --avoid: oklch(0.52 0.21 25);
+  color-scheme: light;
+}
+
+/* ------------------------------------------------------------------ theme effects
+   ":not([data-theme="x"] [data-theme]:not([data-theme="x"]) *)" = no other theme nested inside
+   x around the element (the nearest data-theme is x), so a preview
+   of another theme (Settings -> Wygląd) inside the page keeps its own look. */
+
+/* Glitch Pixel: pixel font + chromatic split on the big headings. */
+[data-theme="glitch"]
+  :is(h1, .font-display, .theme-display):not(
+    [data-theme="glitch"] [data-theme]:not([data-theme="glitch"]) *
+  ) {
+  font-family: "Pixelify Sans", ui-monospace, monospace;
+  letter-spacing: 0.01em;
+  text-shadow:
+    -0.06em 0 0 oklch(0.691 0.282 338.1 / 85%),
+    0.06em 0 0 oklch(0.871 0.147 203 / 85%);
+}
+/* square-ish, pixel corners (rings, dots and avatars stay round) */
+[data-theme="glitch"]
+  [class*="rounded-"]:not(.rounded-full):not(
+    [data-theme="glitch"] [data-theme]:not([data-theme="glitch"]) *
+  ) {
+  border-radius: 2px;
+}
+/* cards: white outline with a magenta / cyan offset fringe */
+[data-theme="glitch"]
+  .bg-card:not([data-theme="glitch"] [data-theme]:not([data-theme="glitch"]) *) {
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 80%),
+    -2px 0 0 1px var(--glitch-magenta),
+    2px 0 0 1px var(--glitch-cyan);
+}
+/* the cat gets the chromatic split too */
+[data-theme="glitch"] [data-szpila-cat] {
+  filter: drop-shadow(-1.5px 0 0 oklch(0.691 0.282 338.1))
+    drop-shadow(1.5px 0 0 oklch(0.871 0.147 203));
+}
+
+/* Terminal: monospace headings with a phosphor glow. */
+[data-theme="terminal"]
+  :is(h1, .font-display, .theme-display):not(
+    [data-theme="terminal"] [data-theme]:not([data-theme="terminal"]) *
+  ) {
+  font-family: ui-monospace, "Cascadia Mono", "Roboto Mono", "DejaVu Sans Mono", monospace;
+  letter-spacing: -0.06em;
+  text-shadow: 0 0 0.35em oklch(0.87 0.22 145 / 45%);
+}
+
+/* Scanlines + tear bands behind the content: AppShell's .app-bg is isolated, so a
+   z-index -1 layer sits above its background and below everything else. Static = free. */
+[data-theme="glitch"] .app-bg,
+[data-theme="terminal"] .app-bg {
+  isolation: isolate;
+}
+[data-theme="glitch"] .app-bg::before,
+[data-theme="terminal"] .app-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+[data-theme="glitch"] .app-bg::before {
+  background:
+    linear-gradient(var(--glitch-magenta), var(--glitch-magenta)) 6% 14% / 22% 2px no-repeat,
+    linear-gradient(var(--glitch-cyan), var(--glitch-cyan)) 92% 27% / 16% 3px no-repeat,
+    linear-gradient(oklch(1 0 0 / 70%), oklch(1 0 0 / 70%)) 80% 29% / 7% 2px no-repeat,
+    linear-gradient(var(--glitch-cyan), var(--glitch-cyan)) 3% 58% / 12% 2px no-repeat,
+    linear-gradient(var(--glitch-magenta), var(--glitch-magenta)) 96% 71% / 24% 2px no-repeat,
+    linear-gradient(var(--glitch-magenta), var(--glitch-magenta)) 20% 88% / 4px 4px no-repeat,
+    linear-gradient(var(--glitch-cyan), var(--glitch-cyan)) 74% 9% / 4px 4px no-repeat,
+    repeating-linear-gradient(oklch(1 0 0 / 3.5%) 0 1px, transparent 1px 3px);
+  opacity: 0.55;
+}
+[data-theme="terminal"] .app-bg::before {
+  background:
+    radial-gradient(120% 80% at 50% 0%, oklch(0.87 0.22 145 / 7%), transparent 70%),
+    repeating-linear-gradient(oklch(0.87 0.22 145 / 4%) 0 1px, transparent 1px 3px);
+}
+/* now and then a tear flickers across (transform + opacity only: composited) */
+@media (prefers-reduced-motion: no-preference) {
+  [data-theme="glitch"] .app-bg::after {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 3px;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent 8%,
+      var(--glitch-magenta) 8% 30%,
+      transparent 30% 55%,
+      var(--glitch-cyan) 55% 70%,
+      transparent 70%
+    );
+    opacity: 0;
+    animation: glitch-tear 9s steps(1, end) infinite;
+  }
+}
+@keyframes glitch-tear {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateY(22vh);
+  }
+  71% {
+    opacity: 0.8;
+    transform: translateY(22vh);
+  }
+  72% {
+    opacity: 0.6;
+    transform: translateY(63vh) translateX(-4%);
+  }
+  73% {
+    opacity: 0;
+  }
 }
 
 .dark {

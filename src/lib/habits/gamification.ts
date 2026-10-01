@@ -538,17 +538,27 @@ const HUMOR_LINES: Record<Exclude<HumorId, "wredny">, HumorLines> = {
       "Co to ma być, rozgrzewka dla emerytów? „{name}” - już, kurwa, bez wymówek!",
       "No pain, no gain! „{name}” czeka, a ty się obijasz jak na dniu nóg.",
       "Mięśnie charakteru same nie urosną. „{name}” - raz, dwa, jazda!",
+      "Rozgrzewka skończona, byku! „{name}” to dzisiejsza seria główna. Bez oszukiwania powtórzeń!",
+      "Leżysz jak sztanga po treningu. „{name}” - podnosimy się i jedziemy, kurwa!",
     ],
     avoid: [
       "Trzymaj gardę! „{name}” to twój najgorszy przeciwnik. Nie dawaj mu się, mięczaku!",
       "Dyscyplina, byku! Żadnego „{name}” dziś, słyszysz?!",
+      "Pokusa to tylko kolejny ciężar, byku. „{name}” dziś odkładasz na stojak i nie dotykasz!",
     ],
     praise: [
       "TAK JEST! „{name}” zaliczone! Tak się, kurwa, trenuje!",
       "Pompa! „{name}” zrobione. Jutro ciśniemy dalej, mistrzu!",
+      "REKORD ŻYCIOWY! „{name}” zaliczone, białko i spać, mistrzu!",
     ],
-    liveFirst: ["{app} o {time}?! Regeneracja to też trening, byku! Telefon na ławkę i spać!"],
-    liveEscalate: ["{m} min na {app}? Nawet cardio tyle nie trwa! Spać, kurwa, natychmiast!"],
+    liveFirst: [
+      "{app} o {time}?! Regeneracja to też trening, byku! Telefon na ławkę i spać!",
+      "{app} o {time}? Mięśnie rosną w nocy, a nie na TikToku! Telefon do szafki, byku!",
+    ],
+    liveEscalate: [
+      "{m} min na {app}? Nawet cardio tyle nie trwa! Spać, kurwa, natychmiast!",
+      "{m} min na {app}! To nie interwały, to lenistwo! Odkładaj i spać, kurwa!",
+    ],
   },
   mafioso: {
     nag: [
@@ -556,20 +566,26 @@ const HUMOR_LINES: Record<Exclude<HumorId, "wredny">, HumorLines> = {
       "Rodzina się niecierpliwi. „{name}” wciąż niezrobione. Nie chcesz nas rozczarować, prawda?",
       "Mam przyjaciół, którzy pytają o „{name}”. Źli przyjaciele. Zrób to.",
       "Szanuję cię. Dlatego mówię po dobroci: „{name}”. Zanim zacznę mówić inaczej.",
+      "„{name}” to przysługa, o którą proszę. Nie lubię prosić dwa razy. Rozumiemy się?",
+      "W mojej rodzinie każdy robi swoje. Ty dziś robisz „{name}”. Tak już jest.",
     ],
     avoid: [
       "„{name}”? Nie w mojej dzielnicy. Pamiętaj, co się stało z tymi, co się nie słuchali.",
       "Jedna wpadka z „{name}” i budzisz się z głową konia w łóżku. Metaforycznie. Chyba.",
+      "„{name}” to konkurencja. A z konkurencją nie robimy interesów. Capisce?",
     ],
     praise: [
       "„{name}” załatwione. Rodzina jest z ciebie dumna. Na razie.",
       "Dobra robota z „{name}”. Don Szpila to zapamięta.",
+      "„{name}” załatwione czysto. Don Szpila składa ci wyrazy szacunku.",
     ],
     liveFirst: [
       "{app} o {time}? Don Szpila nie lubi, jak jego ludzie nie śpią. Odłóż to. Grzecznie proszę. Raz.",
+      "{app} o {time}? Rodzina śpi, a ty kręcisz się po mieście. Do domu i spać.",
     ],
     liveEscalate: [
       "{m} minut. Moja cierpliwość się kończy, a ja nie proszę dwa razy. Telefon. Odłóż.",
+      "{m} minut. Moi ludzie już wiedzą, gdzie trzymasz ładowarkę. Odłóż telefon.",
     ],
   },
   poeta: {
@@ -578,20 +594,26 @@ const HUMOR_LINES: Record<Exclude<HumorId, "wredny">, HumorLines> = {
       "Na ławce siedzi leń i marnuje dzień - „{name}” czeka w cieniu, a ty w zapomnieniu.",
       "Róże są czerwone, fiołki są blade, „{name}” niezrobione - znowu dajesz ciała, gadzie.",
       "Wstań i rób, bo czas ucieka, „{name}” na ciebie, cholera, czeka.",
+      "Gdy słońce zachodzi, a ty wciąż w pościeli, „{name}” czeka smutne, nikt się nie weseli.",
+      "Ach, „{name}”, ty moja udręko - zrób to wreszcie, leniwa ręko!",
     ],
     avoid: [
       "Kto „{name}” ulegnie w nocy czy w dzień, ten rano obudzi się jak stary pień.",
       "Nie „{name}”, bracie, nie tą drogą - bo potem rano nie wstaniesz nogą.",
+      "„{name}” kusi jak jabłko w raju, lecz wpadka smakuje gorzko, jak w dawnym zwyczaju.",
     ],
     praise: [
       "O, cudzie! „{name}” zrobione - niech będzie ten dzień pochwalone!",
       "Z „{name}” wygrana, chwała ci od rana!",
+      "„{name}” zrobione - niech wieść gminna niesie, że leń przegrał dzisiaj w tym lesie!",
     ],
     liveFirst: [
       "Północ minęła, a ty w {app} tkwisz - sen ci ucieka, a ty wciąż patrzysz. Idź spać.",
+      "Noc ciemna, {time} na zegarze, a {app} świeci ci w twarz jak w barze. Idź spać.",
     ],
     liveEscalate: [
       "{m} minut w {app} - o, zgrozo, o, klęsko! Odłóż ten telefon, bo będzie ci ciężko.",
+      "{m} minut w {app} mija, sen cię w kącie omija - odłóż telefon, niech sen cię owija.",
     ],
   },
 };
@@ -604,18 +626,26 @@ const HUMOR_LINES_EN: Record<Exclude<HumorId, "wredny">, HumorLines> = {
       "What is this, a warm-up for pensioners? “{name}” - now, damn it, no excuses!",
       "No pain, no gain! “{name}” is waiting and you're slacking like it's leg day.",
       "Character muscles don't grow on their own. “{name}” - one, two, go!",
+      "Warm-up's over, champ! “{name}” is today's main set. No cheating on the reps!",
+      "You're lying there like a barbell after leg day. “{name}” - up and at it, damn it!",
     ],
     avoid: [
       "Keep your guard up! “{name}” is your toughest opponent. Don't let it win, softie!",
       "Discipline, champ! Zero “{name}” today, you hear me?!",
+      "Temptation is just another weight, champ. “{name}” goes back on the rack today and stays there!",
     ],
     praise: [
       "YEAH, BABY! “{name}” done! That's how you fucking train!",
       "What a pump! “{name}” crushed. Tomorrow we go harder, champ!",
+      "PERSONAL RECORD! “{name}” crushed - protein shake and bed, champ!",
     ],
-    liveFirst: ["{app} at {time}?! Recovery is training too, champ! Phone on the bench and sleep!"],
+    liveFirst: [
+      "{app} at {time}?! Recovery is training too, champ! Phone on the bench and sleep!",
+      "{app} at {time}? Muscles grow at night, not on TikTok! Phone in the locker, champ!",
+    ],
     liveEscalate: [
       "{m} min on {app}? Even cardio doesn't last that long! Sleep, damn it, right now!",
+      "{m} min on {app}! That's not interval training, that's laziness! Put it down and sleep, damn it!",
     ],
   },
   mafioso: {
@@ -624,19 +654,27 @@ const HUMOR_LINES_EN: Record<Exclude<HumorId, "wredny">, HumorLines> = {
       "The family is getting impatient. “{name}” still ain't done. You don't wanna disappoint us, do you?",
       "I got friends asking about “{name}”. Not nice friends. Do it.",
       "I respect you. That's why I'm asking nicely: “{name}”. Before I start asking differently.",
+      "“{name}” is a favor I'm asking. I don't like asking twice. We understand each other?",
+      "In my family everybody does their part. Today you do “{name}”. That's how it is.",
     ],
     avoid: [
       "“{name}”? Not in my neighborhood. Remember what happened to the ones who didn't listen.",
       "One slip with “{name}” and you wake up with a horse's head in your bed. Metaphorically. Probably.",
+      "“{name}” is the competition. And we don't do business with the competition. Capisce?",
     ],
     praise: [
       "“{name}” taken care of. The family is proud of you. For now.",
       "Nice work on “{name}”. Don Szpila won't forget this.",
+      "“{name}” taken care of, nice and clean. Don Szpila pays his respects.",
     ],
     liveFirst: [
       "{app} at {time}? Don Szpila don't like it when his people ain't sleeping. Put it down. I'm asking nicely. Once.",
+      "{app} at {time}? The family's asleep and you're out wandering the streets. Go home and sleep.",
     ],
-    liveEscalate: ["{m} minutes. My patience is running out, and I don't ask twice. Phone. Down."],
+    liveEscalate: [
+      "{m} minutes. My patience is running out, and I don't ask twice. Phone. Down.",
+      "{m} minutes. My guys already know where you keep the charger. Put the phone down.",
+    ],
   },
   poeta: {
     nag: [
@@ -644,20 +682,26 @@ const HUMOR_LINES_EN: Record<Exclude<HumorId, "wredny">, HumorLines> = {
       "The couch is soft, the day is long, “{name}” undone - you're doing it wrong.",
       "Get up and move, the clock won't wait, “{name}” is calling, damn it - don't be late.",
       "A lazy soul on a lazy day - skip “{name}” and you'll pay, pay, pay.",
+      "The sun is setting, you're still in bed - “{name}” undone, and hope is dead.",
+      "Oh “{name}”, my torment, my pain - get off the couch and do it again!",
     ],
     avoid: [
       "Who gives in to “{name}” by night or by day wakes up like a stump in a pile of hay.",
       "Not “{name}”, friend, not down that road - or come the morning you'll feel like a toad.",
+      "“{name}” tempts like the apple in Eden - but the slip tastes bitter, so don't go feedin'.",
     ],
     praise: [
       "O wonder! “{name}” is done - let this day be praised by everyone!",
       "With “{name}” you won the fight - glory to you from morning to night!",
+      "“{name}” is done - let the village sing: the lazy one lost, and you're the king!",
     ],
     liveFirst: [
       "Midnight has passed, yet on {app} you stay - your sleep slips off while you scroll away. Go to bed.",
+      "The night is dark, it's {time} on the dot, and {app} has your eyes in a knot. Go to sleep.",
     ],
     liveEscalate: [
       "{m} minutes on {app} - oh horror, oh plight! Put down that phone or you'll suffer tonight.",
+      "{m} minutes on {app} slip by, while sleep waits in the corner to cry - put down the phone.",
     ],
   },
 };

@@ -36,6 +36,11 @@ odłogiem, i ma tekst na wszystko: na nieumyte zęby, na 2000 kroków o 18:00,
 na frytki. Im dłużej zwlekasz, tym ostrzej. Pamięta twoje wpadki. W niedzielę
 robi podsumowanie tygodnia, którego nie chcesz czytać.
 
+Ponad 1500 tekstów, dopasowanych do zadania i do sytuacji: inaczej rano przy
+pustym kubku, inaczej o 15:00, gdy dalej zero, inaczej przy 7 z 8 szklanek, a
+jeszcze inaczej wieczorem. Programowanie, nauka języka, wydatki, posiłki,
+porno - każde ma swój repertuar.
+
 Zrobisz swoje, dostaniesz pochwałę. Złośliwą, ale zawsze.
 
 > **Szpila domyślnie przeklina.** Wolisz grzeczniej? Ustawienia → Szpila → **„Łagodny”**.
@@ -49,9 +54,22 @@ zaczyna pilnować, odliczając do północy.
 Otwierasz TikToka o 0:40? **Szpila wyskakuje od razu**, a nie dopiero rano.
 Tekst pod konkretną aplikację, a co 5 minut ostrzej.
 
-Nie pomogło? Po trzeciej szpili kot **zasłania całą aplikację**.
-Do wyboru: **„Idę spać”** albo **przytrzymaj guzik 10 sekund**, jeśli naprawdę
-musisz. I spójrz sobie przy tym w oczy.
+Nie pomogło? Po trzeciej szpili kot **zasłania całą aplikację** (przed
+północą już po drugiej). Do wyboru: **„Idę spać”** albo **przytrzymaj guzik
+10 sekund**, jeśli naprawdę musisz. I spójrz sobie przy tym w oczy.
+
+**Cisza nocna.** Chcesz po północy w ogóle nie siedzieć w telefonie? Od 0:00
+działa tylko budzik, telefon, ekran główny i to, co sam dopuścisz (np. muzyka
+do snu). Każda inna aplikacja zasłania się od razu. Bo o północy z algorytmem
+nie wygrasz, więc lepiej nie musieć z nim walczyć:
+
+- **Pilne?** Przytrzymaj 10 s, a dostaniesz 3 minuty przy ciemniejącym na
+  czerwono ekranie. Każdy kolejny raz tej nocy trzymasz dwa razy dłużej.
+- **Noc kosztuje dzień.** Każda minuta social mediów po północy zabiera 2
+  minuty z jutrzejszego limitu, każdy wyjątek 10 minut.
+- **Ładowarka.** Telefon podłączony wieczorem = pochwała i godzina w
+  rachunku. Odłączony po północy = szpila.
+- **Seria czystych nocy** na rachunku. Szkoda ją przerwać.
 
 Rano czeka **rachunek za noc**: _„3× Instagram (22 min) · 1× YouTube (25 min)
 · 61 min z telefonem po północy · telefon odłożony ok. 1:40”_. Z komentarzem.
@@ -68,7 +86,8 @@ zaplanowane wyłączenie telefonu nie udają, że nie śpisz.
   szklanka wody). Odhaczasz je prosto z blokady.
 - **Dzienny limit**, np. 60 minut social mediów. Za 10 minut do końca
   ostrzeżenie, po limicie szpile, a po trzeciej blokada. Na ekranie Dziś
-  widzisz licznik _„42/60 min”_, a w raporcie ile dni zmieściłeś się w limicie.
+  widzisz licznik _„42/60 min”_ (minus to, co zabrała noc), a w raporcie, w ilu
+  dniach udało się zmieścić w limicie.
 
 ## ◉ Kot, który rośnie razem z tobą
 
@@ -106,6 +125,8 @@ szklanek wody? Rozłożone równo od rana do wieczora.
 <div align="center">
 <img src="docs/screenshots/sheet.png" width="240" alt="Przytrzymaj dłużej: +1, +2, +5 albo suwak" />
 &nbsp;&nbsp;
+<img src="docs/screenshots/today-glitch.png" width="240" alt="Motyw Glitch Pixel" />
+&nbsp;&nbsp;
 <img src="docs/screenshots/today-light.png" width="240" alt="Jasny motyw" />
 </div>
 
@@ -135,20 +156,31 @@ Brak potwierdzenia = wpadka. Wczoraj rozliczysz jeszcze rano, do 12:00.
   opóźnieniem i zmieniającą się linijką: szpila, seria, postęp, limit, co
   potem), ikony z pierścieniem postępu i lista. Zaliczasz przytrzymaniem, więc
   przypadkowe dotknięcie niczego nie psuje.
-- **Ustawienia widżetu** przy dodawaniu: przezroczystość tła pod twoją tapetę
-  i co ma pokazywać zmieniająca się linijka.
+- **Ustawienia widżetu** przy dodawaniu: motyw, przezroczystość tła pod twoją
+  tapetę i co ma pokazywać zmieniająca się linijka.
 - **Stałe powiadomienie** z paskiem postępu, planem i szybkimi przyciskami:
   **„+1 szklanka”**, **„+15 min Czytanie”**, **„✓ Mycie”**.
 - **Wieczorne rozliczenie** zakazanych jednym powiadomieniem.
-- **Kroki z Health Connect**: Google Fit, Samsung Health czy Mi Fitness wpisują je za ciebie.
+- **Kroki z opaski**: Mi Fitness (Xiaomi Smart Band), Google Fit, Samsung
+  Health czy Garmin wpisują je za ciebie przez Health Connect. Widzisz, ile
+  naliczyło każde źródło, wybierasz jedno albo „automatycznie”, a przycisk
+  **„Zsynchronizuj opaskę”** otwiera Mi Fitness. Zadanie liczone w tysiącach
+  („8 × 1000”) podłączasz jednym dotknięciem, razem z historią.
 
-## ◉ Polski i English, jasno albo ciemno
+## ◉ Polski i English, dziewięć motywów
 
 Cała aplikacja, szpile (tak, przekleństwa też), powiadomienia i widżety mówią
 **po polsku i po angielsku**. Język wybierasz przy pierwszym uruchomieniu albo
-w każdej chwili w Ustawieniach. Motyw: **ciemny, jasny albo jak telefon**.
-Ustawienia są podzielone na cztery zakładki: Szpila, Strażnik, Powiadomienia,
-Dane.
+w każdej chwili w Ustawieniach.
+
+Motywy: **Jak telefon, Ciemny, Jasny, AMOLED, Glitch Pixel** (pikselowa
+czcionka i rozszczepienie magenta/cyjan), **Terminal, Ocean, Zachód i
+Sakura**. Widżety biorą motyw aplikacji albo każdy swój. Ustawienia są
+podzielone na cztery zakładki: Szpila, Strażnik, Powiadomienia, Dane.
+
+<div align="center">
+<img src="docs/screenshots/themes.png" width="240" alt="Dziewięć motywów do wyboru" />
+</div>
 
 <br />
 
@@ -176,8 +208,9 @@ usuwasz albo dodajesz własne z ponad 20 szablonów.
 | 🔔  | Zgoda na powiadomienia                                      | Szpile, pasek postępu, rachunek za noc                                           |
 | 📱  | Ustawienia → Strażnik → Automatyczne śledzenie → **Otwórz** | Szpila na żywo, rachunek za noc, poranek, limit dzienny                          |
 | 🛑  | Ustawienia → Strażnik → Szpila na żywo → **Zezwól**         | Pełnoekranowa blokada po 3. szpili                                               |
+| 🌙  | Ustawienia → Strażnik → **Cisza nocna**                     | Po północy działa tylko budzik, telefon i to, co dopuścisz                       |
 | 🌅  | Ustawienia → Strażnik → **Social media w dzień**            | Poranne zadania i dzienny limit                                                  |
-| 👣  | Ustawienia → Strażnik → Automatyczne śledzenie → **Połącz** | Kroki wpisują się same                                                           |
+| 👣  | Ustawienia → Strażnik → Automatyczne śledzenie → **Połącz** | Kroki z opaski wpisują się same (w Mi Fitness: Profil → Health Connect)          |
 | 🔋  | Ustawienia systemu → Bateria → Szpila → **Bez ograniczeń**  | Szpile i nocny strażnik działają punktualnie (szczególnie Xiaomi, POCO, Samsung) |
 | ➕  | Przytrzymaj ekran główny → **Widżety** → Szpila             | Kot zawsze na widoku                                                             |
 

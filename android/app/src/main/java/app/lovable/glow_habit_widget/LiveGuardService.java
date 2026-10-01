@@ -36,7 +36,10 @@ import java.util.Set;
 /**
  * "Szpila czuwa": one foreground service for every guard phase (DayGuard.phase):
  * - NIGHT (bedtime .. 05:00): a jab the moment a social media app opens, harsher
- *   every few minutes, the full-screen block after the 3rd jab;
+ *   every few minutes, the full-screen block after the 3rd jab (2nd before the
+ *   deadline); with the curfew on, after the deadline every app outside the
+ *   allow list is blocked at once (urgent passes: a growing hold, 3 min, a
+ *   dark veil, a cost in tomorrow's limit); the charger is noticed too;
  * - MORNING (05:00 .. e.g. 11:00, while morning habits are pending): social media
  *   is blocked right away - tick the habits off from the block or hold 10 s;
  * - DAY: counts today's social media minutes; past the daily limit it jabs and
@@ -68,6 +71,9 @@ public class LiveGuardService extends Service {
     private String usedDay = "";
     private String notifKey = "";
     private boolean polling;
+    private java.util.Set<String> essential;
+    private long essentialAt;
+    private long unplugJabAt;
 
     private final BroadcastReceiver screen = new BroadcastReceiver() {
         @Override
@@ -80,8 +86,29 @@ public class LiveGuardService extends Service {
                 // screen off = session over; nothing to watch until it's back on
                 tracker.reset();
                 LiveBlock.hide(LiveGuardService.this);
+                LiveDim.hide(LiveGuardService.this);
                 foreground = null;
                 saveUsed(true);
+            }
+        }
+    };
+
+    /** Phone on the charger at night = put down (noted for the bill); unplugged after the deadline = a jab. */
+    private final BroadcastReceiver power = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Context c = LiveGuardService.this;
+            if (DayGuard.phase(c) != DayGuard.NIGHT) return;
+            if (Intent.ACTION_POWER_CONNECTED.equals(intent.getAction())) {
+                if (LiveGuard.markCharged(c)) chargerNote(c);
+            } else if (Intent.ACTION_POWER_DISCONNECTED.equals(intent.getAction())) {
+                int now = WidgetShared.nowMinute();
+                long ms = System.currentTimeMillis();
+                if (LiveGuard.curfewNow(now, LiveGuard.from(c), LiveGuard.until(c)) && ms - unplugJabAt > 10 * 60_000L) {
+                    unplugJabAt = ms;
+                    LiveGuard.countEvent(c, "unplugs");
+                    unplugJab(c);
+                }
             }
         }
     };
@@ -114,6 +141,11 @@ public class LiveGuardService extends Service {
             IntentFilter f = new IntentFilter(Intent.ACTION_SCREEN_ON);
             f.addAction(Intent.ACTION_SCREEN_OFF);
             androidx.core.content.ContextCompat.registerReceiver(this, screen, f, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
+            IntentFilter pf = new IntentFilter(Intent.ACTION_POWER_CONNECTED);
+            pf.addAction(Intent.ACTION_POWER_DISCONNECTED);
+            androidx.core.content.ContextCompat.registerReceiver(this, power, pf, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
+            // Already on the charger when the night starts: that's when it went down.
+            if (phase == DayGuard.NIGHT && charging()) LiveGuard.markCharged(this);
             schedulePoll(0);
         }
         return START_STICKY;
@@ -122,10 +154,15 @@ public class LiveGuardService extends Service {
     @Override
     public void onDestroy() {
         LiveBlock.hide(this);
+        LiveDim.hide(this);
         running = false;
         handler.removeCallbacks(poll);
         try {
             unregisterReceiver(screen);
+        } catch (Exception ignored) {
+        }
+        try {
+            unregisterReceiver(power);
         } catch (Exception ignored) {
         }
         saveUsed(true);
@@ -213,6 +250,18 @@ public class LiveGuardService extends Service {
         }
         lastQuery = nowMs;
         boolean watched = LiveGuard.watched(c, foreground);
+        int nowMin = WidgetShared.nowMinute();
+        boolean night = phase == DayGuard.NIGHT;
+        boolean pre = night && LiveGuard.prePhase(nowMin, LiveGuard.start(c), LiveGuard.from(c));
+        // Curfew: after the deadline every app outside the allow list is off limits.
+        boolean curfewHit = night && !pre && LiveGuard.curfewOn(c)
+            && LiveGuard.curfewNow(nowMin, LiveGuard.from(c), LiveGuard.until(c))
+            && LiveGuard.curfewBlocks(foreground, essential(c, nowMs), LiveGuard.curfewAllowed(c));
+        long passUntil = curfewHit ? LiveGuard.curfewPassUntil(c) : 0;
+        boolean passing = curfewHit && nowMs < passUntil;
+        long passMs = LiveGuard.CURFEW_PASS_MIN * 60_000L;
+        if (passing && LiveGuard.curfewDim(c)) LiveDim.set(c, LiveGuard.dimAlpha(nowMs - (passUntil - passMs), passMs));
+        else LiveDim.hide(c);
 
         // The day count runs outside the night (05:00 .. bedtime), whatever the phase.
         if (!usedDay.equals(WidgetShared.today())) seedUsed();
@@ -224,8 +273,13 @@ public class LiveGuardService extends Service {
 
         if (LiveBlock.isShown()) {
             // Left the app some other way (gesture home, recents): drop the block.
-            if (!watched) LiveBlock.hide(c);
+            if (!watched && !curfewHit) LiveBlock.hide(c);
             return;
+        }
+        if (passing) return; // an urgent pass: quiet until it runs out
+        if (curfewHit) {
+            if (LiveGuard.blockEnabled(c) && curfewBlock(c)) return;
+            watched = true; // no overlay permission: jab like for social media
         }
         if (phase == DayGuard.MORNING) {
             morning(c, watched, nowMs);
@@ -240,8 +294,134 @@ public class LiveGuardService extends Service {
             }
         }
         int action = tracker.onForeground(foreground, watched, nowMs, LiveGuard.snoozeUntil(c));
-        if (action == LiveGuard.ESCALATE && LiveGuard.shouldBlock(tracker.jabs) && LiveGuard.blockEnabled(c) && block(c, nowMs)) return;
+        if (action == LiveGuard.ESCALATE && LiveGuard.shouldBlock(tracker.jabs, pre) && LiveGuard.blockEnabled(c) && block(c, nowMs)) return;
         if (action != LiveGuard.NONE) jab(c, action, nowMs);
+    }
+
+    /** Apps the curfew never blocks (home, dialer, clock, keyboard...), resolved every 10 min. */
+    private java.util.Set<String> essential(Context c, long nowMs) {
+        if (essential == null || nowMs - essentialAt > 10 * 60_000L) {
+            essential = LiveGuard.essentialApps(c);
+            essentialAt = nowMs;
+        }
+        return essential;
+    }
+
+    private boolean charging() {
+        Intent b = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int plugged = b != null ? b.getIntExtra(android.os.BatteryManager.EXTRA_PLUGGED, 0) : 0;
+        return plugged != 0;
+    }
+
+    // ------------------------------------------------------------------ curfew
+
+    /** The curfew block: straight away, over any app outside the allow list. */
+    private boolean curfewBlock(Context c) {
+        boolean en = WidgetShared.en(c);
+        String label = LiveGuard.appLabel(c, foreground);
+        JSONObject lines = LiveGuard.settings(c).optJSONObject("lines");
+        String text = lines != null ? WidgetShared.pick(lines.optJSONArray("curfew")) : "";
+        if (text.isEmpty()) {
+            text = en ? "It's {time}. Curfew: the phone sleeps, and so do you." : "Jest {time}. Cisza nocna: telefon śpi, ty też.";
+        }
+        int now = WidgetShared.nowMinute();
+        int until = LiveGuard.until(c);
+        int passes = LiveGuard.tonight(c, "curfew_passes");
+        text = curfewFill(text, label, now, until, passes);
+        int allowed = LiveGuard.curfewAllowed(c).size();
+        String sub = en
+            ? "Curfew until " + WidgetShared.fmtMinute(until) + " · allowed: alarm, calls" + (allowed > 0 ? " + " + allowed + " apps" : "")
+                + (passes > 0 ? " · urgent passes tonight: " + passes : "")
+            : "Cisza nocna do " + WidgetShared.fmtMinute(until) + " · działa: budzik, telefon" + (allowed > 0 ? " + " + allowed + " apl." : "")
+                + (passes > 0 ? " · wyjątki tej nocy: " + passes : "");
+        long hold = LiveGuard.curfewHoldMs(passes);
+        String idle = en
+            ? "Urgent? Hold " + hold / 1000 + " s for " + LiveGuard.CURFEW_PASS_MIN + " min (costs 10 min of tomorrow's limit)"
+            : "Pilne? Przytrzymaj " + hold / 1000 + " s na " + LiveGuard.CURFEW_PASS_MIN + " min (kosztuje 10 min jutrzejszego limitu)";
+        List<String[]> actions = new ArrayList<>();
+        actions.add(new String[]{"alarm", en ? "⏰  Set the alarm" : "⏰  Ustaw budzik"});
+        int cat = SzpilaWidgetProvider.catDrawable(WidgetShared.state(c).optString("face"), 1);
+        boolean ok = LiveBlock.show(c, "SZPILA  🌙", text, sub, cat, en ? "😴  Going to sleep" : "😴  Idę spać", actions, hold, idle,
+            new LiveBlock.Listener() {
+                @Override
+                public void onSleep() {
+                    LiveGuard.countEvent(c, "curfew_slept");
+                    LiveBlock.goHome(c);
+                    tracker.reset();
+                }
+
+                @Override
+                public void onHoldThrough() {
+                    LiveGuard.countEvent(c, "curfew_passes");
+                    LiveGuard.curfewPass(c, System.currentTimeMillis() + LiveGuard.CURFEW_PASS_MIN * 60_000L);
+                    passNote(c);
+                }
+
+                @Override
+                public void onAction(String id) {
+                    LiveBlock.hide(c);
+                    try {
+                        c.startActivity(new Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                    } catch (Exception e) {
+                        LiveBlock.goHome(c);
+                    }
+                }
+            });
+        if (ok) {
+            LiveGuard.countEvent(c, "curfew_blocks");
+            NotificationManagerCompat.from(c).cancel(ID_LIVE);
+        }
+        return ok;
+    }
+
+    /** {app} {time} {count} (passes tonight) {until} (morning) {left} (minutes to the morning). */
+    static String curfewFill(String line, String app, int now, int until, int passes) {
+        return LiveGuard.fill(line, app, 0, WidgetShared.fmtMinute(now), passes)
+            .replace("{until}", WidgetShared.fmtMinute(until))
+            .replace("{left}", String.valueOf(LiveGuard.minutesTo(now, until)));
+    }
+
+    private void passNote(Context c) {
+        quickNote(c, "pass", HabitNotifier.EMOJI_ANGRY,
+            "{count}. wyjątek tej nocy. Masz " + LiveGuard.CURFEW_PASS_MIN + " minuty, a ekran będzie ciemniał.",
+            "Urgent pass no. {count} tonight. You've got " + LiveGuard.CURFEW_PASS_MIN + " minutes and the screen will darken.", 30_000L, false);
+    }
+
+    private void chargerNote(Context c) {
+        quickNote(c, "charger", HabitNotifier.EMOJI_IMPRESSED,
+            "Telefon na ładowarce o {time}. Tak trzymaj - niech tam zostanie do rana.",
+            "Phone on the charger at {time}. Good - let it stay there till morning.", 20_000L, false);
+    }
+
+    private void unplugJab(Context c) {
+        quickNote(c, "unplug", HabitNotifier.EMOJI_ANGRY,
+            "Odłączasz telefon o {time}? Widzę to. Z powrotem na ładowarkę i spać.",
+            "Unplugging the phone at {time}? I saw that. Back on the charger and go to sleep.", 60_000L, true);
+    }
+
+    /** A short Szpila note from a snapshot pool (fallback texts inline). */
+    private void quickNote(Context c, String pool, String emoji, String pl, String en, long timeout, boolean loud) {
+        if (!canNotify(c)) return;
+        JSONObject lines = LiveGuard.settings(c).optJSONObject("lines");
+        String text = lines != null ? WidgetShared.pick(lines.optJSONArray(pool)) : "";
+        if (text.isEmpty()) text = WidgetShared.tr(c, pl, en);
+        int now = WidgetShared.nowMinute();
+        text = curfewFill(text, "", now, LiveGuard.until(c), LiveGuard.tonight(c, "curfew_passes"));
+        NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_LIVE)
+            .setSmallIcon(R.drawable.ic_stat_szpila)
+            .setColor(WidgetShared.AVOID)
+            .setContentTitle(emoji + " Szpila")
+            .setContentText(text)
+            .setStyle(new NotificationCompat.BigTextStyle().bigText(text))
+            .setAutoCancel(true)
+            .setTimeoutAfter(timeout);
+        if (loud) b.setPriority(NotificationCompat.PRIORITY_HIGH).setVibrate(new long[]{0, 180, 90, 180});
+        else b.setSilent(true);
+        try {
+            NotificationManagerCompat.from(c).notify(ID_LIVE, b.build());
+        } catch (SecurityException ignored) {
+        }
     }
 
     // ------------------------------------------------------------------ morning lock
@@ -396,7 +576,7 @@ public class LiveGuardService extends Service {
         if (!canNotify(c)) return;
         String[] app = LiveGuard.SOCIAL.get(foreground);
         String key = app != null ? app[0] : "generic";
-        String label = app != null ? app[1] : "social media";
+        String label = app != null ? app[1] : foreground != null ? LiveGuard.appLabel(c, foreground) : "social media";
         boolean day = phase == DayGuard.DAY;
         boolean morning = phase == DayGuard.MORNING;
         int count = action == LiveGuard.FIRST && !day && !morning ? LiveGuard.countHit(c) : LiveGuard.hits(c).optInt(
@@ -475,7 +655,8 @@ public class LiveGuardService extends Service {
     // ------------------------------------------------------------------ the ongoing notification
 
     private void refreshNotification() {
-        String key = phase + "|" + usedMin() + "|" + (phase == DayGuard.MORNING ? DayGuard.names(DayGuard.morningPending(this)) : "");
+        String key = phase + "|" + usedMin() + "|" + DayGuard.limit(this) + "|" + curfewNow(this) + "|"
+            + (phase == DayGuard.MORNING ? DayGuard.names(DayGuard.morningPending(this)) : "");
         if (key.equals(notifKey)) return;
         notifKey = key;
         try {
@@ -484,8 +665,27 @@ public class LiveGuardService extends Service {
         }
     }
 
+    /** Curfew on and past the deadline right now. */
+    private static boolean curfewNow(Context c) {
+        return LiveGuard.curfewOn(c) && DayGuard.phase(c) == DayGuard.NIGHT
+            && LiveGuard.curfewNow(WidgetShared.nowMinute(), LiveGuard.from(c), LiveGuard.until(c));
+    }
+
     /** Title + text of the ongoing notification per phase (pure, for tests). */
     static String[] guardText(int phase, boolean en, int until, String watching, String pendingNames, int used, int limit) {
+        return guardText(phase, en, until, watching, pendingNames, used, limit, false, 0);
+    }
+
+    /** Same, with the curfew (after the deadline): what still works. */
+    static String[] guardText(int phase, boolean en, int until, String watching, String pendingNames, int used, int limit,
+                              boolean curfew, int allowedApps) {
+        if (phase == DayGuard.NIGHT && curfew) {
+            String extra = allowedApps > 0 ? (en ? " + " + allowedApps + " allowed apps" : " + " + allowedApps + " dozwolone apl.") : "";
+            return new String[]{
+                "🌙 " + (en ? "Curfew until " : "Cisza nocna do ") + WidgetShared.fmtMinute(until),
+                (en ? "Only the alarm, calls" : "Działa tylko budzik, telefon") + extra
+                    + (en ? ". Everything else: blocked." : ". Reszta: blokada.")};
+        }
         if (phase == DayGuard.MORNING) {
             return new String[]{
                 "🔒 " + (en ? "Mornings: habits first" : "Rano najpierw zadania"),
@@ -515,7 +715,8 @@ public class LiveGuardService extends Service {
             + (list.size() > 4 ? (en ? " and more" : " i inne") : "");
         int until = phase == DayGuard.MORNING ? DayGuard.morningSettings(this).optInt("until", 11 * 60) : LiveGuard.until(this);
         String pending = phase == DayGuard.MORNING ? DayGuard.names(DayGuard.morningPending(this)) : "";
-        String[] t = guardText(phase, en, until, watching, pending, usedMin(), DayGuard.limit(this));
+        String[] t = guardText(phase, en, until, watching, pending, usedMin(), DayGuard.limit(this),
+            curfewNow(this), LiveGuard.curfewAllowed(this).size());
         PendingIntent open = WidgetShared.openAppIntent(this, 7502);
         NotificationCompat.Builder b = new NotificationCompat.Builder(this, CH_GUARD)
             .setSmallIcon(R.drawable.ic_stat_szpila)

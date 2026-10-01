@@ -396,14 +396,66 @@ final class HabitNotifier {
         return overdueMin >= 180 || jabsToday >= 3 ? 1 : 0;
     }
 
-    /** Escalated line for a pending row; repeat offenders sometimes get a "memory" line. */
+    // Context rule thresholds - mirror CTX_RULES / CTX_CHANCE in src/lib/habits/szpila.ts.
+    static final int CTX_MORNING_FROM = 5 * 60;
+    static final int CTX_MORNING_UNTIL = 11 * 60;
+    static final int CTX_ZERO_FROM = 14 * 60;
+    static final int CTX_LATE_FROM = 19 * 60;
+    static final int CTX_ALMOST_PCT = 70;
+    static final int CTX_CHANCE = 50;
+    static final int CTX_CHANCE_RAGE = 35;
+
+    /**
+     * Situation of a pending row (mirrors contextRule() in szpila.ts): "morning"
+     * (nothing logged yet, 05:00-11:00), "almost" (70%+ of the target), "late"
+     * (19:00+), "zero" (still nothing at 14:00+), or null. Avoid habits only get
+     * "morning" and "late". Picks the matching pool of the row's "ctx" object.
+     */
+    static String contextOf(boolean avoid, int amount, int target, int now) {
+        boolean morning = now >= CTX_MORNING_FROM && now < CTX_MORNING_UNTIL;
+        if (avoid) return now >= CTX_LATE_FROM ? "late" : morning ? "morning" : null;
+        if (amount >= target) return null;
+        if (amount <= 0 && morning) return "morning";
+        if (amount > 0 && amount * 100L >= target * (long) CTX_ALMOST_PCT) return "almost";
+        if (now >= CTX_LATE_FROM) return "late";
+        if (amount <= 0 && now >= CTX_ZERO_FROM) return "zero";
+        return null;
+    }
+
+    static String contextOf(JSONObject h, int now) {
+        return contextOf(WidgetShared.isAvoid(h), WidgetShared.amount(h), WidgetShared.target(h), now);
+    }
+
+    /** Chance (percent) that a jab uses the context pool, per escalation tier. */
+    static int ctxChance(int tier) {
+        return tier == 1 ? CTX_CHANCE_RAGE : CTX_CHANCE;
+    }
+
+    /** The row's context pool for right now, or null (no situation / no lines / old snapshot). */
+    static JSONArray contextPool(JSONObject h, int now) {
+        String key = contextOf(h, now);
+        JSONObject all = h.optJSONObject("ctx");
+        if (key == null || all == null) return null;
+        JSONArray pool = all.optJSONArray(key);
+        return pool != null && pool.length() > 0 ? pool : null;
+    }
+
+    /**
+     * Escalated line for a pending row; repeat offenders sometimes get a "memory"
+     * line, and the situation ("zostało tylko…", evening, morning) often wins.
+     */
     static String lineFor(JSONObject h, int jabs) {
         JSONArray memory = h.optJSONArray("memory");
         if (memory != null && memory.length() > 0 && RNG.nextInt(10) < 4) {
             return WidgetShared.fill(WidgetShared.pick(memory), h);
         }
-        int overdue = WidgetShared.nowMinute() - WidgetShared.nextMinute(h);
-        JSONArray pool = tier(overdue, jabs) == 1 ? h.optJSONArray("rage") : h.optJSONArray("nag");
+        int now = WidgetShared.nowMinute();
+        int tier = tier(now - WidgetShared.nextMinute(h), jabs);
+        JSONArray ctx = contextPool(h, now);
+        if (ctx != null && RNG.nextInt(100) < ctxChance(tier)) {
+            return WidgetShared.fill(WidgetShared.pick(ctx), h);
+        }
+        JSONArray pool = tier == 1 ? h.optJSONArray("rage") : h.optJSONArray("nag");
         if (pool == null || pool.length() == 0) pool = h.optJSONArray("nag");
         return WidgetShared.fill(WidgetShared.pick(pool), h);
     }

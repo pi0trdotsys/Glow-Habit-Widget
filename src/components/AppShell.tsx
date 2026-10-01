@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className="mx-auto flex min-h-[100dvh] max-w-md flex-col bg-background text-foreground"
+      className="app-bg mx-auto flex min-h-[100dvh] max-w-md flex-col bg-background text-foreground"
       style={{
         paddingTop: "env(safe-area-inset-top)",
         paddingLeft: "max(env(safe-area-inset-left), 0.5rem)",

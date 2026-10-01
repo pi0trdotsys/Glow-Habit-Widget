@@ -136,8 +136,51 @@ final class DayGuard {
         return d != null ? d : new JSONObject();
     }
 
+    /** Today's limit: the set one minus last night's debt (when "the night costs the day" is on). */
     static int limit(Context c) {
+        int base = baseLimit(c);
+        return base - debt(c, base);
+    }
+
+    static int baseLimit(Context c) {
         return daySettings(c).optInt("limit", 60);
+    }
+
+    // ------------------------------------------------------------------ night debt
+
+    /** The night can't take more than this off the day: at least this many minutes stay. */
+    static final int DEBT_FLOOR_MIN = 15;
+    static final int DEBT_PER_SOCIAL_MIN = 2;
+    static final int DEBT_PER_PASS = 10;
+
+    /**
+     * "Noc kosztuje dzień": minutes off today's limit for last night - 2 per
+     * social media minute after midnight and 10 per urgent pass through the
+     * curfew, never below DEBT_FLOOR_MIN left.
+     */
+    static int debtMin(int nightSocialMin, int curfewPasses, int limit) {
+        int d = DEBT_PER_SOCIAL_MIN * Math.max(0, nightSocialMin) + DEBT_PER_PASS * Math.max(0, curfewPasses);
+        return Math.max(0, Math.min(d, limit - DEBT_FLOOR_MIN));
+    }
+
+    /** Last night's raw debt (before the floor), worked out once a day after the night ends. */
+    static int rawDebt(Context c) {
+        if (!daySettings(c).optBoolean("debt", true)) return 0;
+        if (WidgetShared.nowMinute() < DAY_START) return 0; // the night isn't over
+        String today = WidgetShared.today();
+        android.content.SharedPreferences p = LiveGuard.prefs(c);
+        if (today.equals(p.getString("debt_day", ""))) return p.getInt("debt_raw", 0);
+        String night = WidgetShared.dateKey(1);
+        int social = NightStats.report(c, 1).optInt("social", 0);
+        int passes = LiveGuard.counts(c, "curfew_passes").optInt(night, 0);
+        int raw = DEBT_PER_SOCIAL_MIN * Math.max(0, social) + DEBT_PER_PASS * Math.max(0, passes);
+        p.edit().putString("debt_day", today).putInt("debt_raw", raw).apply();
+        return raw;
+    }
+
+    static int debt(Context c, int base) {
+        int raw = rawDebt(c);
+        return Math.max(0, Math.min(raw, base - DEBT_FLOOR_MIN));
     }
 
     static Config config(Context c) {

@@ -5,8 +5,9 @@ import type { FaceId, HumorId } from "./gamification";
 import type { NightReport } from "@/lib/sensors";
 import { loadEnglishLines, setHumor } from "./szpila";
 import { detectLang, getLang, L, setLang, type Lang } from "@/lib/i18n";
-import type { ThemePref } from "@/lib/theme";
+import { isThemePref, type ThemePref } from "@/lib/theme";
 import { translateHabit } from "./seed-names";
+import { linkStepsPatch } from "@/lib/steps";
 import { goalOf, kindOf, minuteOfDay, todayKey } from "./utils";
 
 export type TauntLevel = "hard" | "soft";
@@ -54,6 +55,17 @@ export interface NotificationSettings {
   /** Daily social media limit (05:00 .. bedtime): past it Szpila jabs and blocks. */
   dailyLimit: boolean;
   dailyLimitMin: number;
+  /**
+   * "Cisza nocna": after liveFrom every app outside curfewAllow is blocked at
+   * once (alarm, calls, home screen always work). Urgent passes: a growing hold.
+   */
+  curfew: boolean;
+  /** Packages allowed through the curfew (music, a sleep app, a messenger...). */
+  curfewAllow: string[];
+  /** Darken the screen during an urgent pass. */
+  curfewDim: boolean;
+  /** "Noc kosztuje dzień": last night's scrolling and passes come off today's limit. */
+  nightDebt: boolean;
 }
 
 /** The cat's look + voice (unlocked by forma streaks, see gamification.ts). */
@@ -89,6 +101,10 @@ const defaultNotifications: NotificationSettings = {
   morningHabits: null,
   dailyLimit: true,
   dailyLimitMin: 60,
+  curfew: false,
+  curfewAllow: [],
+  curfewDim: true,
+  nightDebt: true,
 };
 
 const defaultLook: SzpilaLook = { face: "wredny", humor: "wredny" };
@@ -108,6 +124,11 @@ interface HabitsState {
   setTheme: (t: ThemePref) => void;
   notifications: NotificationSettings;
   setNotifications: (n: NotificationSettings) => void;
+  /** Where steps come from: "auto" or the package of one Health Connect source (e.g. Mi Fitness). */
+  stepsSource: string;
+  setStepsSource: (source: string) => void;
+  /** Fill a habit from the band's steps (source "steps"; a goal in thousands becomes real steps). */
+  linkSteps: (habitId: string) => void;
   /** Daily automatic backup to Download/Szpila (Android). */
   autoBackup: boolean;
   setAutoBackup: (on: boolean) => void;
@@ -266,6 +287,20 @@ export const useHabits = create<HabitsState>()(
       seeded: false,
       userName: null,
       setUserName: (name) => set({ userName: name.trim() || null }),
+      stepsSource: "auto",
+      setStepsSource: (source) => set({ stepsSource: source || "auto" }),
+      linkSteps: (habitId) =>
+        set((s) => {
+          const h = s.habits.find((x) => x.id === habitId);
+          if (!h || kindOf(h) === "avoid") return {};
+          const p = linkStepsPatch(h, s.completions);
+          return {
+            habits: s.habits.map((x) =>
+              x.id === habitId ? { ...x, source: "steps" as const, goal: p.goal } : x,
+            ),
+            completions: p.completions,
+          };
+        }),
       theme: "system",
       setTheme: (t) => set({ theme: t }),
       language: detectLang(),
@@ -445,6 +480,7 @@ export const useHabits = create<HabitsState>()(
           nightHits: s.nightHits,
           nightReports: s.nightReports,
           daySocial: s.daySocial,
+          stepsSource: s.stepsSource,
           szpila: s.szpila,
           language: s.language,
           theme: s.theme,
@@ -462,6 +498,7 @@ export const useHabits = create<HabitsState>()(
           nightHits: Record<string, number>;
           nightReports: Record<string, NightReport>;
           daySocial: Record<string, number>;
+          stepsSource: string;
           szpila: Partial<SzpilaLook>;
         }>;
         const valid =
@@ -492,6 +529,7 @@ export const useHabits = create<HabitsState>()(
               : s.nightReports,
           daySocial:
             data.daySocial && typeof data.daySocial === "object" ? data.daySocial : s.daySocial,
+          stepsSource: typeof data.stepsSource === "string" ? data.stepsSource : s.stepsSource,
         }));
         return data.habits!.length;
       },
@@ -558,6 +596,9 @@ export const useHabits = create<HabitsState>()(
           nightHits: p.nightHits ?? {},
           nightReports: p.nightReports ?? {},
           daySocial: p.daySocial ?? {},
+          // A palette this version does not know (e.g. from a newer backup) = like the phone.
+          theme: isThemePref(p.theme) ? p.theme : "system",
+          stepsSource: p.stepsSource || "auto",
         };
       },
     },

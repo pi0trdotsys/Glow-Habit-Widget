@@ -19,6 +19,7 @@ import java.util.Set;
  *                 original look; the config screen shows it as transparency = 100 - opacity)
  *  - "lines_<id>" the ticker lines of the "Następne zadanie" widget, comma separated
  *                 NextWidgetContent.Line kinds (missing = all of them)
+ *  - "theme_<id>" the widget palette (WidgetTheme ids) or "app" = like the app (the default)
  *
  * The pure helpers (clamping, alpha, encode / decode, filtering) have no Android
  * dependency - see WidgetPrefsTest.
@@ -128,13 +129,24 @@ final class WidgetPrefs {
         return clampOpacity(prefs(c).getInt("op_" + widgetId, DEFAULT_OPACITY));
     }
 
+    /** The widget palette choice: a WidgetTheme id or WidgetTheme.APP (default). */
+    static String theme(Context c, int widgetId) {
+        return WidgetTheme.decode(prefs(c).getString("theme_" + widgetId, null));
+    }
+
     static Set<String> lines(Context c, int widgetId) {
         return decodeLines(prefs(c).getString("lines_" + widgetId, null));
     }
 
     static void save(Context c, int widgetId, int opacity, Set<String> lines) {
+        save(c, widgetId, opacity, lines, null);
+    }
+
+    /** `theme` null = leave the palette choice as it is. */
+    static void save(Context c, int widgetId, int opacity, Set<String> lines, String theme) {
         SharedPreferences.Editor e = prefs(c).edit().putInt("op_" + widgetId, clampOpacity(opacity));
         if (lines != null) e.putString("lines_" + widgetId, encodeLines(lines));
+        if (theme != null) e.putString("theme_" + widgetId, WidgetTheme.decode(theme));
         e.apply();
     }
 
@@ -142,7 +154,7 @@ final class WidgetPrefs {
     static void delete(Context c, int[] widgetIds) {
         if (widgetIds == null) return;
         SharedPreferences.Editor e = prefs(c).edit();
-        for (int id : widgetIds) e.remove("op_" + id).remove("lines_" + id);
+        for (int id : widgetIds) e.remove("op_" + id).remove("lines_" + id).remove("theme_" + id);
         e.apply();
     }
 

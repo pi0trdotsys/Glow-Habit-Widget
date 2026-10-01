@@ -4,9 +4,10 @@ import { addDays } from "date-fns";
 import { useHabits } from "@/lib/habits/store";
 import { formatMinute, todayKey } from "@/lib/habits/utils";
 import { badNight, billComment } from "@/lib/night";
+import { cleanNightStreak, nightDebt } from "@/lib/curfew";
 import { SZPILA_EMOJI } from "@/lib/habits/szpila";
 import type { NightReport } from "@/lib/sensors";
-import { L, intlLocale } from "@/lib/i18n";
+import { L, intlLocale, plPlural } from "@/lib/i18n";
 
 const DISMISS_KEY = "szpila-bill-dismissed";
 
@@ -50,7 +51,12 @@ export function NightBillCard({ now = new Date() }: { now?: Date }) {
 export function NightBillView({ r, onDismiss }: { r: NightReport; onDismiss: () => void }) {
   const level = useHabits((s) => s.notifications.tauntLevel);
   const userName = useHabits((s) => s.userName);
+  const reports = useHabits((s) => s.nightReports);
+  const notif = useHabits((s) => s.notifications);
   const bad = badNight(r);
+  const streak = cleanNightStreak(reports);
+  const debt =
+    notif.dailyLimit && (notif.nightDebt ?? true) ? nightDebt(r, notif.dailyLimitMin) : 0;
 
   return (
     <section
@@ -80,6 +86,24 @@ export function NightBillView({ r, onDismiss }: { r: NightReport; onDismiss: () 
       <p className="mt-2 text-[13px] leading-snug">
         {bad ? SZPILA_EMOJI.angry : SZPILA_EMOJI.impressed} {billComment(r, level, userName)}
       </p>
+      {(streak > 0 || debt > 0) && (
+        <div className="mt-1.5 flex flex-wrap gap-x-3 text-xs font-semibold">
+          {streak > 0 && (
+            <span data-clean-streak style={{ color: "var(--primary)" }}>
+              🔥{" "}
+              {L(
+                `${streak} ${plPlural(streak, ["czysta noc", "czyste noce", "czystych nocy"])} z rzędu`,
+                `${streak} clean ${streak === 1 ? "night" : "nights"} in a row`,
+              )}
+            </span>
+          )}
+          {debt > 0 && (
+            <span data-bill-debt style={{ color: "var(--avoid)" }}>
+              {L(`−${debt} min z dzisiejszego limitu`, `−${debt} min off today's limit`)}
+            </span>
+          )}
+        </div>
+      )}
     </section>
   );
 }
@@ -116,6 +140,30 @@ export function NightFacts({ r }: { r: NightReport }) {
           </span>
         )}
       </div>
+      {((r.charged ?? -1) >= 0 || (r.curfewBlocks ?? 0) > 0 || (r.unplugs ?? 0) > 0) && (
+        <div
+          className="mt-1 flex flex-wrap gap-x-4 text-xs text-muted-foreground"
+          data-curfew-facts
+        >
+          {(r.charged ?? -1) >= 0 && (
+            <span>
+              🔌 {L(`ładowarka ${formatMinute(r.charged!)}`, `charger ${formatMinute(r.charged!)}`)}
+            </span>
+          )}
+          {(r.curfewBlocks ?? 0) > 0 && (
+            <span>
+              🚫{" "}
+              {L(
+                `cisza nocna: ${r.curfewBlocks}× blokada, ${r.curfewPasses ?? 0}× wyjątek`,
+                `curfew: ${r.curfewBlocks}× blocked, ${r.curfewPasses ?? 0}× pass`,
+              )}
+            </span>
+          )}
+          {(r.unplugs ?? 0) > 0 && (
+            <span>⚡ {L(`odłączony ${r.unplugs}×`, `unplugged ${r.unplugs}×`)}</span>
+          )}
+        </div>
+      )}
     </>
   );
 }

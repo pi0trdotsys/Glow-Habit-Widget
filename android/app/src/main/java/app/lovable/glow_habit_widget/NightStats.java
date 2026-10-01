@@ -346,6 +346,12 @@ final class NightStats {
                 out.put("asleep", -1);
             }
             out.put("closed", ScreenTime.windowClosed(daysAgo));
+            // Curfew + charger (LiveGuardService counters, keyed by the evening's date).
+            String key = WidgetShared.dateKey(daysAgo);
+            out.put("curfewBlocks", LiveGuard.counts(c, "curfew_blocks").optInt(key, 0));
+            out.put("curfewPasses", LiveGuard.counts(c, "curfew_passes").optInt(key, 0));
+            out.put("unplugs", LiveGuard.counts(c, "unplugs").optInt(key, 0));
+            out.put("charged", LiveGuard.counts(c, "charged").optInt(key, -1));
         } catch (Exception ignored) {
         }
         return out;

@@ -64,6 +64,10 @@ const state = {
         social: 22,
         screen: 40,
         asleep: 100,
+        // curfew + charger (LiveGuardService)
+        charged: 1428,
+        curfewBlocks: 2,
+        curfewPasses: 0,
       },
     },
     completions: [
@@ -296,7 +300,10 @@ await check("Raport: 90-day trend and month comparison tabs", async () => {
   await page.waitFor(`!!document.querySelector("[data-night-list]")`);
   const nights = await page.eval<string>(`document.querySelector("[data-night-list]").innerText`);
   assert(
-    nights.includes("3× Instagram · 22 min") && nights.includes("01:40"),
+    nights.includes("3× Instagram · 22 min") &&
+      nights.includes("01:40") &&
+      nights.includes("ładowarka 23:48") &&
+      nights.includes("2× blokada"),
     `night list: ${nights}`,
   );
   await page.eval(`(${byText("button", "Miesiące")}).click()`);
@@ -362,7 +369,9 @@ await check("Today: one swipeable status card (Szpila + social media) with dots"
     `document.querySelectorAll("[data-status-carousel] [role=tab]")[1].getAttribute("aria-selected") === "true"`,
   );
   const social = await page.eval<string>(`document.querySelector("[data-social-today]").innerText`);
-  assert(social.includes("30/60 min"), `social: ${social}`);
+  // last night's 22 min of Instagram cost 2 × 22 = 44 min of today's 60
+  assert(social.includes("30/16 min"), `social: ${social}`);
+  assert(social.includes("Noc zabrała 44 min"), `no night debt: ${social}`);
   // the habits are visible without scrolling
   const tileTop = await page.eval<number>(
     `document.querySelector("[data-tile]").getBoundingClientRect().top`,
@@ -543,6 +552,50 @@ await check("light theme: switch in Settings, readable, kept after a reload", as
   await page.eval(`document.querySelector('[data-theme-option="dark"]').click()`);
   await page.waitFor(`document.documentElement.dataset.theme === "dark"`);
 });
+
+await check(
+  "every theme (Glitch Pixel, AMOLED, Terminal...): readable text and muted text on Today",
+  async () => {
+    await page.goto("/settings?tab=szpila");
+    await page.waitFor(`!!document.querySelector('[data-theme-option="glitch"]')`, 6000);
+    const ids = await page.eval<string[]>(
+      `[...document.querySelectorAll("[data-theme-option]")].map((e) => e.dataset.themeOption).filter((t) => t !== "system")`,
+    );
+    assert(ids.length >= 8 && ids.includes("glitch") && ids.includes("amoled"), `themes: ${ids}`);
+    for (const id of ids) {
+      await page.goto("/settings?tab=szpila");
+      await page.waitFor(`!!document.querySelector('[data-theme-option="${id}"]')`, 6000);
+      await page.eval(`document.querySelector('[data-theme-option="${id}"]').click()`);
+      await page.waitFor(`document.documentElement.dataset.theme === "${id}"`);
+      await page.goto("/");
+      await page.waitFor(`!!document.querySelector("[data-tile]")`, 6000);
+      assert(
+        (await page.eval<string>(`document.documentElement.dataset.theme`)) === id,
+        `${id} lost on reload`,
+      );
+      const fg = await page.eval<number>(
+        `(() => { const s = getComputedStyle(document.documentElement); return (${contrastJs})(s.getPropertyValue("--foreground"), s.getPropertyValue("--card")); })()`,
+      );
+      assert(fg >= 7, `${id}: text on cards ${fg.toFixed(2)}`);
+      const muted = await page.eval<number>(mutedContrast);
+      assert(muted >= 4.5, `${id}: muted contrast ${muted.toFixed(2)}`);
+    }
+    // Glitch Pixel: the pixel font on headings
+    await page.goto("/settings?tab=szpila");
+    await page.waitFor(`!!document.querySelector('[data-theme-option="glitch"]')`, 6000);
+    await page.eval(`document.querySelector('[data-theme-option="glitch"]').click()`);
+    await page.goto("/");
+    await page.waitFor(`!!document.querySelector("h1")`, 6000);
+    const font = await page.eval<string>(
+      `getComputedStyle(document.querySelector("h1")).fontFamily`,
+    );
+    assert(/pixelify/i.test(font), `glitch heading font: ${font}`);
+    await page.goto("/settings?tab=szpila");
+    await page.waitFor(`!!document.querySelector('[data-theme-option="dark"]')`, 6000);
+    await page.eval(`document.querySelector('[data-theme-option="dark"]').click()`);
+    await page.waitFor(`document.documentElement.dataset.theme === "dark"`);
+  },
+);
 
 // ---------------------------------------------------------------- English
 

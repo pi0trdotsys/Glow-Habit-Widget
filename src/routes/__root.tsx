@@ -23,7 +23,7 @@ import {
 } from "../lib/notifications";
 import { useHabits } from "../lib/habits/store";
 import { useLinesReady } from "../lib/habits/szpila";
-import { watchTheme } from "../lib/theme";
+import { THEME_BOOT, watchTheme } from "../lib/theme";
 import { L } from "../lib/i18n";
 import { SplashScreen } from "@/components/SplashScreen";
 import { Toaster } from "@/components/ui/sonner";
@@ -150,9 +150,6 @@ export const Route = createRootRouteWithContext()({
   errorComponent: ErrorComponent,
 });
 
-/** Inline, pre-hydration: the stored theme preference -> <html data-theme>. Mirrors resolveTheme(). */
-const THEME_BOOT = `(function(){try{var s=JSON.parse(localStorage.getItem("loop-habits-v1")||"{}").state||{};var p=s.theme||"system";var t=p==="system"?(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):p;document.documentElement.dataset.theme=t;}catch(e){}})();`;
-
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="pl">
@@ -175,7 +172,7 @@ function RootComponent() {
   // ...and once more when the (lazily loaded) English lines arrive.
   const enReady = useLinesReady((s) => s.en);
 
-  // Light / dark / like the phone.
+  // The palette (or like the phone).
   const themePref = useHabits((s) => s.theme);
   useEffect(() => watchTheme(() => themePref), [themePref]);
 

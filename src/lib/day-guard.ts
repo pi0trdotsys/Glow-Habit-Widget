@@ -22,41 +22,62 @@ const HARD: Record<Key, string[]> = {
     "Rano najpierw ty, potem algorytm. Zostało: {tasks}.",
     "Chcesz scrollować? Zarób na to: {tasks}. Dwie minuty i {app} jest twój.",
     "Kurwa, jeszcze nawet {tasks} nie zrobione, a ty już w {app}. Odłóż to.",
+    "Najpierw {tasks}, potem {app}. Zęby i woda nie zajmą dłużej niż jedna rolka, kurwa.",
+    "{app} o poranku przed {tasks}? Algorytm poczeka, twoje zęby nie.",
+    "Dzień dobry. {tasks} i dopiero wtedy {app}. Taka jest kolejność, a ja tu rządzę.",
   ],
   morningDone: [
     "Zrobione. Social media odblokowane. Tylko bez przesady, wiem, gdzie mieszkasz.",
     "Poranek ogarnięty. Możesz scrollować - z czystym sumieniem, na razie.",
     "No proszę, najpierw obowiązki, potem przyjemności. Kot zadowolony.",
+    "Poranek zaliczony. Social media odblokowane, ale nie przesadzaj, bo wrócę.",
+    "Brawo, najpierw obowiązki. Teraz możesz scrollować. Nie mów, że kot jest bez serca.",
   ],
   dayOver: [
     "Limit {limit} min przekroczony: dziś już {used} min social mediów. Zamykaj {app}.",
     "{used} min scrollowania dziś. Limit był {limit}. Co ty robisz ze swoim życiem?",
     "Dzienny limit poszedł się jebać: {used}/{limit} min. {app} na dziś wystarczy.",
     "Przekroczone o {over} min. Każda kolejna minuta na {app} to minuta ukradziona z twojego dnia.",
+    "{used} min social mediów dziś. Limit {limit}. Pół dnia oddane obcym ludziom, kurwa.",
+    "Limit przekroczony o {over} min. {app} wysysa ci dzień jak odkurzacz.",
   ],
   dayEscalate: [
     "Wciąż {app}. {used} min dziś, limit {limit}. Serio, odłóż to.",
     "Już {over} min ponad limit. Kciuk ci odpadnie, a mózg zgnije. Zamykaj.",
     "{m} min w {app} od ostatniej szpili. Nie żartuję, kończ.",
+    "Wciąż {app}, już {over} min ponad limit. Odłóż to gówno i zrób coś prawdziwego.",
+    "{m} min od ostatniej szpili i dalej {app}. Serio, kurwa?",
   ],
   dayWarn: [
     "Zostało {left} min social mediów na dziś. Wydaj je mądrze albo wcale.",
     "Uwaga: {left} min do limitu. Potem zaczynam szpilować.",
+    "Jeszcze {left} min social mediów. Potem zaczyna się jazda bez trzymanki.",
   ],
   dayBlock: [
     "Dość. {used} min social mediów dziś przy limicie {limit}. {app} ma fajrant.",
     "Trzy szpile zignorowane, limit przekroczony o {over} min. Teraz ja zamykam {app}.",
     "Na dziś koniec. Jutro nowy limit, dziś idź zrób coś prawdziwego.",
+    "Limit {limit} min na dziś zjedzony. {app} zamknięte, a ty idź na spacer, kurwa.",
+    "Koniec social mediów na dziś: {used} min. Zrób coś, czego nie da się zescrollować.",
   ],
 };
 
 const SOFT: Record<Key, string[]> = {
-  morning: ["Najpierw {tasks}, potem {app}. To tylko chwila!"],
+  morning: [
+    "Najpierw {tasks}, potem {app}. To tylko chwila!",
+    "Najpierw {tasks}, potem {app}. Dobry start dnia!",
+  ],
   morningDone: ["Poranek ogarnięty - social media odblokowane. Miłego dnia!"],
   dayOver: ["Dzisiejszy limit {limit} min social mediów minął ({used} min). Może przerwa?"],
   dayEscalate: ["Już {over} min ponad limit. Pora odłożyć telefon."],
-  dayWarn: ["Zostało {left} min social mediów na dziś."],
-  dayBlock: ["Limit na dziś wykorzystany ({used}/{limit} min). Wróć jutro!"],
+  dayWarn: [
+    "Zostało {left} min social mediów na dziś.",
+    "Zostało {left} min. Wykorzystaj je mądrze.",
+  ],
+  dayBlock: [
+    "Limit na dziś wykorzystany ({used}/{limit} min). Wróć jutro!",
+    "Limit na dziś wykorzystany. Pora na coś offline!",
+  ],
 };
 
 const HARD_EN: Record<Key, string[]> = {
@@ -66,41 +87,59 @@ const HARD_EN: Record<Key, string[]> = {
     "Mornings: you first, the algorithm second. Still left: {tasks}.",
     "Want to scroll? Earn it: {tasks}. Two minutes and {app} is yours.",
     "For fuck's sake, {tasks} isn't even done and you're already on {app}. Put it down.",
+    "First {tasks}, then {app}. Teeth and water take less time than one reel, damn it.",
+    "{app} in the morning before {tasks}? The algorithm can wait, your teeth can't.",
+    "Good morning. {tasks} and only then {app}. That's the order, and I'm in charge here.",
   ],
   morningDone: [
     "Done. Social media unlocked. Don't overdo it, I know where you live.",
     "Morning sorted. Scroll away - with a clear conscience, for now.",
     "Look at that: duties first, fun second. The cat approves.",
+    "Morning done. Social media unlocked, but don't overdo it or I'll be back.",
+    "Bravo, duties first. Now you can scroll. Don't say the cat has no heart.",
   ],
   dayOver: [
     "Limit of {limit} min blown: {used} min of social media today. Close {app}.",
     "{used} min of scrolling today. The limit was {limit}. What are you doing with your life?",
     "The daily limit just got fucked: {used}/{limit} min. That's enough {app} for today.",
     "{over} min over. Every extra minute on {app} goes on my list of grievances.",
+    "{used} min of social media today. Limit {limit}. Half a day handed to strangers, damn it.",
+    "{over} min over the limit. {app} is sucking up your day like a vacuum cleaner.",
   ],
   dayEscalate: [
     "Still on {app}. {used} min today, limit {limit}. Seriously, put it down.",
     "{over} min over the limit already. Your thumb will fall off and your brain will rot. Close it.",
     "{m} min on {app} since my last jab. I'm not joking - wrap it up.",
+    "Still on {app}, {over} min over the limit. Put that shit down and do something real.",
+    "{m} min since my last jab and still {app}. Seriously, damn it?",
   ],
   dayWarn: [
     "{left} min of social media left today. Spend them wisely - or not at all.",
     "Heads up: {left} min to the limit. Then the jabbing starts.",
+    "{left} min of social media left. Then the gloves come off.",
   ],
   dayBlock: [
     "Enough. {used} min of social media today on a {limit} min limit. {app} is off duty.",
     "Three jabs ignored, {over} min over the limit. Now I'm closing {app}.",
     "That's it for today. New limit tomorrow - today, go do something real.",
+    "Today's {limit} min limit is eaten. {app} is closed, and you go for a walk, damn it.",
+    "Social media's done for today: {used} min. Go do something you can't scroll.",
   ],
 };
 
 const SOFT_EN: Record<Key, string[]> = {
-  morning: ["First {tasks}, then {app}. It only takes a moment!"],
+  morning: [
+    "First {tasks}, then {app}. It only takes a moment!",
+    "First {tasks}, then {app}. A good start to the day!",
+  ],
   morningDone: ["Morning sorted - social media unlocked. Have a great day!"],
   dayOver: ["Today's {limit} min social media limit is up ({used} min). Maybe take a break?"],
   dayEscalate: ["{over} min over the limit. Time to put the phone down."],
-  dayWarn: ["{left} min of social media left today."],
-  dayBlock: ["Today's limit is used up ({used}/{limit} min). See you tomorrow!"],
+  dayWarn: ["{left} min of social media left today.", "{left} min left. Use them wisely."],
+  dayBlock: [
+    "Today's limit is used up ({used}/{limit} min). See you tomorrow!",
+    "Today's limit is used up. Time for something offline!",
+  ],
 };
 
 export function dayLines(level: TauntLevel, userName: string | null): Record<Key, string[]> {
@@ -168,7 +207,8 @@ export function dayGuardState(n: NotificationSettings, habits: Habit[], today: D
       until: toMin(n.morningUntil),
       habits: morningHabitIds(n, habits, today),
     },
-    day: { enabled: n.dailyLimit, limit: n.dailyLimitMin },
+    // debt: last night comes off today's limit (DayGuard.debt)
+    day: { enabled: n.dailyLimit, limit: n.dailyLimitMin, debt: n.nightDebt ?? true },
   };
 }
 

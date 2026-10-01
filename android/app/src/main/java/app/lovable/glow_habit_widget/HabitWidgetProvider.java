@@ -27,7 +27,8 @@ public class HabitWidgetProvider extends AppWidgetProvider {
 
     static void updateWidget(Context context, AppWidgetManager mgr, int widgetId) {
         WidgetShared.normalizeIfStale(context);
-        RemoteViews rv = build(context, widgetId, WidgetPrefs.opacity(context, widgetId), false);
+        RemoteViews rv = build(context, widgetId, WidgetPrefs.opacity(context, widgetId),
+            WidgetTheme.forWidget(context, widgetId), false);
         mgr.updateAppWidget(widgetId, rv);
         mgr.notifyAppWidgetViewDataChanged(widgetId, R.id.widget_list);
         // The host caches non-collection views on a full update that re-binds the
@@ -43,9 +44,12 @@ public class HabitWidgetProvider extends AppWidgetProvider {
      * adapter - a RemoteViewsService can't be bound outside a widget host - and
      * shows the first habit names in the empty view instead.
      */
-    static RemoteViews build(Context context, int widgetId, int opacity, boolean preview) {
+    static RemoteViews build(Context context, int widgetId, int opacity, WidgetTheme theme, boolean preview) {
         RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget_root);
-        WidgetPrefs.applyOpacity(rv, opacity);
+        theme.background(rv, opacity);
+        rv.setTextColor(R.id.widget_title, theme.text);
+        rv.setTextColor(R.id.widget_subtitle, theme.muted);
+        rv.setTextColor(R.id.widget_empty, theme.muted);
         rv.setTextViewText(R.id.widget_title, headerTitle(context));
         rv.setTextViewText(R.id.widget_subtitle, headerSubtitle(context));
         rv.setTextViewText(R.id.widget_empty, WidgetShared.tr(context, "Brak zadań na dziś", "No habits for today"));
@@ -54,7 +58,7 @@ public class HabitWidgetProvider extends AppWidgetProvider {
             String names = previewNames(context);
             if (!names.isEmpty()) {
                 rv.setTextViewText(R.id.widget_empty, names);
-                rv.setTextColor(R.id.widget_empty, 0xFFF4F5F9);
+                rv.setTextColor(R.id.widget_empty, theme.text);
                 rv.setInt(R.id.widget_empty, "setGravity", android.view.Gravity.START | android.view.Gravity.TOP);
             }
             return rv;

@@ -52,6 +52,11 @@ final class WidgetShared {
         return c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
     }
 
+    /** The snapshot as stored (the same String instance until it changes - cheap to compare). */
+    static String rawState(Context c) {
+        return prefs(c).getString(STATE_KEY, null);
+    }
+
     static JSONObject state(Context c) {
         String json = prefs(c).getString(STATE_KEY, null);
         if (json == null) return new JSONObject();
@@ -636,11 +641,16 @@ final class WidgetShared {
 
     /** Draws a circular progress ring with the "done/total" count in the centre. */
     static Bitmap progressRing(Context c, int done, int total) {
+        return progressRing(c, done, total, WidgetTheme.DARK);
+    }
+
+    /** The progress ring in a widget palette (WidgetTheme: accent, track, text). */
+    static Bitmap progressRing(Context c, int done, int total, WidgetTheme t) {
         int size = dp(c, 60);
-        Bitmap bmp = ring(c, 60, 6, total > 0 ? done / (float) total : 0, ACCENT, false);
+        Bitmap bmp = ring(c, 60, 6, total > 0 ? done / (float) total : 0, t.accent, false, t.track);
         Canvas canvas = new Canvas(bmp);
         Paint txt = new Paint(Paint.ANTI_ALIAS_FLAG);
-        txt.setColor(TEXT);
+        txt.setColor(t.text);
         txt.setTextAlign(Paint.Align.CENTER);
         txt.setFakeBoldText(true);
         txt.setTextSize(dp(c, 15));
@@ -651,6 +661,12 @@ final class WidgetShared {
 
     /** Plain ring bitmap. `dashed` draws a dotted track (unconfirmed avoid habit). */
     static Bitmap ring(Context c, int sizeDp, int strokeDp, float fraction, int color, boolean dashed) {
+        return ring(c, sizeDp, strokeDp, fraction, color, dashed, TRACK);
+    }
+
+    /** Plain ring bitmap with the given track colour (the widget palette, WidgetTheme.track). */
+    static Bitmap ring(Context c, int sizeDp, int strokeDp, float fraction, int color, boolean dashed,
+                       int trackColor) {
         int size = dp(c, sizeDp);
         float stroke = dp(c, strokeDp);
         Bitmap bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
@@ -661,7 +677,7 @@ final class WidgetShared {
         Paint track = new Paint(Paint.ANTI_ALIAS_FLAG);
         track.setStyle(Paint.Style.STROKE);
         track.setStrokeWidth(stroke);
-        track.setColor(dashed ? (0x66000000 | (color & 0xFFFFFF)) : TRACK);
+        track.setColor(dashed ? (0x66000000 | (color & 0xFFFFFF)) : trackColor);
         if (dashed) {
             track.setPathEffect(new android.graphics.DashPathEffect(new float[]{dp(c, 3), dp(c, 4)}, 0));
         }

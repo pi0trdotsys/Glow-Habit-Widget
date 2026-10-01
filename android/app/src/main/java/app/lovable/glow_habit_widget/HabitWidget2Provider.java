@@ -5,7 +5,6 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -19,9 +18,6 @@ import org.json.JSONObject;
  */
 public class HabitWidget2Provider extends AppWidgetProvider {
     private static final int MAX_CELLS = 8;
-    private static final int ICON_ON_FILL = 0xFF0F1116;
-    private static final int NAME_DONE = Color.parseColor("#f4f5f9");
-    private static final int NAME_IDLE = Color.parseColor("#9398a5");
 
     private static final int[] ROOT = {
         R.id.cell0_root, R.id.cell1_root, R.id.cell2_root, R.id.cell3_root,
@@ -52,20 +48,24 @@ public class HabitWidget2Provider extends AppWidgetProvider {
 
     static void updateWidget(Context context, AppWidgetManager mgr, int widgetId) {
         WidgetShared.normalizeIfStale(context);
-        mgr.updateAppWidget(widgetId, build(context, widgetId, WidgetPrefs.opacity(context, widgetId)));
+        mgr.updateAppWidget(widgetId, build(context, widgetId, WidgetPrefs.opacity(context, widgetId),
+            WidgetTheme.forWidget(context, widgetId)));
     }
 
-    /** The widget's views with the given background opacity (also the WidgetConfigActivity preview). */
-    static RemoteViews build(Context context, int widgetId, int opacity) {
+    /** The widget's views with the given opacity and palette (also the WidgetConfigActivity preview). */
+    static RemoteViews build(Context context, int widgetId, int opacity, WidgetTheme theme) {
         RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget2_root);
-        WidgetPrefs.applyOpacity(rv, opacity);
+        theme.background(rv, opacity);
+        rv.setTextColor(R.id.widget2_title, theme.text);
+        rv.setTextColor(R.id.widget2_timeleft, theme.accent);
+        rv.setTextColor(R.id.widget2_empty, theme.muted);
 
         JSONArray habits = WidgetShared.habits(context);
         int total = WidgetShared.countedTotal(context);
         int done = WidgetShared.doneCount(context);
         int n = Math.min(habits.length(), MAX_CELLS); // every row gets a cell; `total` only drives the ring
 
-        rv.setImageViewBitmap(R.id.widget2_ring, WidgetShared.progressRing(context, done, total));
+        rv.setImageViewBitmap(R.id.widget2_ring, WidgetShared.progressRing(context, done, total, theme));
         boolean en = WidgetShared.en(context);
         rv.setTextViewText(R.id.widget2_title, total > 0 ? (en ? "Today" : "Dziś") : "Loop");
         rv.setTextViewText(R.id.widget2_timeleft, total > 0 ? WidgetShared.timeLeft(en) : "");
@@ -77,7 +77,7 @@ public class HabitWidget2Provider extends AppWidgetProvider {
         for (int i = 0; i < MAX_CELLS; i++) {
             if (i < n) {
                 JSONObject h = habits.optJSONObject(i);
-                bindCell(context, rv, i, h, widgetId);
+                bindCell(context, rv, i, h, widgetId, theme);
                 rv.setViewVisibility(ROOT[i], View.VISIBLE);
             } else {
                 rv.setViewVisibility(ROOT[i], View.INVISIBLE);
@@ -89,18 +89,19 @@ public class HabitWidget2Provider extends AppWidgetProvider {
         return rv;
     }
 
-    private static void bindCell(Context context, RemoteViews rv, int i, JSONObject h, int widgetId) {
+    private static void bindCell(Context context, RemoteViews rv, int i, JSONObject h, int widgetId,
+                                 WidgetTheme theme) {
         String id = h.optString("id");
         String name = h.optString("name", "");
         boolean done = WidgetShared.isDone(h);
         float frac = WidgetShared.fraction(h);
-        int color = WidgetShared.color(h);
+        int color = theme.habit(WidgetShared.color(h));
         String amount = WidgetShared.amountText(h);
 
         rv.setImageViewResource(ICON[i], WidgetShared.iconRes(context, h.optString("icon", "")));
         if (done) {
             rv.setInt(BG[i], "setColorFilter", 0xFF000000 | (color & 0xFFFFFF));
-            rv.setInt(ICON[i], "setColorFilter", ICON_ON_FILL);
+            rv.setInt(ICON[i], "setColorFilter", theme.onFill);
         } else {
             // Partial progress deepens the chip tint: 25% idle -> ~60% almost done.
             int alpha = 0x40 + Math.round(frac * 0x60);
@@ -109,7 +110,7 @@ public class HabitWidget2Provider extends AppWidgetProvider {
         }
         // Mid-way count goals show their progress ("3/8 szklanek") instead of the name.
         rv.setTextViewText(NAME[i], !done && frac > 0 && !amount.isEmpty() ? amount : name);
-        rv.setInt(NAME[i], "setTextColor", done ? NAME_DONE : NAME_IDLE);
+        rv.setInt(NAME[i], "setTextColor", done ? theme.text : theme.muted);
 
         // A tap opens the hold-to-complete overlay; nothing is logged until the ring is held.
         Intent t = HoldActivity.intent(context, id, false, "w2/" + widgetId + "/" + id);

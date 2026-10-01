@@ -12,6 +12,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Calendar;
+import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -110,6 +111,147 @@ final class LiveGuard {
         return jabs > BLOCK_AFTER;
     }
 
+    /** In the last stretch before the deadline (bedtime mode) the block comes one jab sooner. */
+    static boolean shouldBlock(int jabs, boolean pre) {
+        return jabs > (pre ? BLOCK_AFTER - 1 : BLOCK_AFTER);
+    }
+
+    // ------------------------------------------------------------------ curfew ("cisza nocna")
+
+    /** An urgent pass through the curfew block lasts this long. */
+    static final int CURFEW_PASS_MIN = 3;
+    /** The first pass of a night needs a 10 s hold, every next one twice as long (max 60 s). */
+    static final long CURFEW_HOLD_MS = 10_000L;
+    static final long CURFEW_HOLD_MAX_MS = 60_000L;
+
+    /**
+     * Always allowed during the curfew, whatever the allow list says: the system
+     * UI, phone calls, alarms, settings and permission screens (on top of the
+     * home screen, dialer, clock and keyboard apps resolved on the device).
+     */
+    static final Set<String> BASE_ESSENTIAL = new java.util.HashSet<>(java.util.Arrays.asList(
+        "android", "com.android.systemui", "com.android.settings", "com.android.phone",
+        "com.android.incallui", "com.android.server.telecom", "com.google.android.dialer",
+        "com.android.dialer", "com.android.deskclock", "com.google.android.deskclock",
+        "com.android.permissioncontroller", "com.google.android.permissioncontroller",
+        "com.android.packageinstaller", "com.google.android.packageinstaller",
+        "com.miui.securitycenter", "com.lbe.security.miui", "com.miui.aod", "com.android.emergency",
+        "com.google.android.apps.safetyhub", "com.android.stk", "com.android.mms",
+        "com.google.android.apps.messaging", "com.android.cellbroadcastreceiver"));
+
+    /** Curfew time = after the deadline until the morning (bedtime mode before it only jabs). */
+    static boolean curfewNow(int now, int deadline, int until) {
+        return inWindow(now, deadline, until);
+    }
+
+    /** Does the curfew cover this foreground app? */
+    static boolean curfewBlocks(String pkg, Set<String> essential, Set<String> allowed) {
+        if (pkg == null || pkg.isEmpty()) return false;
+        if (essential != null && essential.contains(pkg)) return false;
+        return allowed == null || !allowed.contains(pkg);
+    }
+
+    /** Hold time for the n-th urgent pass of the night (0-based): 10 s, 20 s, 40 s, 60 s... */
+    static long curfewHoldMs(int passesTonight) {
+        long ms = CURFEW_HOLD_MS;
+        for (int i = 0; i < passesTonight && ms < CURFEW_HOLD_MAX_MS; i++) ms *= 2;
+        return Math.min(ms, CURFEW_HOLD_MAX_MS);
+    }
+
+    /** Night filter opacity during a pass: from 0.3 up to 0.7 by its end (stays below the touch-blocking 0.8). */
+    static float dimAlpha(long sinceMs, long passMs) {
+        if (passMs <= 0) return 0.7f;
+        float p = Math.max(0f, Math.min(1f, sinceMs / (float) passMs));
+        return 0.3f + 0.4f * p;
+    }
+
+    static boolean curfewOn(Context c) {
+        return settings(c).optBoolean("curfew", false);
+    }
+
+    static boolean curfewDim(Context c) {
+        return settings(c).optBoolean("curfewDim", true);
+    }
+
+    /** Apps the user lets through the curfew (music, a sleep app, a messenger...). */
+    static Set<String> curfewAllowed(Context c) {
+        Set<String> out = new java.util.HashSet<>();
+        JSONArray a = settings(c).optJSONArray("curfewAllow");
+        if (a != null) for (int i = 0; i < a.length(); i++) out.add(a.optString(i));
+        return out;
+    }
+
+    /** BASE_ESSENTIAL + this device's home screens, dialers, clocks and keyboards + Szpila. */
+    static Set<String> essentialApps(Context c) {
+        Set<String> out = new java.util.HashSet<>(BASE_ESSENTIAL);
+        out.add(c.getPackageName());
+        PackageManager pm = c.getPackageManager();
+        Intent[] intents = {
+            new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME),
+            new Intent(Intent.ACTION_DIAL),
+            new Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS),
+        };
+        for (Intent i : intents) {
+            try {
+                for (android.content.pm.ResolveInfo r : pm.queryIntentActivities(i, 0)) {
+                    if (r.activityInfo != null) out.add(r.activityInfo.packageName);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        try {
+            android.view.inputmethod.InputMethodManager imm =
+                (android.view.inputmethod.InputMethodManager) c.getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) for (android.view.inputmethod.InputMethodInfo m : imm.getEnabledInputMethodList()) out.add(m.getPackageName());
+        } catch (Exception ignored) {
+        }
+        try {
+            android.telecom.TelecomManager tm = (android.telecom.TelecomManager) c.getSystemService(Context.TELECOM_SERVICE);
+            if (tm != null && tm.getDefaultDialerPackage() != null) out.add(tm.getDefaultDialerPackage());
+        } catch (Exception ignored) {
+        }
+        return out;
+    }
+
+    static String appLabel(Context c, String pkg) {
+        String[] social = SOCIAL.get(pkg);
+        if (social != null) return social[1];
+        try {
+            PackageManager pm = c.getPackageManager();
+            return pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString();
+        } catch (Exception e) {
+            return pkg;
+        }
+    }
+
+    static long curfewPassUntil(Context c) {
+        return prefs(c).getLong("curfew_pass_until", 0);
+    }
+
+    static void curfewPass(Context c, long untilMs) {
+        prefs(c).edit().putLong("curfew_pass_until", untilMs).apply();
+    }
+
+    /** Count for tonight (habit day) of a per-night counter. */
+    static int tonight(Context c, String key) {
+        String day = habitDay(WidgetShared.nowMinute(), WidgetShared.today(), WidgetShared.dateKey(1));
+        return counts(c, key).optInt(day, 0);
+    }
+
+    /** First "phone on the charger" of the night (minute of day), for the night bill. */
+    static synchronized boolean markCharged(Context c) {
+        String day = habitDay(WidgetShared.nowMinute(), WidgetShared.today(), WidgetShared.dateKey(1));
+        try {
+            JSONObject o = new JSONObject(prefs(c).getString("charged", "{}"));
+            if (o.has(day)) return false;
+            o.put(day, WidgetShared.nowMinute());
+            prefs(c).edit().putString("charged", o.toString()).apply();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     /** Resolve {app} {m} {time} {count} in a line. */
     static String fill(String line, String app, int minutes, String time, int count) {
         return line.replace("{app}", app).replace("{m}", String.valueOf(minutes))
@@ -147,9 +289,21 @@ final class LiveGuard {
 
     // ------------------------------------------------------------------ settings (from the snapshot)
 
-    static JSONObject settings(Context c) {
+    private static String cachedRaw;
+    private static JSONObject cachedLive;
+
+    /**
+     * The snapshot's "live" part. The guard asks for it several times per poll, so
+     * it's parsed once per snapshot (SharedPreferences hands back the same String
+     * until the app writes a new one). Read-only for callers.
+     */
+    static synchronized JSONObject settings(Context c) {
+        String raw = WidgetShared.rawState(c);
+        if (raw != null && raw == cachedRaw && cachedLive != null) return cachedLive;
         JSONObject l = WidgetShared.state(c).optJSONObject("live");
-        return l != null ? l : new JSONObject();
+        cachedRaw = raw;
+        cachedLive = l != null ? l : new JSONObject();
+        return cachedLive;
     }
 
     static boolean enabled(Context c) {
@@ -300,6 +454,11 @@ final class LiveGuard {
                 "{deadline} in {left} min. Put the phone down and get ready for bed.");
         }
         text = fillLeft(text, left, clock);
+        boolean curfew = curfewOn(c);
+        if (curfew) {
+            text += WidgetShared.tr(c, " Od " + clock + " cisza nocna: działa tylko budzik i telefon. Ładowarka najlepiej poza łóżkiem.",
+                " From " + clock + " it's curfew: only the alarm and calls work. Best put the charger away from the bed.");
+        }
         String title = WidgetShared.tr(c, "Odłóż telefon za " + left + " min", "Put the phone down in " + left + " min");
         Intent home = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent sleep = PendingIntent.getActivity(c, 7521, home, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -312,7 +471,8 @@ final class LiveGuard {
             .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setTimeoutAfter(left * 60_000L)
-            .addAction(0, WidgetShared.tr(c, "😴 Idę spać", "😴 Going to bed"), sleep);
+            .addAction(0, curfew ? WidgetShared.tr(c, "🔌 Na ładowarkę i spać", "🔌 Charger, then bed")
+                : WidgetShared.tr(c, "😴 Idę spać", "😴 Going to bed"), sleep);
         PendingIntent open = WidgetShared.openAppIntent(c, 7522);
         if (open != null) b.setContentIntent(open);
         try {

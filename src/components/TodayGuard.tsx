@@ -4,13 +4,15 @@ import { useHabits } from "@/lib/habits/store";
 import type { Habit } from "@/lib/habits/types";
 import { morningPending, morningWindow } from "@/lib/day-guard";
 import { minuteOfDay, todayKey } from "@/lib/habits/utils";
+import { nightDebt } from "@/lib/curfew";
+import { addDays } from "date-fns";
 import { L } from "@/lib/i18n";
 
 export interface GuardStatus {
   /** Morning habits still blocking social media (empty = no lock right now). */
   morning: Habit[];
   /** Today's social media minutes vs the daily limit (null = limit off / no data yet). */
-  social: { used: number; limit: number; over: boolean } | null;
+  social: { used: number; limit: number; over: boolean; debt: number } | null;
 }
 
 /**
@@ -22,15 +24,20 @@ export function useGuardStatus(now: Date, force = false): GuardStatus {
   const habits = useHabits((s) => s.habits);
   const completions = useHabits((s) => s.completions);
   const daySocial = useHabits((s) => s.daySocial);
+  const reports = useHabits((s) => s.nightReports);
   if (!force && !Capacitor.isNativePlatform()) return { morning: [], social: null };
   const morning = morningWindow(notif, minuteOfDay(now))
     ? morningPending(notif, habits, completions, now)
     : [];
   const used = daySocial[todayKey(now)];
+  // "Noc kosztuje dzień": last night's scrolling comes off today's limit (mirrors DayGuard.debt).
+  const debt =
+    (notif.nightDebt ?? true) && now.getHours() >= 5
+      ? nightDebt(reports[todayKey(addDays(now, -1))] ?? null, notif.dailyLimitMin)
+      : 0;
+  const limit = notif.dailyLimitMin - debt;
   const social =
-    notif.dailyLimit && used != null
-      ? { used, limit: notif.dailyLimitMin, over: used > notif.dailyLimitMin }
-      : null;
+    notif.dailyLimit && used != null ? { used, limit, over: used > limit, debt } : null;
   return { morning, social };
 }
 
@@ -66,10 +73,13 @@ export function SocialTodayCard({
   used,
   limit,
   over,
+  debt = 0,
 }: {
   used: number;
   limit: number;
   over: boolean;
+  /** Minutes last night took off today's limit. */
+  debt?: number;
 }) {
   return (
     <section
@@ -100,6 +110,11 @@ export function SocialTodayCard({
         {over
           ? L(`Limit przekroczony o ${used - limit} min.`, `Over the limit by ${used - limit} min.`)
           : L(`Zostało ${limit - used} min.`, `${limit - used} min left.`)}
+        {debt > 0 && (
+          <span data-night-debt style={{ color: "var(--avoid)" }}>
+            {L(` Noc zabrała ${debt} min.`, ` Last night cost ${debt} min.`)}
+          </span>
+        )}
       </div>
     </section>
   );

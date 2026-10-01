@@ -43,7 +43,7 @@ export function SzpilaAvatar({
         ri: "M50 22 L48 11 L41 17 Z",
       };
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden>
+    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden data-szpila-cat>
       {face === "dj" && (
         <path
           d="M9 40 Q8 9 32 9 Q56 9 55 40"

@@ -172,9 +172,40 @@ public class HabitWidgetPlugin extends Plugin {
             ret.put("day", new JSObject(DayGuard.history(getContext()).toString()));
             ret.put("phase", new String[]{"off", "night", "morning", "day"}[DayGuard.phase(getContext())]);
             ret.put("morningBlocks", new JSObject(LiveGuard.counts(getContext(), "morning_blocks").toString()));
+            // Curfew + night debt (today's limit after last night).
+            ret.put("curfewBlocks", new JSObject(LiveGuard.counts(getContext(), "curfew_blocks").toString()));
+            ret.put("curfewPasses", new JSObject(LiveGuard.counts(getContext(), "curfew_passes").toString()));
+            int base = DayGuard.baseLimit(getContext());
+            ret.put("limitBase", base);
+            ret.put("debt", DayGuard.debt(getContext(), base));
         } catch (Exception e) {
             ret.put("hits", new JSObject());
         }
+        call.resolve(ret);
+    }
+
+    /** Launchable apps for the curfew's allow list (the always-allowed ones left out): [{pkg, label}]. */
+    @PluginMethod
+    public void curfewApps(PluginCall call) {
+        android.content.pm.PackageManager pm = getContext().getPackageManager();
+        java.util.Set<String> essential = LiveGuard.essentialApps(getContext());
+        java.util.Map<String, String> apps = new java.util.TreeMap<>();
+        Intent launcher = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
+        for (android.content.pm.ResolveInfo r : pm.queryIntentActivities(launcher, 0)) {
+            String pkg = r.activityInfo.packageName;
+            if (essential.contains(pkg) || apps.containsKey(pkg)) continue;
+            apps.put(pkg, r.loadLabel(pm).toString());
+        }
+        JSArray list = new JSArray();
+        for (java.util.Map.Entry<String, String> e : apps.entrySet()) {
+            JSObject o = new JSObject();
+            o.put("pkg", e.getKey());
+            o.put("label", e.getValue());
+            o.put("social", LiveGuard.SOCIAL.containsKey(e.getKey()));
+            list.put(o);
+        }
+        JSObject ret = new JSObject();
+        ret.put("apps", list);
         call.resolve(ret);
     }
 
@@ -267,11 +298,60 @@ public class HabitWidgetPlugin extends Plugin {
         call.resolve(stepsState());
     }
 
+    /** { source? } - "auto", a package, or missing = the source saved in the snapshot. */
     @PluginMethod
     public void readSteps(PluginCall call) {
         JSObject ret = new JSObject();
-        ret.put("steps", HealthSteps.today(getContext()));
+        String source = call.getString("source");
+        ret.put("steps", source != null ? HealthSteps.today(getContext(), StepsPick.normalize(source))
+            : HealthSteps.today(getContext()));
         call.resolve(ret);
+    }
+
+    /** Apps writing steps today: { sources: [{pkg, label, steps}], wearable: {pkg, label} | null }. */
+    @PluginMethod
+    public void stepsSources(PluginCall call) {
+        JSArray list = new JSArray();
+        for (kotlin.Pair<String, Long> s : HealthSteps.sources(getContext())) {
+            JSObject o = new JSObject();
+            o.put("pkg", s.getFirst());
+            o.put("label", appLabel(s.getFirst()));
+            o.put("steps", s.getSecond());
+            list.put(o);
+        }
+        JSObject ret = new JSObject();
+        ret.put("sources", list);
+        String w = HealthSteps.wearableApp(getContext());
+        if (w != null) {
+            JSObject o = new JSObject();
+            o.put("pkg", w);
+            o.put("label", appLabel(w));
+            ret.put("wearable", o);
+        }
+        call.resolve(ret);
+    }
+
+    /** Opens another app by package (e.g. Mi Fitness, so the band syncs its steps). */
+    @PluginMethod
+    public void openApp(PluginCall call) {
+        String pkg = call.getString("pkg", "");
+        Intent i = getContext().getPackageManager().getLaunchIntentForPackage(pkg);
+        if (i == null) {
+            call.reject("not installed");
+            return;
+        }
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        getContext().startActivity(i);
+        call.resolve();
+    }
+
+    private String appLabel(String pkg) {
+        try {
+            android.content.pm.PackageManager pm = getContext().getPackageManager();
+            return pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString();
+        } catch (Exception e) {
+            return pkg;
+        }
     }
 
     // ------------------------------------------------------------------

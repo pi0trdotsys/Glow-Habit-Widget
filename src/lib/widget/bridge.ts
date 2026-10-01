@@ -41,7 +41,8 @@ import { billLines } from "@/lib/night";
 import { catCondition, formaStreaks } from "@/lib/habits/gamification";
 import { lateBasisOf } from "@/lib/sensors";
 import { getLang } from "@/lib/i18n";
-import { useLinesReady } from "@/lib/habits/szpila";
+import { isLightTheme, resolveTheme, systemPrefersDark } from "@/lib/theme";
+import { contextPools, useLinesReady } from "@/lib/habits/szpila";
 
 const STATE_KEY = "widget_state";
 const PENDING_KEY = "widget_pending";
@@ -105,9 +106,17 @@ const toMin = (t: string) => {
   return h * 60 + (m || 0);
 };
 
+/** The app theme in the snapshot (widgets "like the app"). Exported for tests. */
+export function themeFields() {
+  const pref = useHabits.getState().theme;
+  const theme = resolveTheme(pref, systemPrefersDark());
+  return { theme, themePref: pref, themeLight: isLightTheme(theme) };
+}
+
 /** The snapshot every native surface reads (widgets, notifications). Exported for tests. */
 export function buildState() {
-  const { habits, completions, userName, notifications, autoBackup, szpila } = useHabits.getState();
+  const { habits, completions, userName, notifications, autoBackup, szpila, stepsSource } =
+    useHabits.getState();
   const level = notifications.tauntLevel;
   const today = new Date();
   const key = todayKey(today);
@@ -142,6 +151,8 @@ export function buildState() {
       nag: nagLines(h, level, userName),
       rage: rageLines(h, level, userName),
       memory: memoryLines(h, completions, level, userName),
+      // Situation pools (zero / almost / late / morning), picked by HabitNotifier.contextOf().
+      ctx: contextPools(h, level, userName),
       praise: praiseFor(h, level, userName),
       source: h.source ?? "",
       ...(h.source === "screen"
@@ -189,6 +200,11 @@ export function buildState() {
     face: szpila.face,
     // App language for native texts (WidgetShared.tr).
     lang: getLang(),
+    // App theme for widgets set to "like the app" (WidgetTheme.java): the palette shown now,
+    // the preference ("system" = native follows the phone's night mode itself), light flag.
+    ...themeFields(),
+    // Health Connect steps: "auto" or one app's package (HealthSteps.source).
+    stepsSource: stepsSource || "auto",
     // "Kot w domu": groomed / normal / neglected (widget overlay + mood).
     cat: catCondition(habits, completions, today),
     // Forma streak (current / best) for the widgets.

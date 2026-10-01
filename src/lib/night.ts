@@ -18,22 +18,31 @@ const BILL: Record<TauntLevel, { bad: string[]; good: string[] }> = {
       "{apps}. Algorytmy się najadły, a twój sen poszedł się jebać. Brawo.",
       "Nocny rachunek: {social} min scrollowania. Zapłacisz dziś koncentracją i humorem.",
       "Tyle scrollowania po północy, a nic z tego nie pamiętasz. Dziś odkładasz to przed 24:00.",
+      "{social} min social mediów po północy. Sen poszedł się jebać, a ty nawet nie pamiętasz po co.",
+      "Nocne wejścia w social media: {visits}. Dziś telefon śpi w kuchni, kurwa.",
+      "{screen} min ekranu w nocy. Oczy wyglądają dziś jak dwie dziury w śniegu.",
+      "Rachunek za noc: {apps}. Zapłacone snem, gotówki nie przyjmujemy.",
     ],
     good: [
       "Zero social mediów po północy. Nie wierzę, ale szanuję. Powtórz to dziś.",
       "Czysta noc. Algorytm płakał, a łóżko wreszcie służyło do spania. Tak ma być.",
       "Telefon odłożony o {asleep} i żadnego scrollowania. Kot jest dumny. Trochę.",
       "Noc bez TikToków i Instagramów. Może jednak coś z ciebie będzie.",
+      "Czysta noc. Telefon spał osobno, łóżko służyło do spania. Kurwa, tak trzymaj.",
+      "Zero scrollowania po północy. Algorytm głodny, a sen wygrany. Szanuję.",
+      "Telefon odłożony o {asleep}. Rano widać to na twarzy. Dobra robota.",
     ],
   },
   soft: {
     bad: [
       "Po północy {social} min w social mediach. Dziś spróbuj odłożyć telefon wcześniej.",
       "Telefon odłożony ok. {asleep}. Krótsza noc = trudniejszy dzień. Dziś lepiej!",
+      "Po północy {social} min w telefonie. Dziś spróbuj zostawić go poza sypialnią.",
     ],
     good: [
       "Czysta noc - zero social mediów po północy. Świetnie!",
       "Telefon odłożony o {asleep}. Dobra robota!",
+      "Spokojna noc bez social mediów. Brawo!",
     ],
   },
 };
@@ -47,22 +56,31 @@ const BILL_EN: Record<TauntLevel, { bad: string[]; good: string[] }> = {
       "{apps}. The algorithms feasted and your sleep got fucked. Bravo.",
       "Night bill: {social} min of scrolling. You'll pay for it today in focus and mood.",
       "All that scrolling after midnight and you remember none of it. Tonight it goes down before 12.",
+      "{social} min of social media after midnight. Your sleep got fucked and you don't even remember what for.",
+      "Social media visits overnight: {visits}. Tonight the phone sleeps in the kitchen, damn it.",
+      "{screen} min of screen at night. Your eyes look like two holes in the snow today.",
+      "Night bill: {apps}. Paid in sleep, no cash accepted.",
     ],
     good: [
       "Zero social media after midnight. I don't believe it, but respect. Do it again tonight.",
       "A clean night. The algorithm cried and the bed was finally used for sleeping. As it should be.",
       "Phone down at {asleep} and no scrolling. The cat is proud. A little.",
       "A night without TikTok and Instagram. Maybe you'll amount to something after all.",
+      "A clean night. The phone slept alone and the bed was used for sleeping. Damn, keep it up.",
+      "Zero scrolling after midnight. The algorithm went hungry and sleep won. Respect.",
+      "Phone down at {asleep}. It shows on your face this morning. Good job.",
     ],
   },
   soft: {
     bad: [
       "{social} min on social media after midnight. Try putting the phone down earlier tonight.",
       "Phone down around {asleep}. Shorter night = harder day. Better tonight!",
+      "{social} min on the phone after midnight. Tonight try leaving it outside the bedroom.",
     ],
     good: [
       "A clean night - zero social media after midnight. Great!",
       "Phone down at {asleep}. Nice work!",
+      "A calm night without social media. Well done!",
     ],
   },
 };

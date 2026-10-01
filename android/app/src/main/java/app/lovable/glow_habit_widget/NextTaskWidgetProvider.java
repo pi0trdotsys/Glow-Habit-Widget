@@ -58,16 +58,17 @@ public class NextTaskWidgetProvider extends AppWidgetProvider {
         WidgetShared.normalizeIfStale(context);
         NextWidgetContent.Content content = content(context, WidgetPrefs.lines(context, widgetId));
         int opacity = WidgetPrefs.opacity(context, widgetId);
+        WidgetTheme theme = WidgetTheme.forWidget(context, widgetId);
 
-        RemoteViews small = render(context, content, widgetId, false, opacity);
+        RemoteViews small = render(context, content, widgetId, false, opacity, theme);
         RemoteViews rv;
         if (Build.VERSION.SDK_INT >= 31) {
             Map<SizeF, RemoteViews> bySize = new HashMap<>();
             bySize.put(new SizeF(40f, 40f), small);
-            bySize.put(new SizeF(WIDE_MIN_DP, 40f), render(context, content, widgetId, true, opacity));
+            bySize.put(new SizeF(WIDE_MIN_DP, 40f), render(context, content, widgetId, true, opacity, theme));
             rv = new RemoteViews(bySize);
         } else {
-            rv = isWide(mgr, widgetId) ? render(context, content, widgetId, true, opacity) : small;
+            rv = isWide(mgr, widgetId) ? render(context, content, widgetId, true, opacity, theme) : small;
         }
         mgr.updateAppWidget(widgetId, rv);
     }
@@ -124,11 +125,12 @@ public class NextTaskWidgetProvider extends AppWidgetProvider {
         return c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
     }
 
-    /** One size of the widget (also the WidgetConfigActivity preview). */
+    /** One size of the widget in a palette (also the WidgetConfigActivity preview). */
     static RemoteViews render(Context context, NextWidgetContent.Content content, int widgetId, boolean wide,
-                              int opacity) {
+                              int opacity, WidgetTheme theme) {
         RemoteViews rv = new RemoteViews(context.getPackageName(), wide ? R.layout.widget3_wide : R.layout.widget3_root);
-        WidgetPrefs.applyOpacity(rv, opacity);
+        theme.background(rv, opacity);
+        rv.setTextColor(R.id.next_name, theme.text);
         JSONObject h = content.main;
 
         PendingIntent openPi = WidgetShared.openAppIntent(context, 3);
@@ -137,9 +139,10 @@ public class NextTaskWidgetProvider extends AppWidgetProvider {
             rv.setOnClickPendingIntent(R.id.next_root, openPi);
         }
 
-        int color = h != null ? WidgetShared.color(h) : content.ringColor;
+        int color = h != null ? theme.habit(WidgetShared.color(h)) : theme.map(content.ringColor);
         rv.setImageViewBitmap(R.id.next_ring,
-            WidgetShared.ring(context, wide ? 38 : 48, wide ? 4 : 5, content.ringFraction, color, content.ringDashed));
+            WidgetShared.ring(context, wide ? 38 : 48, wide ? 4 : 5, content.ringFraction, color, content.ringDashed,
+                theme.track));
         rv.setImageViewResource(R.id.next_icon,
             WidgetShared.iconRes(context, h != null ? h.optString("icon", "") : content.icon));
         rv.setInt(R.id.next_icon, "setColorFilter", color);
@@ -147,7 +150,7 @@ public class NextTaskWidgetProvider extends AppWidgetProvider {
         String name = !wide && content.smallName != null ? content.smallName : content.name;
         rv.setTextViewText(R.id.next_name, name);
         rv.setTextViewText(R.id.next_sub, wide ? content.status : content.smallSub);
-        rv.setTextColor(R.id.next_sub, wide ? content.statusColor : content.smallSubColor);
+        rv.setTextColor(R.id.next_sub, theme.map(wide ? content.statusColor : content.smallSubColor));
 
         if (h != null) {
             // A tap opens the hold-to-complete overlay; nothing is logged until the ring is held.
@@ -172,7 +175,7 @@ public class NextTaskWidgetProvider extends AppWidgetProvider {
             }
             NextWidgetContent.Line line = content.line;
             rv.setTextViewText(R.id.next_ticker, line != null ? line.text : "");
-            rv.setTextColor(R.id.next_ticker, line != null ? line.color : NextWidgetContent.C_MUTED);
+            rv.setTextColor(R.id.next_ticker, theme.map(line != null ? line.color : NextWidgetContent.C_MUTED));
 
             Intent tick = new Intent(context, NextTaskWidgetProvider.class);
             tick.setAction(ACTION_TICKER);

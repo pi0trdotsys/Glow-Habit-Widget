@@ -82,14 +82,17 @@ public class SzpilaWidgetProvider extends AppWidgetProvider {
 
     static void updateWidget(Context context, AppWidgetManager mgr, int widgetId) {
         WidgetShared.normalizeIfStale(context);
-        mgr.updateAppWidget(widgetId, build(context, WidgetPrefs.opacity(context, widgetId)));
+        mgr.updateAppWidget(widgetId, build(context, WidgetPrefs.opacity(context, widgetId),
+            WidgetTheme.forWidget(context, widgetId)));
     }
 
-    /** The widget's views with the given background opacity (also the WidgetConfigActivity preview). */
-    static RemoteViews build(Context context, int opacity) {
+    /** The widget's views with the given opacity and palette (also the WidgetConfigActivity preview). */
+    static RemoteViews build(Context context, int opacity, WidgetTheme theme) {
         Jab jab = currentJab(context);
         RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget4_root);
-        WidgetPrefs.applyOpacity(rv, opacity);
+        theme.background(rv, opacity);
+        rv.setTextColor(R.id.szpila_title, theme.title);
+        rv.setTextColor(R.id.szpila_text, theme.text);
         rv.setTextViewText(R.id.szpila_text, jab.text);
         String cond = WidgetShared.state(context).optString("cat", "normal");
         int mood = condMood(cond, jab.mood);

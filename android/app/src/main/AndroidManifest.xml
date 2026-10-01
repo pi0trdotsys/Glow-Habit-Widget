@@ -185,5 +185,21 @@
         <package android:name="com.pinterest" />
         <package android:name="tv.twitch.android.app" />
         <package android:name="com.linkedin.android" />
+        <!-- launchable apps: the night curfew's allow list, step sources (Mi Fitness, ...) -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <!-- the curfew always lets the home screen, the clock and the dialer through -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.HOME" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SHOW_ALARMS" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+        </intent>
     </queries>
 </manifest>

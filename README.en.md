@@ -37,6 +37,11 @@ everything: unbrushed teeth, 2,000 steps at 6 pm, fries. The longer you wait,
 the harsher it gets. It remembers your slips. On Sunday it writes a weekly
 roast you won't want to read.
 
+Over 1,500 lines, matched to the habit and to the moment: one thing in the
+morning with an empty glass, another at 3 pm with still nothing done, another
+at 7 of 8 glasses, and another in the evening. Coding, learning a language,
+spending, meals, porn - each gets its own repertoire.
+
 Get it done and you get praise. Snarky, but praise.
 
 > **Szpila swears by default.** Prefer it polite? Settings → Szpila → **"Gentle"**.
@@ -48,9 +53,21 @@ Get it done and you get praise. Snarky, but praise.
   and starts watching right away, counting down to midnight.
 - **Night guard.** Opening TikTok at 00:40? **Szpila pops up instantly**,
   not tomorrow morning. A line for that exact app, harsher every 5 minutes.
-- **The block.** Still scrolling after the third jab? The cat **covers the
-  whole app**. Pick **"Going to bed"** or **hold a button for 10 seconds** if
-  you really must - and look yourself in the eye while you do.
+- **The block.** Still scrolling after the third jab (the second before
+  midnight)? The cat **covers the whole app**. Pick **"Going to bed"** or
+  **hold a button for 10 seconds** if you really must - and look yourself in
+  the eye while you do.
+- **Curfew.** Want no phone at all after midnight? From 0:00 only the alarm,
+  calls, the home screen and what you allow (e.g. sleep music) work. Any other
+  app is covered at once. At midnight you won't beat the algorithm, so better
+  not to have to fight it:
+  - **Urgent?** Hold for 10 s and get 3 minutes on a screen darkening to red.
+    Every next time that night you hold twice as long.
+  - **The night costs the day.** Every social media minute after midnight
+    takes 2 minutes off tomorrow's limit, every urgent pass 10 minutes.
+  - **The charger.** Phone plugged in in the evening = praise and a time on
+    the bill. Unplugged after midnight = a jab.
+  - **A streak of clean nights** on the bill. Shame to break it.
 - **The night bill.** Every morning: _"3× Instagram (22 min) · 1× YouTube
   (25 min) · 61 min on the phone after midnight · phone down around 1:40"_.
   With commentary.
@@ -66,7 +83,8 @@ Get it done and you get praise. Snarky, but praise.
   water by default) - right from the block.
 - **Daily limit**, e.g. 60 minutes of social media. A heads-up 10 minutes
   before, jabs past the limit, the block after the third. Today shows a
-  _"42/60 min"_ counter, the report how many days you stayed within it.
+  _"42/60 min"_ counter (minus what the night took), the report how many days
+  you stayed within it.
 
 ## ◉ A cat that grows with you
 
@@ -104,6 +122,8 @@ Eight glasses of water? Spread evenly from morning to night.
 <div align="center">
 <img src="docs/screenshots/en/sheet.png" width="240" alt="Hold longer: +1, +2, +5 or a slider" />
 &nbsp;&nbsp;
+<img src="docs/screenshots/en/today-glitch.png" width="240" alt="Glitch Pixel theme" />
+&nbsp;&nbsp;
 <img src="docs/screenshots/en/today-light.png" width="240" alt="Light theme" />
 </div>
 
@@ -133,20 +153,31 @@ noon.
   the delay and a rotating line: a jab, your streak, progress, the limit,
   what's next), icons with a progress ring, and a list. You complete by
   holding, so an accidental tap breaks nothing.
-- **Widget settings** when you add one: background transparency to match your
-  wallpaper, and what the rotating line shows.
+- **Widget settings** when you add one: theme, background transparency to
+  match your wallpaper, and what the rotating line shows.
 - **Ongoing notification** with a progress bar, the plan and quick buttons:
   **"+1 glass"**, **"+15 min Read"**, **"✓ Brush"**.
 - **Evening review** of forbidden habits in one notification.
-- **Steps from Health Connect**: Google Fit, Samsung Health or Mi Fitness fill
-  them in for you.
+- **Steps from your band**: Mi Fitness (Xiaomi Smart Band), Google Fit,
+  Samsung Health or Garmin fill them in through Health Connect. You see how
+  many each source counted, pick one or "automatic", and **"Sync the band"**
+  opens Mi Fitness. A habit counted in thousands ("8 × 1000") links in one
+  tap, history included.
 
-## ◉ Polski i English, light or dark
+## ◉ Polski i English, nine themes
 
 The whole app, Szpila's jabs (yes, the swearing too), notifications and widgets
 speak **Polish and English**. Pick the language at first launch or any time in
-Settings. Theme: **dark, light or like your phone**. Settings are split into
-four tabs: Szpila, Guard, Notifications, Data.
+Settings.
+
+Themes: **Like the phone, Dark, Light, AMOLED, Glitch Pixel** (a pixel font and
+a magenta/cyan split), **Terminal, Ocean, Sunset and Sakura**. Widgets follow
+the app or get their own. Settings are split into four tabs: Szpila, Guard,
+Notifications, Data.
+
+<div align="center">
+<img src="docs/screenshots/en/themes.png" width="240" alt="Nine themes to pick from" />
+</div>
 
 <br />
 
@@ -174,8 +205,9 @@ or add your own from 20+ templates.
 | 🔔  | Allow notifications                                      | Jabs, progress bar, the night bill                                         |
 | 📱  | Settings → Guard → Automatic tracking → **Open**         | Night guard, night bill, mornings, daily limit                             |
 | 🛑  | Settings → Guard → Night guard → **Allow**               | Full-screen block after the 3rd jab                                        |
+| 🌙  | Settings → Guard → **Curfew**                            | After midnight only the alarm, calls and what you allow work               |
 | 🌅  | Settings → Guard → **Social media by day**               | Morning habits and the daily limit                                         |
-| 👣  | Settings → Guard → Automatic tracking → **Connect**      | Steps fill in by themselves                                                |
+| 👣  | Settings → Guard → Automatic tracking → **Connect**      | Band steps fill in by themselves (Mi Fitness: Profile → Health Connect)    |
 | 🔋  | System settings → Battery → Szpila → **No restrictions** | Jabs and the night guard arrive on time (especially Xiaomi, POCO, Samsung) |
 | ➕  | Long-press the home screen → **Widgets** → Szpila        | The cat always in sight                                                    |
 

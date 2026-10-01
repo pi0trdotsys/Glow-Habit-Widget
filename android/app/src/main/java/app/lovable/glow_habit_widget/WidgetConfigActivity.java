@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.RemoteViews;
 import android.widget.ScrollView;
@@ -37,8 +38,9 @@ import java.util.Set;
 /**
  * "Ustawienia widżetu": opened by the launcher when a widget is placed
  * (android:configure) and, on Android 12+, from the widget's long-press
- * "reconfigure". Picks the background transparency for any of the four widgets
- * and, for "Następne zadanie", which lines the rotating ticker cycles through.
+ * "reconfigure". Picks the palette (WidgetTheme - "like the app" by default) and the
+ * background transparency for any of the four widgets and, for "Następne zadanie",
+ * which lines the rotating ticker cycles through.
  * A live preview (the widget's real RemoteViews applied in-process) sits on the
  * actual wallpaper (Theme.Szpila.Config shows it through the preview strip).
  * Texts follow the app language from the snapshot (WidgetShared.en), not the
@@ -61,6 +63,9 @@ public class WidgetConfigActivity extends Activity {
     /** Background opacity 0..100 (the slider shows transparency = 100 - opacity). */
     private int opacity;
     private final Set<String> lines = new LinkedHashSet<>();
+    /** WidgetTheme choice: "app" (like the app) or a palette id. */
+    private String themeChoice = WidgetTheme.APP;
+    private final java.util.Map<String, View> themeChips = new java.util.HashMap<>();
     private boolean reverting;
 
     private LinearLayout previewRow;
@@ -99,6 +104,7 @@ public class WidgetConfigActivity extends Activity {
         res = localized(WidgetShared.en(this));
         opacity = WidgetPrefs.opacity(this, widgetId);
         lines.addAll(WidgetPrefs.lines(this, widgetId));
+        themeChoice = WidgetPrefs.theme(this, widgetId);
 
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(buildUi());
@@ -180,7 +186,10 @@ public class WidgetConfigActivity extends Activity {
         LinearLayout body = new LinearLayout(this);
         body.setOrientation(LinearLayout.VERTICAL);
         body.setPadding(dp(16), dp(16), dp(16), dp(8));
-        body.addView(opacityCard());
+        body.addView(themeCard());
+        LinearLayout.LayoutParams opLp = cardLp();
+        opLp.topMargin = dp(12);
+        body.addView(opacityCard(), opLp);
         if (kind == Kind.NEXT) {
             View ticker = tickerCard();
             LinearLayout.LayoutParams lp = cardLp();
@@ -231,6 +240,116 @@ public class WidgetConfigActivity extends Activity {
             default: return R.string.widget_szpila_label;
         }
     }
+
+    // ------------------------------------------------------------------ theme
+
+    private View themeCard() {
+        LinearLayout card = card();
+        boolean en = WidgetShared.en(this);
+        card.addView(text(WidgetShared.tr(this, "Motyw", "Theme"), 15, TEXT, true));
+        TextView hint = text(WidgetShared.tr(this,
+            "„Jak aplikacja” zmienia się razem z motywem aplikacji (Ustawienia → Szpila → Wygląd).",
+            "“Like the app” changes together with the app theme (Settings → Szpila → Appearance)."),
+            12, MUTED, false);
+        hint.setPadding(0, dp(4), 0, dp(10));
+        card.addView(hint);
+
+        HorizontalScrollView scroll = new HorizontalScrollView(this);
+        scroll.setHorizontalScrollBarEnabled(false);
+        scroll.setClipToPadding(false);
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        for (String id : WidgetTheme.CHOICES) {
+            View chip = themeChip(id, en);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(76), ViewGroup.LayoutParams.WRAP_CONTENT);
+            if (row.getChildCount() > 0) lp.setMarginStart(dp(8));
+            row.addView(chip, lp);
+            themeChips.put(id, chip);
+        }
+        scroll.addView(row);
+        card.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT));
+        markTheme();
+        // keep the chosen chip in view
+        scroll.post(() -> {
+            View on = themeChips.get(themeChoice);
+            if (on != null) scroll.scrollTo(Math.max(0, on.getLeft() - dp(24)), 0);
+        });
+        return card;
+    }
+
+    /** A mini widget in the palette (its real background) with "Aa", the accent and the avoid colour. */
+    private View themeChip(String id, boolean en) {
+        WidgetTheme t = WidgetTheme.forChoice(this, id);
+        LinearLayout chip = new LinearLayout(this);
+        chip.setOrientation(LinearLayout.VERTICAL);
+        chip.setGravity(Gravity.CENTER_HORIZONTAL);
+        chip.setPadding(dp(4), dp(4), dp(4), dp(6));
+        chip.setClickable(true);
+        chip.setFocusable(true);
+        chip.setContentDescription(WidgetTheme.name(id, en));
+
+        FrameLayout swatch = new FrameLayout(this);
+        int res = WidgetTheme.backgroundRes(t.id);
+        swatch.setBackgroundResource(res != 0 ? res : R.drawable.widget2_bg);
+        LinearLayout inner = new LinearLayout(this);
+        inner.setOrientation(LinearLayout.HORIZONTAL);
+        inner.setGravity(Gravity.CENTER_VERTICAL);
+        inner.setPadding(dp(8), 0, dp(8), 0);
+        TextView aa = text("Aa", 14, t.text, true);
+        inner.addView(aa, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        inner.addView(dot(t.accent));
+        View avoid = dot(t.avoid);
+        LinearLayout.LayoutParams aLp = new LinearLayout.LayoutParams(dp(8), dp(8));
+        aLp.setMarginStart(dp(3));
+        inner.addView(avoid, aLp);
+        swatch.addView(inner, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT));
+        if (WidgetTheme.APP.equals(id)) {
+            // "like the app": a small badge on the corner
+            TextView badge = text("A", 9, 0xFF14060A, true);
+            badge.setGravity(Gravity.CENTER);
+            badge.setBackground(rounded(MINT, dp(7), 0));
+            FrameLayout.LayoutParams bLp = new FrameLayout.LayoutParams(dp(14), dp(14), Gravity.TOP | Gravity.END);
+            bLp.setMargins(0, dp(3), dp(3), 0);
+            swatch.addView(badge, bLp);
+        }
+        chip.addView(swatch, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(44)));
+
+        TextView label = text(WidgetTheme.name(id, en), 12, TEXT, false);
+        label.setGravity(Gravity.CENTER);
+        label.setMaxLines(2);
+        label.setPadding(0, dp(5), 0, 0);
+        chip.addView(label, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        chip.setOnClickListener(v -> {
+            if (id.equals(themeChoice)) return;
+            themeChoice = id;
+            markTheme();
+            renderPreview();
+        });
+        return chip;
+    }
+
+    private View dot(int color) {
+        View v = new View(this);
+        v.setBackground(rounded(color, dp(4), 0));
+        v.setLayoutParams(new LinearLayout.LayoutParams(dp(8), dp(8)));
+        return v;
+    }
+
+    /** Outline the chosen chip (and tell TalkBack which one is selected). */
+    private void markTheme() {
+        for (java.util.Map.Entry<String, View> e : themeChips.entrySet()) {
+            boolean on = e.getKey().equals(themeChoice);
+            View chip = e.getValue();
+            chip.setSelected(on);
+            chip.setBackground(rounded(on ? 0x33FF4D5E : 0, dp(14), on ? RED : STROKE));
+        }
+    }
+
+    // ------------------------------------------------------------------ transparency
 
     private View opacityCard() {
         LinearLayout card = card();
@@ -342,22 +461,23 @@ public class WidgetConfigActivity extends Activity {
         if (previewRow == null) return;
         previewRow.removeAllViews();
         int wide = Math.min(dp(360), getResources().getDisplayMetrics().widthPixels - dp(48));
+        WidgetTheme theme = WidgetTheme.forChoice(this, themeChoice);
         try {
             switch (kind) {
                 case LIST:
-                    addPreview(HabitWidgetProvider.build(this, widgetId, opacity, true), wide, dp(170), 0);
+                    addPreview(HabitWidgetProvider.build(this, widgetId, opacity, theme, true), wide, dp(170), 0);
                     break;
                 case ICONS:
-                    addPreview(HabitWidget2Provider.build(this, widgetId, opacity), wide, dp(196), 0);
+                    addPreview(HabitWidget2Provider.build(this, widgetId, opacity, theme), wide, dp(196), 0);
                     break;
                 case SZPILA:
-                    addPreview(SzpilaWidgetProvider.build(this, opacity), wide, dp(84), 0);
+                    addPreview(SzpilaWidgetProvider.build(this, opacity, theme), wide, dp(84), 0);
                     break;
                 default:
                     NextWidgetContent.Content c = NextTaskWidgetProvider.content(this, lines);
                     int cell = dp(80);
-                    addPreview(NextTaskWidgetProvider.render(this, c, widgetId, false, opacity), cell, cell, 0);
-                    addPreview(NextTaskWidgetProvider.render(this, c, widgetId, true, opacity),
+                    addPreview(NextTaskWidgetProvider.render(this, c, widgetId, false, opacity, theme), cell, cell, 0);
+                    addPreview(NextTaskWidgetProvider.render(this, c, widgetId, true, opacity, theme),
                         Math.min(dp(210), wide - cell - dp(14)), cell, dp(14));
             }
         } catch (Exception e) {
@@ -378,7 +498,7 @@ public class WidgetConfigActivity extends Activity {
     // ------------------------------------------------------------------ save
 
     private void save() {
-        WidgetPrefs.save(this, widgetId, opacity, kind == Kind.NEXT ? lines : null);
+        WidgetPrefs.save(this, widgetId, opacity, kind == Kind.NEXT ? lines : null, themeChoice);
         AppWidgetManager mgr = AppWidgetManager.getInstance(this);
         try {
             switch (kind) {

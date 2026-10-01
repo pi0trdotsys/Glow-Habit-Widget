@@ -10,6 +10,7 @@ import { addDays } from "date-fns";
 import { useHabits } from "@/lib/habits/store";
 import { amountOn, isDueOn, kindOf, todayKey } from "@/lib/habits/utils";
 import type { Habit } from "@/lib/habits/types";
+import type { StepsSource } from "@/lib/steps";
 
 export interface StepsStatus {
   available: boolean;
@@ -20,7 +21,9 @@ export interface StepsStatus {
 interface SensorsPlugin {
   stepsStatus(): Promise<StepsStatus>;
   requestSteps(): Promise<StepsStatus>;
-  readSteps(): Promise<{ steps: number }>;
+  readSteps(opts?: { source?: string }): Promise<{ steps: number }>;
+  stepsSources(): Promise<{ sources: StepsSource[]; wearable?: { pkg: string; label: string } }>;
+  openApp(opts: { pkg: string }): Promise<void>;
   screenStatus(): Promise<{ granted: boolean }>;
   openUsageSettings(): Promise<void>;
   lateScreen(opts: { afterMin: number; days: number }): Promise<{
@@ -52,6 +55,12 @@ export interface NightReport {
   /** Minute of day the phone went down for the night, -1 = unknown. */
   asleep?: number;
   closed?: boolean;
+  /** Curfew: blocks shown, urgent passes taken, unplugs after the deadline. */
+  curfewBlocks?: number;
+  curfewPasses?: number;
+  unplugs?: number;
+  /** Minute of day the phone went on the charger that night, -1 = not seen. */
+  charged?: number;
 }
 
 const isNative = () => Capacitor.isNativePlatform();
@@ -97,6 +106,36 @@ export function lateBasisOf(h: Habit): "social" | "screen" {
   return h.lateBasis ?? "social";
 }
 
+/** Apps writing steps to Health Connect today (with counts) + the band app to open for a sync. */
+export async function stepsSources(): Promise<{
+  sources: StepsSource[];
+  wearable: { pkg: string; label: string } | null;
+}> {
+  if (!isNative()) return { sources: [], wearable: null };
+  try {
+    const r = await Native.stepsSources();
+    return { sources: r.sources ?? [], wearable: r.wearable ?? null };
+  } catch {
+    return { sources: [], wearable: null };
+  }
+}
+
+/** Open another app (Mi Fitness: the band syncs its steps to Health Connect). */
+export async function openApp(pkg: string): Promise<boolean> {
+  if (!isNative()) return false;
+  try {
+    await Native.openApp({ pkg });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Pull today's steps right now (e.g. after a source change or a band sync). */
+export async function syncStepsNow(): Promise<void> {
+  if (isNative()) await syncSteps().catch(() => {});
+}
+
 /** The minutes that judge a night: social media only (default) or any screen time. */
 export function nightMinutes(n: LateNight, basis: "social" | "screen"): number {
   if (basis === "social" && n.social != null) return n.social;
@@ -109,10 +148,10 @@ export function lateAfterMin(h: Habit): number {
 }
 
 async function syncSteps(): Promise<void> {
-  const { habits, completions, setAmount } = useHabits.getState();
+  const { habits, completions, setAmount, stepsSource } = useHabits.getState();
   const stepHabits = habits.filter((h) => kindOf(h) === "build" && h.source === "steps");
   if (stepHabits.length === 0) return;
-  const { steps } = await Native.readSteps();
+  const { steps } = await Native.readSteps({ source: stepsSource || "auto" });
   if (steps < 0) return;
   const today = new Date();
   for (const h of stepHabits) {

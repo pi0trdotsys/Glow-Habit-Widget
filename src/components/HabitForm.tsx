@@ -12,6 +12,9 @@ import { HabitIcon } from "./HabitIcon";
 import { AVOID_COLOR, HABIT_COLOR_VAR, HABIT_COLORS, HABIT_ICONS } from "@/lib/habits/colors";
 import { translateName, translateUnit } from "@/lib/habits/seed-names";
 import { getLang, L, pick } from "@/lib/i18n";
+import { useHabits } from "@/lib/habits/store";
+import { goalOf } from "@/lib/habits/utils";
+import { inThousands, stepsGoal } from "@/lib/steps";
 import type {
   GoalType,
   HabitSource,
@@ -220,6 +223,15 @@ export function HabitForm({
 
   const save = () => {
     if (!canSave) return;
+    // Linking a goal kept in thousands ("8" × 1000) to the band: scale its history to real steps too.
+    if (
+      initial &&
+      initial.source !== "steps" &&
+      source === "steps" &&
+      !avoid &&
+      inThousands(goalOf(initial))
+    )
+      useHabits.getState().linkSteps(initial.id);
     onSave({
       name: name.trim(),
       icon,
@@ -465,8 +477,8 @@ export function HabitForm({
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {L(
-                          "Ilość uzupełnia się sama z Google Fit / Samsung Health / Mi Fitness.",
-                          "Fills in by itself from Google Fit / Samsung Health / Mi Fitness.",
+                          "Ilość uzupełnia się sama z opaski (Mi Fitness), Google Fit, Samsung Health albo Garmina.",
+                          "Fills in by itself from your band (Mi Fitness), Google Fit, Samsung Health or Garmin.",
                         )}
                       </div>
                     </div>
@@ -490,6 +502,20 @@ export function HabitForm({
                             ),
                           );
                         setSource("steps");
+                        const g = {
+                          type: "count" as const,
+                          target: goalTarget,
+                          step: goalStep,
+                          unit: goalUnit,
+                        };
+                        if (inThousands(g)) {
+                          // "8" with unit "1000" -> 8000 steps
+                          const n = stepsGoal(g);
+                          setGoalTarget(n.target);
+                          setGoalStep(n.step ?? 1000);
+                          setGoalUnit(n.unit ?? "");
+                          return;
+                        }
                         if (!goalUnit) setGoalUnit(L("kroków", "steps"));
                         if (goalStep === 1 && goalTarget >= 1000) setGoalStep(1000);
                       }}

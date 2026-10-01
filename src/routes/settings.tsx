@@ -45,6 +45,8 @@ import {
 } from "@/lib/notifications";
 import { formatMinute } from "@/lib/habits/utils";
 import { L, pick } from "@/lib/i18n";
+import { StepsSources } from "@/components/StepsSources";
+import { CurfewCard } from "@/components/CurfewCard";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: L("Ustawienia - Szpila", "Settings - Szpila") }] }),
@@ -299,6 +301,8 @@ function SettingsPage() {
             <SensorsCard onMessage={setMsg} />
 
             <LiveGuardCard />
+
+            <CurfewCard />
 
             <DayGuardCard />
           </div>
@@ -698,6 +702,7 @@ function SensorsCard({ onMessage }: { onMessage: (m: string) => void }) {
           </button>
         )}
       </div>
+      {steps?.granted && <StepsSources onMessage={onMessage} />}
 
       <div className="mt-4 flex items-center gap-3">
         <PhoneOff size={18} className="shrink-0" style={{ color: "var(--avoid)" }} />

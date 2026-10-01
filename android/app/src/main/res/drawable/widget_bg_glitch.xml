@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Glitch Pixel widget background (WidgetTheme.backgroundRes): black with a white outline and
+     a magenta / cyan offset fringe, plus two "tear" bands. The ImageView is fitXY, so the
+     drawable gets the view's bounds as is (the fixed-size bands are not scaled). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- magenta copy shifted left, cyan copy shifted right -->
+    <item android:right="3dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FF2BD6" />
+            <corners android:radius="3dp" />
+        </shape>
+    </item>
+    <item android:left="3dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#14F0FF" />
+            <corners android:radius="3dp" />
+        </shape>
+    </item>
+    <!-- the widget itself: black, white outline -->
+    <item android:left="1.5dp" android:right="1.5dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#000000" />
+            <corners android:radius="3dp" />
+            <stroke android:width="1dp" android:color="#E6FFFFFF" />
+        </shape>
+    </item>
+    <!-- tear bands -->
+    <item android:gravity="top|end" android:top="10dp" android:right="16dp"
+        android:width="34dp" android:height="2dp">
+        <shape android:shape="rectangle"><solid android:color="#B3FF2BD6" /></shape>
+    </item>
+    <item android:gravity="bottom|start" android:bottom="9dp" android:left="20dp"
+        android:width="26dp" android:height="2dp">
+        <shape android:shape="rectangle"><solid android:color="#9914F0FF" /></shape>
+    </item>
+</layer-list>

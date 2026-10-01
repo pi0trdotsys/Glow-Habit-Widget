@@ -111,7 +111,7 @@ describe("daily limit", () => {
   test("the snapshot carries morning + day settings and their lines (DayGuard.java)", () => {
     const st = dayGuardState(n({ morningUntil: "10:30", dailyLimitMin: 45 }), habits, now);
     expect(st.morning).toEqual({ enabled: true, until: 630, habits: [teeth.id, water.id] });
-    expect(st.day).toEqual({ enabled: true, limit: 45 });
+    expect(st.day).toEqual({ enabled: true, limit: 45, debt: true });
     const live = liveState(n(), "hard", null, undefined, habits);
     expect(live.morning.habits).toEqual([teeth.id, water.id]);
     for (const k of ["morning", "morningDone", "dayOver", "dayEscalate", "dayWarn", "dayBlock"]) {

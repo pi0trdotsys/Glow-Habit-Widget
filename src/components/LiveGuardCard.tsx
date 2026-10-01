@@ -107,8 +107,8 @@ export function LiveGuardCard() {
           </div>
           <div className="text-xs text-muted-foreground">
             {L(
-              "Dalej siedzisz? Pełnoekranowy kot zasłania aplikację: „Idę spać” albo przytrzymaj 10 s, jeśli naprawdę musisz.",
-              "Still at it? A full-screen cat covers the app: tap “Going to bed” or hold for 10 s if you really must.",
+              "Dalej siedzisz? Pełnoekranowy kot zasłania aplikację: „Idę spać” albo przytrzymaj 10 s, jeśli naprawdę musisz. W trybie przed snem już po 2. szpili.",
+              "Still at it? A full-screen cat covers the app: tap “Going to bed” or hold for 10 s if you really must. In bedtime mode after the 2nd jab already.",
             )}
           </div>
         </div>

@@ -1,6 +1,17 @@
 import { useEffect, useRef } from "react";
 
 const COLORS = ["#ff4d5e", "#60e7b4", "#fdba2f", "#b180fc", "#55c4fe", "#ff7d9c", "#a9e85e"];
+/** Themes with their own confetti (the rest use the habit colours). */
+const THEMED: Record<string, string[]> = {
+  glitch: ["#ff2bd6", "#14f0ff", "#ffffff", "#ff2bd6", "#14f0ff"],
+  terminal: ["#3dff6e", "#9dff9d", "#1fd655", "#ffc24a"],
+  sakura: ["#e0457b", "#ff9cc0", "#ffd1e1", "#3fa883", "#c86bd8"],
+};
+
+/** Confetti colours for a theme id (html[data-theme]). */
+export function confettiColors(theme: string | undefined): string[] {
+  return (theme && THEMED[theme]) || COLORS;
+}
 
 export interface Piece {
   x: number;
@@ -14,7 +25,12 @@ export interface Piece {
 }
 
 /** A burst of pieces from the top centre (deterministic for a given random source - tests). */
-export function makePieces(n: number, width: number, rnd: () => number = Math.random): Piece[] {
+export function makePieces(
+  n: number,
+  width: number,
+  rnd: () => number = Math.random,
+  colors: string[] = COLORS,
+): Piece[] {
   return Array.from({ length: n }, () => ({
     x: width / 2 + (rnd() - 0.5) * width * 0.3,
     y: -10,
@@ -23,7 +39,7 @@ export function makePieces(n: number, width: number, rnd: () => number = Math.ra
     size: 5 + rnd() * 6,
     rot: rnd() * Math.PI,
     vr: (rnd() - 0.5) * 0.3,
-    color: COLORS[Math.floor(rnd() * COLORS.length)],
+    color: colors[Math.floor(rnd() * colors.length)],
   }));
 }
 
@@ -58,7 +74,12 @@ export function Confetti({ fire }: { fire: number }) {
     canvas.width = w * dpr;
     canvas.height = h * dpr;
     ctx.scale(dpr, dpr);
-    let pieces = makePieces(140, w);
+    let pieces = makePieces(
+      140,
+      w,
+      Math.random,
+      confettiColors(document.documentElement.dataset.theme),
+    );
     let raf = 0;
     const started = performance.now();
     const frame = () => {

@@ -26,6 +26,20 @@ import {
   EXTRA_SOFT,
   type ExtraCategory,
 } from "./szpila-extra";
+import {
+  HARD_27,
+  SOFT_27,
+  RAGE_SOFT_27,
+  ALL_DONE_27,
+  EVENING_27,
+  CAUGHT_27,
+  CAUGHT_SOCIAL_27,
+  MOTIVATE_27,
+  mergeLevels,
+} from "./szpila-27";
+import type { Lines27 } from "./szpila-27";
+import { HARD_27X, SOFT_27X } from "./szpila-27-extra";
+import { CTX_HARD, CTX_SOFT } from "./szpila-ctx";
 import { create } from "zustand";
 import { addDays } from "date-fns";
 import { L, isEn, plural } from "@/lib/i18n";
@@ -520,21 +534,28 @@ const EMPTY: Record<TauntLevel, string[]> = {
 };
 
 // Line tables per language, picked at call time (the language can change at runtime).
+// The 2.7 banks (szpila-27*.ts, szpila-ctx.ts) sit next to the original ones.
 const PL_T = {
   HARD,
   SOFT,
   RAGE_HARD,
   RAGE_SOFT,
-  CAUGHT,
-  CAUGHT_SOCIAL,
-  ALL_DONE,
-  EVENING,
+  CAUGHT: mergeLevels(CAUGHT, CAUGHT_27),
+  CAUGHT_SOCIAL: mergeLevels(CAUGHT_SOCIAL, CAUGHT_SOCIAL_27),
+  ALL_DONE: mergeLevels(ALL_DONE, ALL_DONE_27),
+  EVENING: mergeLevels(EVENING, EVENING_27),
   EMPTY,
   MORE_HARD,
   MORE_RAGE,
   MOTIVATE,
   EXTRA_HARD,
   EXTRA_SOFT,
+  X27: { ...HARD_27, ...HARD_27X } as Partial<Record<Category, Lines27>>,
+  S27: { ...SOFT_27, ...SOFT_27X } as Partial<Record<Category, Lines27>>,
+  RAGE_SOFT27: RAGE_SOFT_27,
+  M27: MOTIVATE_27,
+  CTX_H: CTX_HARD,
+  CTX_S: CTX_SOFT,
 };
 // English tables are a separate chunk, loaded only when the app is in English.
 let EN_T: typeof PL_T | null = null;
@@ -569,20 +590,44 @@ export function setHumor(humor: HumorId): void {
 }
 export const currentHumor = (): HumorId => activeHumor;
 
+const joinSlips = (...pools: (string[] | undefined)[]): string[] | undefined =>
+  pools.some(Boolean) ? pools.flatMap((p) => p ?? []) : undefined;
+
 function linesFor(h: Habit, level: TauntLevel): Lines {
   const t = T();
   const cat = categoryOf(h);
-  if (level === "soft") return isExtra(cat) ? t.EXTRA_SOFT[cat] : t.SOFT[cat];
+  if (level === "soft") {
+    const base: Lines = isExtra(cat) ? t.EXTRA_SOFT[cat] : t.SOFT[cat];
+    const x = t.S27[cat] ?? {};
+    return {
+      nag: [...base.nag, ...(x.nag ?? [])],
+      praise: [...base.praise, ...(x.praise ?? [])],
+      slip: joinSlips(base.slip, x.slip),
+    };
+  }
   const base: Lines = isExtra(cat) ? t.EXTRA_HARD[cat] : t.HARD[cat];
   const more = isExtra(cat) ? {} : (t.MORE_HARD[cat] ?? {});
-  const motivate = kindOf(h) === "avoid" ? t.MOTIVATE.avoid : t.MOTIVATE.build;
+  const x = t.X27[cat] ?? {};
+  const motivate =
+    kindOf(h) === "avoid"
+      ? [...t.MOTIVATE.avoid, ...t.M27.avoid]
+      : [...t.MOTIVATE.build, ...t.M27.build];
   return {
-    nag: withHumor([...base.nag, ...(more.nag ?? []), ...motivate], humorNag(h, activeHumor)),
+    nag: withHumor(
+      [...base.nag, ...(more.nag ?? []), ...(x.nag ?? []), ...motivate],
+      humorNag(h, activeHumor),
+    ),
     praise: withHumor(
-      [...base.praise, ...(more.praise ?? []), ...t.MOTIVATE.praise],
+      [
+        ...base.praise,
+        ...(more.praise ?? []),
+        ...(x.praise ?? []),
+        ...t.MOTIVATE.praise,
+        ...t.M27.praise,
+      ],
       humorLines(activeHumor).praise,
     ),
-    slip: base.slip || more.slip ? [...(base.slip ?? []), ...(more.slip ?? [])] : undefined,
+    slip: joinSlips(base.slip, more.slip, x.slip),
   };
 }
 
@@ -617,17 +662,20 @@ export function rageLines(h: Habit, level: TauntLevel, userName: string | null):
   const t = T();
   const cat = categoryOf(h);
   const fallback = kindOf(h) === "avoid" ? "avoidGeneric" : "generic";
+  const own = t.X27[cat]?.rage ?? [];
   const pool =
     level === "hard" && isExtra(cat)
-      ? [...t.EXTRA_HARD[cat].rage, ...t.MORE_RAGE[fallback]!]
+      ? [...t.EXTRA_HARD[cat].rage, ...own, ...t.MORE_RAGE[fallback]!]
       : level === "hard"
         ? [
             ...(t.RAGE_HARD[cat] ?? t.RAGE_HARD[fallback]!),
             ...(t.MORE_RAGE[cat] ?? t.MORE_RAGE[fallback] ?? []),
+            ...own,
           ]
-        : t.RAGE_SOFT;
+        : [...t.RAGE_SOFT, ...t.RAGE_SOFT27];
   // Build habits also get the motivating rage ("Dosyć tego. Wstajesz i robisz…").
-  const all = level === "hard" && kindOf(h) === "build" ? [...pool, ...t.MOTIVATE.rage] : pool;
+  const all =
+    level === "hard" && kindOf(h) === "build" ? [...pool, ...t.MOTIVATE.rage, ...t.M27.rage] : pool;
   return usable(all, h).map((l) => personal(l, h, userName));
 }
 
@@ -787,14 +835,113 @@ export function eveningLines(level: TauntLevel): string[] {
   return T().EVENING[level];
 }
 
+/** All praise lines for a habit (resolved). */
+export function praiseLines(h: Habit, level: TauntLevel, userName: string | null): string[] {
+  return linesFor(h, level).praise.map((l) => personal(l, h, userName));
+}
+
+/** All slip lines for an avoid habit (resolved). */
+export function slipLines(h: Habit, level: TauntLevel, userName: string | null): string[] {
+  const t = T();
+  const l = linesFor(h, level).slip ?? (level === "hard" ? t.HARD : t.SOFT).avoidGeneric.slip!;
+  return l.map((x) => personal(x, h, userName));
+}
+
 export function praiseFor(h: Habit, level: TauntLevel, userName: string | null): string {
-  return personal(pick(linesFor(h, level).praise), h, userName);
+  return pick(praiseLines(h, level, userName));
 }
 
 export function slipFor(h: Habit, level: TauntLevel, userName: string | null): string {
+  return pick(slipLines(h, level, userName));
+}
+
+// ---------------------------------------------------------------------------
+// Context-aware lines ("0 z 4 szklanek o 15:00", "zostało tylko…", evening, morning)
+// ---------------------------------------------------------------------------
+
+/** Situation of a pending habit right now - see contextRule(). */
+export type Ctx = "zero" | "almost" | "late" | "morning";
+
+export const CTX_KEYS: Ctx[] = ["zero", "almost", "late", "morning"];
+
+/**
+ * Thresholds of the context rule, in minutes of day / percent. Mirrored by
+ * HabitNotifier.contextOf() (CTX_* constants) - keep both in sync.
+ */
+export const CTX_RULES = {
+  morningFrom: 5 * 60,
+  morningUntil: 11 * 60,
+  zeroFrom: 14 * 60,
+  lateFrom: 19 * 60,
+  almostPct: 70,
+} as const;
+
+/** Chance (percent) that a jab uses the context pool: normal tier / rage tier. */
+export const CTX_CHANCE = { normal: 50, rage: 35 } as const;
+
+/**
+ * The pure context rule (mirrors HabitNotifier.contextOf):
+ *  - done build habit -> none;
+ *  - avoid habit: "morning" (05:00-11:00), "late" (19:00+), else none;
+ *  - build habit: "morning" when nothing is logged yet before 11:00, "almost" at
+ *    70%+ of the target, "late" from 19:00, "zero" when still nothing at 14:00+.
+ */
+export function contextRule(
+  avoid: boolean,
+  amount: number,
+  target: number,
+  nowMinute: number,
+): Ctx | null {
+  const r = CTX_RULES;
+  const morning = nowMinute >= r.morningFrom && nowMinute < r.morningUntil;
+  if (avoid) return nowMinute >= r.lateFrom ? "late" : morning ? "morning" : null;
+  if (amount >= target) return null;
+  if (amount <= 0 && morning) return "morning";
+  if (amount > 0 && amount * 100 >= target * r.almostPct) return "almost";
+  if (nowMinute >= r.lateFrom) return "late";
+  if (amount <= 0 && nowMinute >= r.zeroFrom) return "zero";
+  return null;
+}
+
+/** The situation of a habit with `amount` logged today, at `nowMinute` (minutes of day). */
+export function contextOf(h: Habit, amount: number, nowMinute: number): Ctx | null {
+  const avoid = kindOf(h) === "avoid";
+  return contextRule(avoid, avoid ? 0 : amount, avoid ? 1 : goalOf(h).target, nowMinute);
+}
+
+/**
+ * Lines for a situation: the category's own pool plus the generic one (avoid
+ * habits: avoidGeneric). Placeholders {done}/{left}/{target} left in, like nagLines.
+ */
+export function contextLines(
+  h: Habit,
+  level: TauntLevel,
+  userName: string | null,
+  ctx: Ctx,
+): string[] {
   const t = T();
-  const l = linesFor(h, level).slip ?? (level === "hard" ? t.HARD : t.SOFT).avoidGeneric.slip!;
-  return personal(pick(l), h, userName);
+  const table = level === "soft" ? t.CTX_S : t.CTX_H;
+  const cat = categoryOf(h);
+  const fallback = kindOf(h) === "avoid" ? "avoidGeneric" : "generic";
+  const lines = [
+    ...(cat === fallback ? [] : (table[cat]?.[ctx] ?? [])),
+    ...(table[fallback]?.[ctx] ?? []),
+  ];
+  // Strict for single-check habits: no amount lines at all (an empty pool falls back to nag/rage).
+  const counted = kindOf(h) === "avoid" || goalOf(h).type !== "check";
+  const ok = counted ? lines : lines.filter((l) => !/\{(left|done|target)\}/.test(l));
+  return ok.map((l) => personal(l, h, userName));
+}
+
+/** All context pools of a habit (widget snapshot row `ctx`, read by HabitNotifier.lineFor). */
+export function contextPools(
+  h: Habit,
+  level: TauntLevel,
+  userName: string | null,
+): Record<Ctx, string[]> {
+  const out = {} as Record<Ctx, string[]>;
+  for (const k of CTX_KEYS) out[k] = contextLines(h, level, userName, k);
+  return out;
 }
 
 export interface SzpilaSay {
@@ -832,7 +979,17 @@ export function szpilaNow(
   const top = plan[(seed ?? 0) % Math.min(plan.length, 2)] ?? plan[0];
   // Escalate for tasks overdue by 3h+ (same rule as the native jabs).
   const rage = escalationTier(minuteOfDay(now) - top.at) === 1;
-  const pool = rage ? rageLines(top.habit, level, userName) : nagLines(top.habit, level, userName);
+  // Situation lines ("zostało tylko…", evening, morning) win part of the time, like natively.
+  const ctx = contextOf(top.habit, top.amount, minuteOfDay(now));
+  const ctxPool = ctx ? contextLines(top.habit, level, userName, ctx) : [];
+  const roll = seed == null ? Math.floor(Math.random() * 100) : Math.abs(seed * 37) % 100;
+  const chance = rage ? CTX_CHANCE.rage : CTX_CHANCE.normal;
+  const pool =
+    ctxPool.length && roll < chance
+      ? ctxPool
+      : rage
+        ? rageLines(top.habit, level, userName)
+        : nagLines(top.habit, level, userName);
   const line = pick(pool, seed);
   return {
     text: fill(line, top.habit, top.amount),
