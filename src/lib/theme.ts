@@ -80,6 +80,7 @@ export function systemPrefersDark(): boolean | null {
 
 interface BarsPlugin {
   systemBars(opts: { light: boolean; background: string }): Promise<void>;
+  setAppIcon(opts: { theme: Theme }): Promise<unknown>;
 }
 const Native = registerPlugin<BarsPlugin>("HabitWidget");
 
@@ -97,9 +98,47 @@ export function applyTheme(theme: Theme): void {
   }
 }
 
-/** Keep the document in sync with the preference (and the OS, for "system"). Returns cleanup. */
-export function watchTheme(getPref: () => ThemePref): () => void {
-  const update = () => applyTheme(resolveTheme(getPref(), systemPrefersDark()));
+/**
+ * The launcher icon (Android, AppIcon.java) for the shown theme: its own icon while the icon
+ * follows the theme, otherwise the original one ("dark"). "system" is already resolved here.
+ */
+export function appIconFor(theme: Theme, follows: boolean): Theme {
+  return follows ? theme : "dark";
+}
+
+/**
+ * Tells the native side which launcher icon to show, only when it changes: while the setting
+ * is off nothing is sent except the one switch back to the original icon. Native only
+ * remembers it and switches once the app leaves the screen.
+ */
+export function createAppIconSync(send: (theme: Theme) => void) {
+  let last: Theme | null = null;
+  return (theme: Theme, follows: boolean) => {
+    const want = appIconFor(theme, follows);
+    if (want === last) return;
+    last = want;
+    send(want);
+  };
+}
+
+const syncAppIcon = createAppIconSync((theme) => {
+  if (Capacitor.isNativePlatform()) void Native.setAppIcon({ theme }).catch(() => {});
+});
+
+/**
+ * Keep the document in sync with the preference (and the OS, for "system"), and the launcher
+ * icon with the shown theme while `iconFollows()` is on. Returns cleanup.
+ */
+export function watchTheme(
+  getPref: () => ThemePref,
+  iconFollows: () => boolean = () => true,
+  icon: (theme: Theme, follows: boolean) => void = syncAppIcon,
+): () => void {
+  const update = () => {
+    const theme = resolveTheme(getPref(), systemPrefersDark());
+    applyTheme(theme);
+    icon(theme, iconFollows());
+  };
   update();
   if (typeof window === "undefined" || !window.matchMedia) return () => {};
   const mq = window.matchMedia("(prefers-color-scheme: light)");

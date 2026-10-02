@@ -18,6 +18,29 @@ public class MainActivity extends BridgeActivity {
                 onBack(this);
             }
         });
+        // An icon switch that never got applied (e.g. the app was killed while in front).
+        if (savedInstanceState == null) applyAppIcon();
+    }
+
+    /**
+     * The launcher icon follows the theme (AppIcon): the web app only stores the wanted icon,
+     * it is switched here once the app has left the screen - launchers may kill or refresh
+     * the app when launcher components change.
+     */
+    @Override
+    public void onStop() {
+        super.onStop();
+        applyAppIcon();
+    }
+
+    private void applyAppIcon() {
+        android.content.Context app = getApplicationContext();
+        new Thread(() -> {
+            try {
+                AppIcon.applyPending(app);
+            } catch (Exception ignored) {
+            }
+        }, "app-icon").start();
     }
 
     /**

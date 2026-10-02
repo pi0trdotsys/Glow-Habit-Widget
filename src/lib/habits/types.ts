@@ -66,6 +66,7 @@ export interface Habit {
   /**
    * Automatic tracking. "steps": build count habit filled from Health Connect.
    * "screen": avoid habit judged from late-night screen time (usage access).
+   * "kropi": build count habit in ml, filled from the Kropi hydration app.
    */
   source?: HabitSource;
   /** source "screen": screen use after this time ("HH:mm") counts as late. */
@@ -79,7 +80,7 @@ export interface Habit {
   lateBasis?: "social" | "screen";
 }
 
-export type HabitSource = "steps" | "screen";
+export type HabitSource = "steps" | "screen" | "kropi";
 
 export interface Completion {
   habitId: string;

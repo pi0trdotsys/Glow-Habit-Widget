@@ -177,6 +177,8 @@ Brak potwierdzenia = wpadka. Wczoraj rozliczysz jeszcze rano, do 12:00.
 - **Stałe powiadomienie** z paskiem postępu, planem i szybkimi przyciskami:
   **„+1 szklanka”**, **„+15 min Czytanie”**, **„✓ Mycie”**.
 - **Wieczorne rozliczenie** zakazanych jednym powiadomieniem.
+- **Woda z Kropi**: wodę logujesz tylko w [Kropi](https://github.com/pi0trdotsys/Hydration-Buddy), a ml i cel trafiają do Szpili same, od razu po wpisie. Przytrzymanie wody w Szpili dolewa w Kropi.
+- **Zakazane nigdy nie lądują na widżecie**: ekran główny widzi każdy, więc widżety pokazują tylko zadania do zrobienia.
 - **Kroki z opaski**: Mi Fitness (Xiaomi Smart Band), Google Fit, Samsung
   Health czy Garmin wpisują je za ciebie przez Health Connect. Widzisz, ile
   naliczyło każde źródło, wybierasz jedno albo „automatycznie”, a przycisk
@@ -191,7 +193,7 @@ w każdej chwili w Ustawieniach.
 
 Motywy: **Jak telefon, Ciemny, Jasny, AMOLED, Glitch Pixel** (pikselowa
 czcionka i rozszczepienie magenta/cyjan), **Terminal, Ocean, Zachód i
-Sakura**. Widżety biorą motyw aplikacji albo każdy swój. Ustawienia są
+Sakura**. Ikona aplikacji zmienia się razem z motywem. Widżety biorą motyw aplikacji albo każdy swój. Ustawienia są
 podzielone na cztery zakładki: Szpila, Strażnik, Powiadomienia, Dane.
 
 <div align="center">

@@ -385,6 +385,9 @@ await check("hold a tile longer: the quick amount sheet, +5 adds five glasses", 
   await page.waitFor(`!(${splashVisible})`, 5000); // the splash would catch the press
   const before = await page.eval<number>(waterAmount);
   const c = await centre('[data-tile="water"]');
+  const headBefore = await page.eval<string>(
+    `(() => { const c = document.querySelector('[data-tile="water"] [data-progress-head]'); return c ? c.getAttribute("cx") + "," + c.getAttribute("cy") : ""; })()`,
+  );
   await mouse("mousePressed", c.x, c.y);
   await sleep(2700); // past the +1 (1.2 s) to the sheet (2.4 s)
   await mouse("mouseReleased", c.x, c.y);
@@ -395,6 +398,12 @@ await check("hold a tile longer: the quick amount sheet, +5 adds five glasses", 
   await page.waitFor(`!document.querySelector("[data-quick-sheet]")`);
   const after = await page.eval<number>(waterAmount);
   assert(after === before + 5, `${before} -> ${after}`);
+  // the progress dot rides the end of the arc and moved with the amount
+  const headAt = await page.eval<string>(
+    `(() => { const c = document.querySelector('[data-tile="water"] [data-progress-head]'); return c ? c.getAttribute("cx") + "," + c.getAttribute("cy") : ""; })()`,
+  );
+  assert(headAt !== "", "no progress dot on the water tile");
+  assert(headAt !== headBefore, `the progress dot didn't move: ${headBefore} -> ${headAt}`);
 });
 
 await check("the sheet's slider + Ustaw sets an exact amount; Back closes it", async () => {

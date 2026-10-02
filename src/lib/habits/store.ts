@@ -8,6 +8,7 @@ import { detectLang, getLang, L, setLang, type Lang } from "@/lib/i18n";
 import { isThemePref, type ThemePref } from "@/lib/theme";
 import { translateHabit } from "./seed-names";
 import { linkStepsPatch } from "@/lib/steps";
+import { linkKropiPatch, type KropiDay } from "@/lib/kropi";
 import { normalizeWishlist, wishReady, type WishItem } from "@/lib/shop";
 import { weekKey, type WeeklyFocus } from "./focus";
 import { goalOf, kindOf, minuteOfDay, todayKey } from "./utils";
@@ -133,6 +134,9 @@ interface HabitsState {
   /** Light / dark / like the phone. */
   theme: ThemePref;
   setTheme: (t: ThemePref) => void;
+  /** Android: the launcher icon matches the theme (off = the original icon). */
+  iconFollowsTheme: boolean;
+  setIconFollowsTheme: (on: boolean) => void;
   notifications: NotificationSettings;
   setNotifications: (n: NotificationSettings) => void;
   /** "Cel tygodnia": one habit that gets the most attention this week. */
@@ -144,6 +148,10 @@ interface HabitsState {
   setStepsSource: (source: string) => void;
   /** Fill a habit from the band's steps (source "steps"; a goal in thousands becomes real steps). */
   linkSteps: (habitId: string) => void;
+  /** Fill a water habit from Kropi (source "kropi", ml; history from Kropi's days). */
+  linkKropi: (habitId: string, days: KropiDay[]) => void;
+  /** Back to logging by hand (the ml goal stays). */
+  unlinkKropi: (habitId: string) => void;
   /** Daily automatic backup to Download/Szpila (Android). */
   autoBackup: boolean;
   setAutoBackup: (on: boolean) => void;
@@ -319,6 +327,24 @@ export const useHabits = create<HabitsState>()(
         }),
       stepsSource: "auto",
       setStepsSource: (source) => set({ stepsSource: source || "auto" }),
+      linkKropi: (habitId, days) =>
+        set((s) => {
+          const h = s.habits.find((x) => x.id === habitId);
+          if (!h || kindOf(h) === "avoid") return {};
+          const p = linkKropiPatch(h, s.completions, days);
+          return {
+            habits: s.habits.map((x) =>
+              x.id === habitId ? { ...x, source: "kropi" as const, goal: p.goal } : x,
+            ),
+            completions: p.completions,
+          };
+        }),
+      unlinkKropi: (habitId) =>
+        set((s) => ({
+          habits: s.habits.map((x) =>
+            x.id === habitId && x.source === "kropi" ? { ...x, source: undefined } : x,
+          ),
+        })),
       linkSteps: (habitId) =>
         set((s) => {
           const h = s.habits.find((x) => x.id === habitId);
@@ -333,6 +359,8 @@ export const useHabits = create<HabitsState>()(
         }),
       theme: "system",
       setTheme: (t) => set({ theme: t }),
+      iconFollowsTheme: true,
+      setIconFollowsTheme: (on) => set({ iconFollowsTheme: on }),
       language: detectLang(),
       setLanguage: (lang) =>
         set((s) => ({
@@ -547,6 +575,7 @@ export const useHabits = create<HabitsState>()(
           szpila: s.szpila,
           language: s.language,
           theme: s.theme,
+          iconFollowsTheme: s.iconFollowsTheme,
           habits: s.habits,
           completions: s.completions,
         });
@@ -565,6 +594,7 @@ export const useHabits = create<HabitsState>()(
           wishlist: unknown;
           focus: WeeklyFocus | null;
           szpila: Partial<SzpilaLook>;
+          iconFollowsTheme: boolean;
         }>;
         const valid =
           Array.isArray(data.habits) &&
@@ -588,6 +618,8 @@ export const useHabits = create<HabitsState>()(
           nightHits:
             data.nightHits && typeof data.nightHits === "object" ? data.nightHits : s.nightHits,
           szpila: data.szpila ? { ...defaultLook, ...data.szpila } : s.szpila,
+          iconFollowsTheme:
+            typeof data.iconFollowsTheme === "boolean" ? data.iconFollowsTheme : s.iconFollowsTheme,
           nightReports:
             data.nightReports && typeof data.nightReports === "object"
               ? data.nightReports
@@ -670,6 +702,7 @@ export const useHabits = create<HabitsState>()(
           daySocial: p.daySocial ?? {},
           // A palette this version does not know (e.g. from a newer backup) = like the phone.
           theme: isThemePref(p.theme) ? p.theme : "system",
+          iconFollowsTheme: typeof p.iconFollowsTheme === "boolean" ? p.iconFollowsTheme : true,
           stepsSource: p.stepsSource || "auto",
           wishlist: normalizeWishlist(p.wishlist),
           focus: p.focus ?? null,

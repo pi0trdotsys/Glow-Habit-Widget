@@ -75,6 +75,21 @@ public class HabitWidgetPlugin extends Plugin {
         call.resolve();
     }
 
+    /**
+     * Launcher icon for a theme: { theme: "glitch" } (unknown = dark). Only remembered here -
+     * MainActivity switches it once the app leaves the screen (AppIcon). Resolves
+     * { pending, active }.
+     */
+    @PluginMethod
+    public void setAppIcon(PluginCall call) {
+        String theme = AppIcon.normalize(call.getString("theme", AppIcon.DEFAULT));
+        AppIcon.setPending(getContext(), theme);
+        JSObject r = new JSObject();
+        r.put("pending", theme);
+        r.put("active", AppIcon.active(getContext()));
+        call.resolve(r);
+    }
+
     @PluginMethod
     public void refresh(PluginCall call) {
         WidgetShared.updateAll(getContext());
@@ -363,6 +378,41 @@ public class HabitWidgetPlugin extends Plugin {
             ret.put("wearable", o);
         }
         call.resolve(ret);
+    }
+
+    // ------------------------------------------------------------------
+    // Water from Kropi
+    // ------------------------------------------------------------------
+
+    @PluginMethod
+    public void kropiStatus(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("installed", Kropi.installed(getContext()));
+        ret.put("granted", Kropi.granted(getContext()));
+        call.resolve(ret);
+    }
+
+    /** Kropi's days, today first: { days: [{date, ml, goal}] }. */
+    @PluginMethod
+    public void kropiDays(PluginCall call) {
+        JSArray list = new JSArray();
+        for (Kropi.Day d : Kropi.days(getContext())) {
+            JSObject o = new JSObject();
+            o.put("date", d.date);
+            o.put("ml", d.ml);
+            o.put("goal", d.goal);
+            list.put(o);
+        }
+        JSObject ret = new JSObject();
+        ret.put("days", list);
+        call.resolve(ret);
+    }
+
+    /** Opens Kropi's quick add (adds a glass there; Kropi reports back). */
+    @PluginMethod
+    public void kropiAdd(PluginCall call) {
+        if (Kropi.quickAdd(getContext())) call.resolve();
+        else call.reject("Kropi not installed");
     }
 
     /** Opens another app by package (e.g. Mi Fitness, so the band syncs its steps). */

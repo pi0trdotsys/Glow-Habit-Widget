@@ -109,6 +109,7 @@ final class HabitNotifier {
         try {
             ensureChannels(c);
             WidgetShared.syncSteps(c);
+            WidgetShared.syncWater(c, Kropi.today(c));
             checkLateScreen(c);
             maybeTaunt(c);
             maybeReview(c);
@@ -202,6 +203,10 @@ final class HabitNotifier {
     // ------------------------------------------------------------------
 
     private static PendingIntent action(Context c, String action, String habitId, int cancelId, int req) {
+        // Water from Kropi: the button opens Kropi's quick add (it reports back to us).
+        if (ACTION_DO_NEXT.equals(action) && habitId != null && Kropi.isKropi(WidgetShared.row(c, habitId))) {
+            return PendingIntent.getActivity(c, req, Kropi.addIntent(), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        }
         Intent i = new Intent(c, NotifierReceiver.class);
         i.setAction(action);
         if (habitId != null) i.putExtra(WidgetShared.EXTRA_HABIT_ID, habitId);
@@ -214,6 +219,7 @@ final class HabitNotifier {
         if (WidgetShared.isAvoid(h)) return en ? "Clean today" : "Dziś czysto";
         if ("check".equals(h.optString("goal", "check"))) return en ? "Done" : "Zrobione";
         if ("steps".equals(h.optString("source"))) return en ? "Refresh steps" : "Odśwież kroki";
+        if (Kropi.isKropi(h)) return en ? "💧 Add in Kropi" : "💧 Dolej w Kropi";
         int step = Math.min(WidgetShared.step(h), WidgetShared.target(h) - WidgetShared.amount(h));
         return ("+" + step + " " + WidgetShared.unit(h, step)).trim();
     }
@@ -239,6 +245,7 @@ final class HabitNotifier {
      * English; names and units already come from the snapshot in the right language.
      */
     static String quickLabel(JSONObject h, boolean en) {
+        if (Kropi.isKropi(h)) return "💧 Kropi";
         String first = h.optString("name").trim().split("\\s+")[0];
         String goal = h.optString("goal", "check");
         if ("check".equals(goal)) return "✓ " + first;

@@ -169,7 +169,7 @@ public class SzpilaWidgetProvider extends AppWidgetProvider {
         int mood;
         JSONObject target = null;
         boolean en = WidgetShared.en(c);
-        if (WidgetShared.habits(c).length() == 0) {
+        if (WidgetShared.widgetHabits(c).length() == 0) {
             raw = en ? "Mrrr. Add some habits in the app and I'll start picking on you."
                 : "Mrrr. Dodaj zadania w Loop, a zacznę się czepiać.";
             mood = 0;

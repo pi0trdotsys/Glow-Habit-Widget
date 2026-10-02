@@ -63,7 +63,7 @@ public class HabitRemoteViewsFactory implements RemoteViewsService.RemoteViewsFa
     public void onDataSetChanged() {
         items.clear();
         theme = WidgetTheme.forWidget(context, widgetId);
-        JSONArray habits = WidgetShared.habits(context);
+        JSONArray habits = WidgetShared.widgetHabits(context);
         for (int i = 0; i < habits.length(); i++) {
             items.add(habits.optJSONObject(i));
         }

@@ -141,6 +141,46 @@ final class WidgetShared {
     }
 
     /** Rows that count toward today's totals (see counts). */
+    /**
+     * Home-screen widgets never show forbidden ("avoid") habits - the screen is
+     * visible to anyone, and some of those habits are personal. Build rows only.
+     */
+    static JSONArray withoutAvoid(JSONArray a) {
+        JSONArray out = new JSONArray();
+        if (a == null) return out;
+        for (int i = 0; i < a.length(); i++) {
+            JSONObject h = a.optJSONObject(i);
+            if (h != null && !isAvoid(h)) out.put(h);
+        }
+        return out;
+    }
+
+    static JSONArray widgetHabits(Context c) {
+        return withoutAvoid(habits(c));
+    }
+
+    /** plan() without forbidden habits, for widgets. */
+    static java.util.List<JSONObject> widgetPlan(Context c) {
+        java.util.List<JSONObject> out = new java.util.ArrayList<>();
+        for (JSONObject h : plan(c)) if (!isAvoid(h)) out.add(h);
+        return out;
+    }
+
+    /** countedTotal / doneCount over the widget rows only. */
+    static int widgetTotal(Context c) {
+        JSONArray h = widgetHabits(c);
+        int n = 0;
+        for (int i = 0; i < h.length(); i++) if (counts(h.optJSONObject(i))) n++;
+        return n;
+    }
+
+    static int widgetDone(Context c) {
+        JSONArray h = widgetHabits(c);
+        int d = 0;
+        for (int i = 0; i < h.length(); i++) if (isDone(h.optJSONObject(i))) d++;
+        return d;
+    }
+
     static int countedTotal(Context c) {
         JSONArray h = habits(c);
         int n = 0;
@@ -495,6 +535,11 @@ final class WidgetShared {
      */
     static void applyTap(Context context, String habitId, boolean forwardOnly) {
         JSONObject row = row(context, habitId);
+        // Water from Kropi: log it there (one place to log) - Kropi tells us back.
+        if (Kropi.isKropi(row) && Kropi.installed(context)) {
+            Kropi.quickAdd(context);
+            return;
+        }
         if (row != null && "steps".equals(row.optString("source")) && HealthSteps.available(context)
                 && syncSteps(context)) {
             return;
@@ -539,6 +584,22 @@ final class WidgetShared {
             h.put("done", true);
             return new JSONObject().put("status", "clean");
         });
+    }
+
+    /** Kropi's day into the "kropi" habits (amount = ml, target = Kropi's goal). True if anything changed. */
+    static boolean syncWater(Context context, Kropi.Day day) {
+        if (day == null) return false;
+        boolean any = false;
+        JSONArray a = habits(context);
+        for (int i = 0; i < a.length(); i++) if (Kropi.isKropi(a.optJSONObject(i))) any = true;
+        if (!any) return false;
+        final boolean[] changed = {false};
+        edit(context, null, (h, date) -> {
+            if (!Kropi.applyTo(h, date, day)) return null;
+            changed[0] = true;
+            return new JSONObject().put("amount", h.optInt("amount"));
+        });
+        return changed[0];
     }
 
     /** Pulls today's steps from Health Connect into habits with source "steps". */

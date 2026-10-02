@@ -175,6 +175,8 @@ noon.
 - **Ongoing notification** with a progress bar, the plan and quick buttons:
   **"+1 glass"**, **"+15 min Read"**, **"✓ Brush"**.
 - **Evening review** of forbidden habits in one notification.
+- **Water from Kropi**: log water only in [Kropi](https://github.com/pi0trdotsys/Hydration-Buddy); the ml and the goal reach Szpila by themselves, right after each entry. Holding water in Szpila adds it in Kropi.
+- **Forbidden habits never land on a widget**: anyone can see the home screen, so widgets only show habits to do.
 - **Steps from your band**: Mi Fitness (Xiaomi Smart Band), Google Fit,
   Samsung Health or Garmin fill them in through Health Connect. You see how
   many each source counted, pick one or "automatic", and **"Sync the band"**
@@ -188,7 +190,7 @@ speak **Polish and English**. Pick the language at first launch or any time in
 Settings.
 
 Themes: **Like the phone, Dark, Light, AMOLED, Glitch Pixel** (a pixel font and
-a magenta/cyan split), **Terminal, Ocean, Sunset and Sakura**. Widgets follow
+a magenta/cyan split), **Terminal, Ocean, Sunset and Sakura**. The app icon changes with the theme. Widgets follow
 the app or get their own. Settings are split into four tabs: Szpila, Guard,
 Notifications, Data.
 

@@ -96,10 +96,10 @@ public class NextTaskWidgetProvider extends AppWidgetProvider {
         JSONObject state = WidgetShared.state(c);
         in.en = WidgetShared.en(c);
         in.now = WidgetShared.nowMinute();
-        in.plan = WidgetShared.plan(c);
-        in.total = WidgetShared.habits(c).length();
-        in.counted = WidgetShared.countedTotal(c);
-        in.done = WidgetShared.doneCount(c);
+        in.plan = WidgetShared.widgetPlan(c); // never forbidden habits on the home screen
+        in.total = WidgetShared.widgetHabits(c).length();
+        in.counted = WidgetShared.widgetTotal(c);
+        in.done = WidgetShared.widgetDone(c);
         JSONObject forma = state.optJSONObject("forma");
         if (forma != null) {
             in.formaCurrent = forma.optInt("current", 0);

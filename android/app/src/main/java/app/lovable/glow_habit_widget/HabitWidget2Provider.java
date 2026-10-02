@@ -60,9 +60,9 @@ public class HabitWidget2Provider extends AppWidgetProvider {
         rv.setTextColor(R.id.widget2_timeleft, theme.accent);
         rv.setTextColor(R.id.widget2_empty, theme.muted);
 
-        JSONArray habits = WidgetShared.habits(context);
-        int total = WidgetShared.countedTotal(context);
-        int done = WidgetShared.doneCount(context);
+        JSONArray habits = WidgetShared.widgetHabits(context);
+        int total = WidgetShared.widgetTotal(context);
+        int done = WidgetShared.widgetDone(context);
         int n = Math.min(habits.length(), MAX_CELLS); // every row gets a cell; `total` only drives the ring
 
         rv.setImageViewBitmap(R.id.widget2_ring, WidgetShared.progressRing(context, done, total, theme));

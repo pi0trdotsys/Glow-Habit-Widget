@@ -25,6 +25,9 @@ import { SZPILA_EMOJI, praiseFor } from "@/lib/habits/szpila";
 import { minimumLabel, minimumOf, rescueOn } from "@/lib/habits/rescue";
 import { focusHabit } from "@/lib/habits/focus";
 import { focusPraise, minimumPraise } from "@/lib/habits/chain";
+import { ringMarks, ringPoint } from "@/lib/habits/ring";
+import { isKropi, kropiAdd } from "@/lib/kropi";
+import { syncKropiNow } from "@/lib/sensors";
 import { L } from "@/lib/i18n";
 
 interface Props {
@@ -56,7 +59,9 @@ export function HabitTile({ habit, compact = false }: Props) {
   const undoLast = useHabits((s) => s.undoLast);
   const streak = currentStreak(habit, completions);
   const [sheet, setSheet] = useState(false);
-  const quick = hasQuickAmounts(habit) && habit.source !== "steps";
+  // Water from Kropi is logged in Kropi (one place to log): no amount sheet here.
+  const fromKropi = isKropi(habit);
+  const quick = hasQuickAmounts(habit) && habit.source !== "steps" && !fromKropi;
   const toastId = `tile-${habit.id}`;
   const avoid = kindOf(habit) === "avoid";
   const color = avoid ? AVOID_COLOR : HABIT_COLOR_VAR[habit.color];
@@ -90,6 +95,13 @@ export function HabitTile({ habit, compact = false }: Props) {
       : undefined,
     // Swipe sideways: undo the last entry.
     onSwipe: () => {
+      if (fromKropi) {
+        toast(L("Wodę cofniesz w Kropi.", "Undo the water in Kropi."), {
+          id: toastId,
+          duration: 2200,
+        });
+        return;
+      }
       const back = undoLast(habit.id, key);
       if (back == null) {
         toast(L("Nie ma czego cofnąć", "Nothing to undo"), { id: toastId, duration: 1800 });
@@ -115,6 +127,18 @@ export function HabitTile({ habit, compact = false }: Props) {
         pop();
         haptic("success");
         praiseToast(habit, () => setAvoid(habit.id, key, prev === "slip" ? "slip" : null));
+        return;
+      }
+      if (fromKropi) {
+        void kropiAdd().then((ok) => {
+          if (!ok) {
+            toast(L("Nie widzę Kropi na telefonie.", "Kropi isn't installed."), { id: toastId });
+            return;
+          }
+          haptic("tick");
+          // Kropi adds a glass and tells us back; pull it in shortly after.
+          setTimeout(() => void syncKropiNow(), 1500);
+        });
         return;
       }
       const before = amount;
@@ -172,6 +196,7 @@ export function HabitTile({ habit, compact = false }: Props) {
   // While holding, preview the next step on top of what's already logged.
   const stepFrac = avoid || done ? 1 - fraction : Math.min(1 - fraction, g.step / g.target);
   const ringProgress = done && !isHolding ? 1 : fraction + stepFrac * progress;
+  const marks = ringMarks({ progress: ringProgress, amount, target: g.target, min, done, avoid });
 
   const sub = avoid
     ? status === "clean"
@@ -184,7 +209,7 @@ export function HabitTile({ habit, compact = false }: Props) {
     : rescue && min > 0 && amount < min
       ? `🛟 ${L("ratunek: min.", "rescue: min.")} ${minimumLabel(habit)}`
       : g.type !== "check"
-        ? amountText(habit, amount)
+        ? `${fromKropi ? "💧 " : ""}${amountText(habit, amount)}`
         : streak > 0
           ? `🔥 ${daysLabel(streak)}`
           : L("Przytrzymaj, by zaliczyć", "Hold to complete");
@@ -233,16 +258,30 @@ export function HabitTile({ habit, compact = false }: Props) {
             strokeDashoffset={c * (1 - ringProgress)}
             style={{ transition: isHolding ? "none" : "stroke-dashoffset 250ms ease-out" }}
           />
-          {/* the minimum version: a notch on the ring */}
-          {!avoid && min > 0 && !done && !compact && (
-            <circle
+          {/* the minimum version: a thin tick until it's reached */}
+          {marks.minTick != null && !compact && (
+            <line
               data-min-notch
-              cx={size / 2 + r * Math.cos((2 * Math.PI * min) / g.target)}
-              cy={size / 2 + r * Math.sin((2 * Math.PI * min) / g.target)}
+              x1={ringPoint(size, r - stroke / 2 - 1, marks.minTick).x}
+              y1={ringPoint(size, r - stroke / 2 - 1, marks.minTick).y}
+              x2={ringPoint(size, r + stroke / 2 + 1, marks.minTick).x}
+              y2={ringPoint(size, r + stroke / 2 + 1, marks.minTick).y}
+              stroke="var(--muted-foreground)"
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+          )}
+          {/* the progress head rides the end of the arc (moves with auto steps / water too) */}
+          {marks.head != null && (
+            <circle
+              data-progress-head
+              cx={ringPoint(size, r, marks.head).x}
+              cy={ringPoint(size, r, marks.head).y}
               r={stroke / 2 + 1.5}
-              fill={amount >= min ? color : "var(--muted-foreground)"}
+              fill={color}
               stroke="var(--background)"
               strokeWidth={1.5}
+              style={{ transition: isHolding ? "none" : "cx 250ms ease-out, cy 250ms ease-out" }}
             />
           )}
         </svg>

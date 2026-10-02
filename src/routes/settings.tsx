@@ -47,6 +47,7 @@ import {
 import { formatMinute } from "@/lib/habits/utils";
 import { L, pick } from "@/lib/i18n";
 import { StepsSources } from "@/components/StepsSources";
+import { KropiSource } from "@/components/KropiSource";
 import { CurfewCard } from "@/components/CurfewCard";
 import { ShopGuardCard } from "@/components/ShopGuardCard";
 
@@ -707,6 +708,7 @@ function SensorsCard({ onMessage }: { onMessage: (m: string) => void }) {
         )}
       </div>
       {steps?.granted && <StepsSources onMessage={onMessage} />}
+      <KropiSource onMessage={onMessage} />
 
       {steps?.available && steps.sleep != null && (
         <div className="mt-4 flex items-center gap-3" data-sleep-sensor>

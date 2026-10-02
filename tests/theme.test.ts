@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
+  appIconFor,
+  createAppIconSync,
   isLightTheme,
   isThemePref,
   resolveTheme,
@@ -7,7 +9,9 @@ import {
   THEME_BOOT,
   THEME_META,
   THEMES,
+  watchTheme,
   type Theme,
+  type ThemePref,
 } from "@/lib/theme";
 import { useHabits } from "@/lib/habits/store";
 import { themeFields } from "@/lib/widget/bridge";
@@ -162,5 +166,82 @@ describe("theme model", () => {
     expect(confettiColors("dark")).toEqual(confettiColors(undefined));
     const pieces = makePieces(30, 400, Math.random, confettiColors("glitch"));
     expect(pieces.every((p) => confettiColors("glitch").includes(p.color))).toBe(true);
+  });
+});
+
+describe("launcher icon follows the theme", () => {
+  /** Runs watchTheme like __root does and records what goes to the native setAppIcon. */
+  const sent: Theme[] = [];
+  const icon = createAppIconSync((t) => sent.push(t));
+  const watch = (pref: ThemePref, follows: boolean) =>
+    watchTheme(
+      () => pref,
+      () => follows,
+      icon,
+    )();
+  const withSystem = (light: boolean, fn: () => void) => {
+    const g = globalThis as { matchMedia?: unknown };
+    const before = g.matchMedia;
+    g.matchMedia = () => ({ matches: light, addEventListener() {}, removeEventListener() {} });
+    try {
+      fn();
+    } finally {
+      g.matchMedia = before;
+    }
+  };
+
+  test("setting: on by default, backfilled by the merge, in backups", () => {
+    const s = useHabits.getState();
+    expect(s.iconFollowsTheme).toBe(true);
+    const merge = useHabits.persist.getOptions().merge!;
+    expect(merge({}, s).iconFollowsTheme).toBe(true);
+    expect(merge({ iconFollowsTheme: "yes" }, s).iconFollowsTheme).toBe(true);
+    expect(merge({ iconFollowsTheme: false }, s).iconFollowsTheme).toBe(false);
+
+    s.setIconFollowsTheme(false);
+    const backup = useHabits.getState().exportData();
+    expect(JSON.parse(backup).iconFollowsTheme).toBe(false);
+    s.setIconFollowsTheme(true);
+    useHabits.getState().importData(backup);
+    expect(useHabits.getState().iconFollowsTheme).toBe(false);
+    // an older backup without the field keeps the current setting
+    const old = JSON.parse(backup);
+    delete old.iconFollowsTheme;
+    useHabits.getState().setIconFollowsTheme(true);
+    useHabits.getState().importData(JSON.stringify(old));
+    expect(useHabits.getState().iconFollowsTheme).toBe(true);
+  });
+
+  test("the shown theme is sent: system = the phone's light / dark, palettes as they are", () => {
+    sent.length = 0;
+    withSystem(true, () => watch("system", true));
+    expect(sent).toEqual(["light"]);
+    withSystem(false, () => watch("system", true));
+    watch("light", true);
+    watch("glitch", true);
+    watch("glitch", true); // unchanged: nothing new
+    watch("dark", true);
+    expect(sent).toEqual(["light", "dark", "light", "glitch", "dark"]);
+    for (const t of THEMES) expect(appIconFor(t, true)).toBe(t);
+  });
+
+  test("off: one switch back to the original icon, then no calls", () => {
+    watch("sakura", true);
+    sent.length = 0;
+    watch("sakura", false);
+    expect(sent).toEqual(["dark"]);
+    watch("glitch", false);
+    watch("terminal", false);
+    withSystem(true, () => watch("system", false));
+    expect(sent).toEqual(["dark"]);
+    for (const t of THEMES) expect(appIconFor(t, false)).toBe("dark");
+    // back on: the current theme again
+    watch("terminal", true);
+    expect(sent).toEqual(["dark", "terminal"]);
+  });
+
+  test("web: the default sync never calls the native plugin", () => {
+    // no Capacitor native platform under bun: must not throw
+    expect(() => watchTheme(() => "glitch")()).not.toThrow();
   });
 });

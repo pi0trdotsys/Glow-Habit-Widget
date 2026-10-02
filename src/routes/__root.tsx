@@ -175,7 +175,16 @@ function RootComponent() {
 
   // The palette (or like the phone).
   const themePref = useHabits((s) => s.theme);
-  useEffect(() => watchTheme(() => themePref), [themePref]);
+  // ...and the Android launcher icon follows it (unless turned off in Settings -> Wygląd).
+  const iconFollows = useHabits((s) => s.iconFollowsTheme);
+  useEffect(
+    () =>
+      watchTheme(
+        () => themePref,
+        () => iconFollows,
+      ),
+    [themePref, iconFollows],
+  );
 
   // Background work (widget bridge, notification scheduling) waits until the
   // splash has faded out, so the first screen and the fade get the main thread.

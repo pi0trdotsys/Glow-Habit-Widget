@@ -1,5 +1,7 @@
 import { useRef, type KeyboardEvent } from "react";
+import { Capacitor } from "@capacitor/core";
 import { Check } from "lucide-react";
+import { Toggle } from "@/components/HabitForm";
 import { useHabits } from "@/lib/habits/store";
 import { THEMES, THEME_META, type Theme, type ThemePref } from "@/lib/theme";
 import { L } from "@/lib/i18n";
@@ -35,6 +37,8 @@ function Swatch({ theme, compact = false }: { theme: Theme; compact?: boolean })
 export function ThemeCard() {
   const theme = useHabits((s) => s.theme);
   const setTheme = useHabits((s) => s.setTheme);
+  const iconFollows = useHabits((s) => s.iconFollowsTheme);
+  const setIconFollows = useHabits((s) => s.setIconFollowsTheme);
   const group = useRef<HTMLDivElement>(null);
 
   // Radio group keys: arrows move (and pick) like native radio buttons.
@@ -114,6 +118,22 @@ export function ThemeCard() {
           "Home-screen widgets follow this theme by default - each can get its own in its settings.",
         )}
       </p>
+      {Capacitor.isNativePlatform() && (
+        <div className="mt-4 flex items-center justify-between gap-3" data-app-icon-setting>
+          <div>
+            <div className="text-sm font-medium">
+              {L("Ikona aplikacji pasuje do motywu", "App icon matches the theme")}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {L(
+                "Ikona zmienia się po wyjściu z aplikacji. Niektóre launchery raz usuwają wtedy skrót z ekranu głównego - trzeba go dodać ponownie z szuflady aplikacji.",
+                "The icon changes after you leave the app. Some launchers drop the home-screen shortcut once - add it again from the app drawer.",
+              )}
+            </div>
+          </div>
+          <Toggle checked={iconFollows} onChange={setIconFollows} />
+        </div>
+      )}
     </div>
   );
 }

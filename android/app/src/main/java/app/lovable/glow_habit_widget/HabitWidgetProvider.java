@@ -89,7 +89,7 @@ public class HabitWidgetProvider extends AppWidgetProvider {
 
     /** "●  Woda\n✓  Czytanie" - up to four of today's rows for the config preview. */
     private static String previewNames(Context context) {
-        org.json.JSONArray habits = WidgetShared.habits(context);
+        org.json.JSONArray habits = WidgetShared.widgetHabits(context);
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < Math.min(4, habits.length()); i++) {
             org.json.JSONObject h = habits.optJSONObject(i);
@@ -101,9 +101,9 @@ public class HabitWidgetProvider extends AppWidgetProvider {
     }
 
     private static String headerTitle(Context context) {
-        int total = WidgetShared.countedTotal(context);
+        int total = WidgetShared.widgetTotal(context);
         if (total == 0) return "Loop";
-        return WidgetShared.doneCount(context) + " / " + total + WidgetShared.tr(context, " dziś", " today");
+        return WidgetShared.widgetDone(context) + " / " + total + WidgetShared.tr(context, " dziś", " today");
     }
 
     private static String headerSubtitle(Context context) {

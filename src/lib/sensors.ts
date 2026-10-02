@@ -8,9 +8,10 @@
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import { addDays } from "date-fns";
 import { useHabits } from "@/lib/habits/store";
-import { amountOn, isDueOn, kindOf, todayKey } from "@/lib/habits/utils";
+import { amountOn, goalOf, isDueOn, kindOf, todayKey } from "@/lib/habits/utils";
 import type { Habit } from "@/lib/habits/types";
 import type { StepsSource } from "@/lib/steps";
+import { isKropi, kropiDays, kropiUpdates } from "@/lib/kropi";
 
 export interface StepsStatus {
   available: boolean;
@@ -151,6 +152,26 @@ export async function openApp(pkg: string): Promise<boolean> {
   }
 }
 
+/** Kropi's water into the "kropi" habits (amounts for the last days + Kropi's goal). */
+async function syncKropi(): Promise<void> {
+  const { habits, completions, setAmount, updateHabit } = useHabits.getState();
+  const linked = habits.filter(isKropi);
+  if (linked.length === 0) return;
+  const days = await kropiDays();
+  if (days.length === 0) return;
+  const today = todayKey(new Date());
+  for (const h of linked) {
+    const u = kropiUpdates(h, completions, days, today);
+    for (const a of u.amounts) setAmount(h.id, a.date, a.ml);
+    if (u.target != null) updateHabit(h.id, { goal: { ...goalOf(h), target: u.target } });
+  }
+}
+
+/** Pull Kropi's water right now (after linking, on return from Kropi). */
+export async function syncKropiNow(): Promise<void> {
+  if (isNative()) await syncKropi().catch(() => {});
+}
+
 /** Pull today's steps right now (e.g. after a source change or a band sync). */
 export async function syncStepsNow(): Promise<void> {
   if (isNative()) await syncSteps().catch(() => {});
@@ -248,6 +269,7 @@ export async function syncSensors(): Promise<void> {
   running = true;
   try {
     await syncSteps().catch(() => {});
+    await syncKropi().catch(() => {});
     await syncScreen().catch(() => {});
     await syncNights().catch(() => {});
   } finally {

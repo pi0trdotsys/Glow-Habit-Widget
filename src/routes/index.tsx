@@ -34,6 +34,8 @@ import { StatusCarousel } from "@/components/StatusCarousel";
 import { Confetti } from "@/components/Confetti";
 import { haptic } from "@/lib/haptics";
 import { boostSet } from "@/lib/habits/chain";
+import { isKropi, kropiAdd } from "@/lib/kropi";
+import { syncKropiNow } from "@/lib/sensors";
 import { focusHabit } from "@/lib/habits/focus";
 
 /** Tests/previews can show the native guard's status slides on the web. */
@@ -293,6 +295,11 @@ function NowCard({ plan }: { plan: PlanItem[] }) {
   const doNext = () => {
     const h = next.habit;
     const key = todayKey();
+    // Water from Kropi: log it in Kropi, it reports back.
+    if (isKropi(h)) {
+      void kropiAdd().then((ok) => ok && setTimeout(() => void syncKropiNow(), 1500));
+      return;
+    }
     logStep(h.id);
     if (next.avoid || next.left <= goalOf(h).step) {
       praiseToast(h, () =>
