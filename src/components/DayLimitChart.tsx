@@ -2,17 +2,27 @@ import { useMemo } from "react";
 import { useHabits } from "@/lib/habits/store";
 import { limitScore, limitSeries } from "@/lib/day-guard";
 import { L, intlLocale } from "@/lib/i18n";
+import { isBank } from "@/lib/bank";
 
 /** Report: social media minutes by day (last 14 days) against the daily limit. */
 export function DayLimitChart() {
   const daySocial = useHabits((s) => s.daySocial);
   const on = useHabits((s) => s.notifications.dailyLimit);
   const limit = useHabits((s) => s.notifications.dailyLimitMin);
-  const series = useMemo(() => limitSeries(daySocial, limit, 14), [daySocial, limit]);
+  // "Bank minut": each day against what the bank held that day (the native guard's record).
+  const bank = useHabits((s) => isBank(s.notifications));
+  const dayLimits = useHabits((s) => s.dayLimits);
+  const series = useMemo(
+    () => limitSeries(daySocial, limit, 14, new Date(), bank ? dayLimits : undefined),
+    [daySocial, limit, bank, dayLimits],
+  );
   const score = limitScore(series);
   if (score.tracked === 0) return null;
 
-  const max = Math.max(limit * 1.5, ...series.map((d) => d.minutes ?? 0));
+  const max = Math.max(
+    (bank ? Math.max(...series.map((d) => d.limit ?? 0), 30) : limit) * 1.5,
+    ...series.map((d) => d.minutes ?? 0),
+  );
   const H = 110;
   const y = (m: number) => H - (m / max) * H;
 
@@ -24,10 +34,15 @@ export function DayLimitChart() {
         </h2>
         {on && (
           <span className="text-xs text-muted-foreground" data-within>
-            {L(
-              `w limicie ${score.within}/${score.tracked} dni`,
-              `within the limit ${score.within}/${score.tracked} days`,
-            )}
+            {bank
+              ? L(
+                  `w banku ${score.within}/${score.tracked} dni`,
+                  `within the bank ${score.within}/${score.tracked} days`,
+                )
+              : L(
+                  `w limicie ${score.within}/${score.tracked} dni`,
+                  `within the limit ${score.within}/${score.tracked} days`,
+                )}
           </span>
         )}
       </div>
@@ -37,7 +52,7 @@ export function DayLimitChart() {
         role="img"
         aria-label={L("Social media w dzień", "Social media by day")}
       >
-        {on && (
+        {on && !bank && (
           <>
             <line
               x1="0"
@@ -76,8 +91,20 @@ export function DayLimitChart() {
                     month: "short",
                   })}
                   : {d.minutes} min
+                  {bank && d.limit != null ? ` / bank ${d.limit} min` : ""}
                 </title>
               </rect>
+              {on && bank && d.limit != null && (
+                <line
+                  data-bank-mark
+                  x1={i * w + 1}
+                  x2={(i + 1) * w - 1}
+                  y1={y(d.limit)}
+                  y2={y(d.limit)}
+                  stroke="var(--avoid)"
+                  strokeWidth="1.5"
+                />
+              )}
             </g>
           );
         })}
@@ -93,6 +120,12 @@ export function DayLimitChart() {
           "Od 5:00 do trybu przed snem. Noc liczy się osobno w rachunku za noc.",
           "From 5:00 until bedtime mode. Nights are counted separately in the night bill.",
         )}
+        {on &&
+          bank &&
+          L(
+            " Kreski: ile było w banku minut danego dnia.",
+            " Marks: what the minute bank held that day.",
+          )}
       </p>
     </section>
   );

@@ -16,6 +16,7 @@ import {
   sleepWeeks,
 } from "@/lib/night";
 import { cleanNightStreak, nightDebt } from "@/lib/curfew";
+import { isBank, rawNightDebt } from "@/lib/bank";
 import { SZPILA_EMOJI } from "@/lib/habits/szpila";
 import type { NightReport } from "@/lib/sensors";
 import { L, intlLocale, plPlural } from "@/lib/i18n";
@@ -66,8 +67,13 @@ export function NightBillView({ r, onDismiss }: { r: NightReport; onDismiss: () 
   const notif = useHabits((s) => s.notifications);
   const bad = badNight(r);
   const streak = cleanNightStreak(reports);
+  // "Bank minut": the whole debt comes off the bank (no floor).
   const debt =
-    notif.dailyLimit && (notif.nightDebt ?? true) ? nightDebt(r, notif.dailyLimitMin) : 0;
+    notif.dailyLimit && (notif.nightDebt ?? true)
+      ? isBank(notif)
+        ? rawNightDebt(r)
+        : nightDebt(r, notif.dailyLimitMin)
+      : 0;
 
   return (
     <section

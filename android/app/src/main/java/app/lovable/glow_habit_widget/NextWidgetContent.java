@@ -61,6 +61,9 @@ final class NextWidgetContent {
         int usedMin;
         int limitMin;
         boolean overLimit;
+        /** "Bank minut": the limit is earned (limitMin = the bank today); minutes per habit. */
+        boolean bank;
+        int bankPerHabit = DayGuard.BANK_PER_HABIT;
         /** Minutes to the deadline while the bedtime countdown runs, else -1. */
         int bedtimeLeft = -1;
         int deadline;
@@ -138,7 +141,8 @@ final class NextWidgetContent {
         in.deadline = deadline;
         in.nightEnd = nightEnd;
         in.morningLock = phase == DayGuard.MORNING && morningPendingCount > 0;
-        in.overLimit = phase == DayGuard.DAY && dayOn && limit > 0 && used >= limit;
+        // Bank mode: an empty bank counts too (social media has to be earned first).
+        in.overLimit = phase == DayGuard.DAY && dayOn && (limit > 0 || in.bank) && used >= limit;
         boolean countdown = nightOn && bedtimeOn && LiveGuard.prePhase(in.now, nightStart, deadline);
         in.bedtimeLeft = countdown ? LiveGuard.minutesTo(in.now, deadline) : -1;
         in.night = phase == DayGuard.NIGHT && !countdown;
@@ -171,8 +175,11 @@ final class NextWidgetContent {
                 break;
             case OVER_LIMIT:
                 if (next != null) habit(c, next, in); else done(c, in);
-                c.line = new Line("limit", "📱 " + in.usedMin + "/" + in.limitMin + " min · "
-                    + (en ? "limit exceeded" : "limit przekroczony"), C_RED);
+                c.line = in.bank
+                    ? new Line("limit", en ? "💰 Bank empty · +" + in.bankPerHabit + " min per habit"
+                        : "💰 Bank pusty · +" + in.bankPerHabit + " min za zadanie", C_RED)
+                    : new Line("limit", "📱 " + in.usedMin + "/" + in.limitMin + " min · "
+                        + (en ? "limit exceeded" : "limit przekroczony"), C_RED);
                 mood = ANGRY;
                 break;
             case BEDTIME:
@@ -358,6 +365,19 @@ final class NextWidgetContent {
         return "📱 " + used + "/" + limit + " min " + (en ? "social media" : "social mediów");
     }
 
+    /** The ticker's social line in bank mode: what's left in the minute bank. */
+    static String bankLine(int used, int limit, boolean en) {
+        return "💰 " + Math.max(0, limit - used) + " min " + (en ? "in the bank" : "w banku");
+    }
+
+    /** The "social" ticker line (null = none: the limit is off). */
+    static Line socialLine(Inputs in) {
+        if (!in.dayLimitOn || (in.limitMin <= 0 && !in.bank)) return null;
+        int ls = DayGuard.limitState(in.usedMin, in.limitMin, in.bank);
+        return new Line("social", in.bank ? bankLine(in.usedMin, in.limitMin, in.en) : social(in.usedMin, in.limitMin, in.en),
+            ls == DayGuard.LIMIT_OK ? C_NIGHT : C_AMBER);
+    }
+
     // ------------------------------------------------------------------ ticker
 
     /** The rotation counter: a new slot every SLOT_MIN minutes, one step per tap. */
@@ -385,11 +405,8 @@ final class NextWidgetContent {
                 + " · " + percent(in.done, in.counted) + "%", C_ACCENT));
         }
         out.add(new Line("time", timeLeft(in.now, en), C_MUTED));
-        if (in.dayLimitOn && in.limitMin > 0) {
-            int ls = DayGuard.limitState(in.usedMin, in.limitMin);
-            out.add(new Line("social", social(in.usedMin, in.limitMin, en),
-                ls == DayGuard.LIMIT_OK ? C_NIGHT : C_AMBER));
-        }
+        Line social = socialLine(in);
+        if (social != null) out.add(social);
         if (in.plan.size() > 1) {
             JSONObject after = in.plan.get(1);
             int at = dueAt(after, in.now);
@@ -411,9 +428,8 @@ final class NextWidgetContent {
         boolean en = in.en;
         if (in.formaCurrent > 0) out.add(new Line("forma", forma(in.formaCurrent, in.formaBest, en), C_AMBER));
         out.add(new Line("time", timeLeft(in.now, en), C_MUTED));
-        if (in.dayLimitOn && in.limitMin > 0) {
-            out.add(new Line("social", social(in.usedMin, in.limitMin, en), C_NIGHT));
-        }
+        Line social = socialLine(in);
+        if (social != null) out.add(in.bank ? social : new Line("social", social.text, C_NIGHT));
         List<Line> kept = WidgetPrefs.filter(out, in.lines);
         JSONArray lines = in.allDoneLines;
         if (WidgetPrefs.lineOn(in.lines, "jab") && lines != null && lines.length() > 0) {

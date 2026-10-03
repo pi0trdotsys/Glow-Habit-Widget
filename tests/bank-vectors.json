@@ -1,0 +1,47 @@
+{
+  "_": "Bank minut: src/lib/bank.ts (tests/bank.test.ts) and DayGuard.java (BankParityTest) must agree on every vector. Rules: base, perHabit, perKSteps, cap (0 = no cap).",
+  "earned": [
+    { "rules": [5, 10, 5, 120], "done": 0, "steps": 0, "debt": 0, "earned": 5, "limit": 5 },
+    { "rules": [5, 10, 5, 120], "done": 3, "steps": 0, "debt": 0, "earned": 35, "limit": 35 },
+    { "rules": [5, 10, 5, 120], "done": 3, "steps": 4999, "debt": 0, "earned": 55, "limit": 55 },
+    { "rules": [5, 10, 5, 120], "done": 3, "steps": 8200, "debt": 10, "earned": 75, "limit": 65 },
+    {
+      "rules": [5, 10, 5, 120],
+      "done": 12,
+      "steps": 12000,
+      "debt": 0,
+      "earned": 120,
+      "limit": 120
+    },
+    {
+      "rules": [5, 10, 5, 120],
+      "done": 12,
+      "steps": 12000,
+      "debt": 30,
+      "earned": 120,
+      "limit": 90
+    },
+    { "rules": [5, 10, 5, 120], "done": 1, "steps": 0, "debt": 44, "earned": 15, "limit": 0 },
+    { "rules": [0, 10, 5, 120], "done": 0, "steps": 999, "debt": 0, "earned": 0, "limit": 0 },
+    { "rules": [5, 10, 5, 0], "done": 20, "steps": 20000, "debt": 5, "earned": 305, "limit": 300 },
+    { "rules": [10, 15, 0, 60], "done": 2, "steps": 9000, "debt": 0, "earned": 40, "limit": 40 },
+    { "rules": [5, 10, 5, 120], "done": -1, "steps": -500, "debt": -10, "earned": 5, "limit": 5 }
+  ],
+  "state": [
+    { "used": 30, "limit": 60, "bank": false, "expected": 0 },
+    { "used": 50, "limit": 60, "bank": false, "expected": 1 },
+    { "used": 60, "limit": 60, "bank": false, "expected": 2 },
+    { "used": 10, "limit": 0, "bank": false, "expected": 0 },
+    { "used": 15, "limit": 20, "bank": false, "expected": 0 },
+    { "used": 0, "limit": 0, "bank": true, "expected": 2 },
+    { "used": 0, "limit": 5, "bank": true, "expected": 0 },
+    { "used": 2, "limit": 5, "bank": true, "expected": 0 },
+    { "used": 5, "limit": 5, "bank": true, "expected": 2 },
+    { "used": 29, "limit": 35, "bank": true, "expected": 0 },
+    { "used": 30, "limit": 35, "bank": true, "expected": 1 },
+    { "used": 34, "limit": 35, "bank": true, "expected": 1 },
+    { "used": 40, "limit": 35, "bank": true, "expected": 2 },
+    { "used": 0, "limit": 6, "bank": true, "expected": 0 },
+    { "used": 1, "limit": 6, "bank": true, "expected": 1 }
+  ]
+}

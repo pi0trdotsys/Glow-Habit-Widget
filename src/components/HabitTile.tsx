@@ -27,8 +27,11 @@ import { focusHabit } from "@/lib/habits/focus";
 import { focusPraise, minimumPraise } from "@/lib/habits/chain";
 import { ringMarks, ringPoint } from "@/lib/habits/ring";
 import { isKropi, kropiAdd } from "@/lib/kropi";
+import { appsFloor, isAppsHabit } from "@/lib/apps";
 import { syncKropiNow } from "@/lib/sensors";
 import { L } from "@/lib/i18n";
+import { Capacitor } from "@capacitor/core";
+import { bankToastLine } from "@/lib/bank";
 
 interface Props {
   habit: Habit;
@@ -39,12 +42,27 @@ const CELEBRATE_EMOJI = ["🎉", "✨", "💪", "🔥", "🌟", "🙌"];
 
 /** Shows Szpila's back-handed compliment with an undo action (the weekly focus gets its own). */
 export function praiseToast(habit: Habit, undo: () => void) {
-  const { notifications, userName, habits, focus } = useHabits.getState();
+  const { notifications, userName, habits, focus, completions, nightReports, daySocial } =
+    useHabits.getState();
   const text =
     focusHabit(habits, focus)?.id === habit.id
       ? `🎯 ${focusPraise(habit, notifications.tauntLevel)}`
       : `${SZPILA_EMOJI.impressed} ${praiseFor(habit, notifications.tauntLevel, userName)}`;
-  toast(text, { action: { label: L("Cofnij", "Undo"), onClick: undo } });
+  // "Bank minut": a finished habit to do earns social media minutes (the guard runs on Android only).
+  const bank = Capacitor.isNativePlatform()
+    ? bankToastLine(
+        notifications,
+        habit,
+        habits,
+        completions,
+        nightReports,
+        daySocial[todayKey()] ?? 0,
+      )
+    : null;
+  toast(text, {
+    description: bank ?? undefined,
+    action: { label: L("Cofnij", "Undo"), onClick: undo },
+  });
 }
 
 export function HabitTile({ habit, compact = false }: Props) {
@@ -143,7 +161,22 @@ export function HabitTile({ habit, compact = false }: Props) {
       }
       const before = amount;
       if (done) {
-        setAmount(habit.id, key, 0);
+        // Minutes from apps: only the part added by hand goes; the apps' minutes stay.
+        const floor = appsFloor(
+          habit,
+          completions.find((c) => c.habitId === habit.id && c.date === key),
+        );
+        if (isAppsHabit(habit) && floor >= before) {
+          toast(
+            L(
+              "Te minuty policzyły aplikacje. Poprawisz je na stronie zadania.",
+              "The apps counted these minutes. Correct them on the habit's page.",
+            ),
+            { id: toastId, duration: 2500 },
+          );
+          return;
+        }
+        setAmount(habit.id, key, floor);
         toast(`↩️ ${L("Cofnięto", "Undone")}: ${habit.name}`, {
           action: {
             label: L("Przywróć", "Restore"),

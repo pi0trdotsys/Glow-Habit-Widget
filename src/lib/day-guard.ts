@@ -12,6 +12,7 @@ import { categoryOf } from "@/lib/habits/szpila";
 import { goalOf, isDueOn, kindOf, amountOn, todayKey } from "@/lib/habits/utils";
 import type { Completion } from "@/lib/habits/types";
 import { L, pick } from "@/lib/i18n";
+import { bankState } from "@/lib/bank";
 
 type Key = "morning" | "morningDone" | "dayOver" | "dayEscalate" | "dayWarn" | "dayBlock";
 
@@ -142,11 +143,84 @@ const SOFT_EN: Record<Key, string[]> = {
   ],
 };
 
-export function dayLines(level: TauntLevel, userName: string | null): Record<Key, string[]> {
-  const base = level === "soft" ? pick(SOFT, SOFT_EN) : pick(HARD, HARD_EN);
+// "Bank minut" (src/lib/bank.ts): the same moments in bank mode. Extra
+// placeholders: {bank} minutes left in the bank, {earn} minutes per habit;
+// {limit} = what the bank got today.
+type BankKey = "bankOver" | "bankEscalate" | "bankWarn" | "bankBlock";
+
+const BANK_HARD: Record<BankKey, string[]> = {
+  bankOver: [
+    "Bank pusty. Chcesz {app}? Zarób go: +{earn} min za każde zadanie.",
+    "Zero minut w banku, a ty w {app}. Najpierw robota, potem scrollowanie, kurwa.",
+    "Wydane {used} z {limit} min. Bank świeci pustkami. Zrób zadanie, to pogadamy.",
+    "Konto social mediów: 0 min. Debetu nie ma. Zamykaj {app}.",
+    "Za darmo w {app} są tylko reklamy. Minuty się zarabia: +{earn} za zadanie.",
+  ],
+  bankEscalate: [
+    "Dalej {app}, a bank dalej pusty. {over} min na kredyt. Zamykaj.",
+    "{m} min od ostatniej szpili, zero minut w banku. Idź zrób coś, za co dostaniesz minuty.",
+    "Już {over} min na debecie. Ten bank nie udziela kredytów, kurwa.",
+  ],
+  bankWarn: [
+    "W banku zostało {bank} min. Zrób zadanie, to dorzucę {earn}.",
+    "Uwaga: {bank} min w banku. Potem zaczynam szpilować, chyba że coś zarobisz.",
+  ],
+  bankBlock: [
+    "Bank pusty, trzy szpile zignorowane. {app} zamknięte. Chcesz więcej? Zarób: +{earn} min za zadanie.",
+    "Wydane {used} z {limit} min. Na kredyt się nie scrolluje. Idź coś zrobić, kurwa.",
+    "Koniec kasy. {app} zamknięte, dopóki czegoś nie odhaczysz.",
+  ],
+};
+
+const BANK_SOFT: Record<BankKey, string[]> = {
+  bankOver: ["Bank minut pusty ({used}/{limit} min). Zrób zadanie, a dostaniesz +{earn} min."],
+  bankEscalate: ["Już {over} min ponad bank. Może najpierw jakieś zadanie?"],
+  bankWarn: ["W banku zostało {bank} min. Każde zadanie to +{earn} min."],
+  bankBlock: ["Bank na dziś wyczerpany. Zrób zadanie, żeby zarobić +{earn} min."],
+};
+
+const BANK_HARD_EN: Record<BankKey, string[]> = {
+  bankOver: [
+    "The bank's empty. Want {app}? Earn it: +{earn} min per habit.",
+    "Zero minutes in the bank and you're on {app}. Work first, scroll later, damn it.",
+    "Spent {used} of {limit} min. The bank is bone dry. Do a habit, then we'll talk.",
+    "Social media account: 0 min. No overdraft here. Close {app}.",
+    "The only free thing on {app} is the ads. Minutes are earned: +{earn} per habit.",
+  ],
+  bankEscalate: [
+    "Still {app}, still an empty bank. {over} min on credit. Close it.",
+    "{m} min since my last jab, zero in the bank. Go do something that earns minutes.",
+    "{over} min into the overdraft. This bank doesn't do loans, for fuck's sake.",
+  ],
+  bankWarn: [
+    "{bank} min left in the bank. Do a habit and I'll add {earn}.",
+    "Heads up: {bank} min in the bank. Then the jabbing starts, unless you earn some.",
+  ],
+  bankBlock: [
+    "The bank's empty, three jabs ignored. {app} is closed. Want more? Earn it: +{earn} min per habit.",
+    "Spent {used} of {limit} min. No scrolling on credit. Go do something, damn it.",
+    "Out of minutes. {app} stays closed until you tick something off.",
+  ],
+};
+
+const BANK_SOFT_EN: Record<BankKey, string[]> = {
+  bankOver: ["Your minute bank is empty ({used}/{limit} min). Do a habit to earn +{earn} min."],
+  bankEscalate: ["{over} min past the bank. Maybe a habit first?"],
+  bankWarn: ["{bank} min left in the bank. Every habit adds +{earn} min."],
+  bankBlock: ["Today's bank is used up. Do a habit to earn +{earn} min."],
+};
+
+export function dayLines(
+  level: TauntLevel,
+  userName: string | null,
+): Record<Key | BankKey, string[]> {
+  const base =
+    level === "soft"
+      ? { ...pick(SOFT, SOFT_EN), ...pick(BANK_SOFT, BANK_SOFT_EN) }
+      : { ...pick(HARD, HARD_EN), ...pick(BANK_HARD, BANK_HARD_EN) };
   const u = (l: string) => l.replaceAll("{u}", userName || L("ty", "you"));
-  const out = {} as Record<Key, string[]>;
-  for (const k of Object.keys(base) as Key[]) out[k] = base[k].map(u);
+  const out = {} as Record<Key | BankKey, string[]>;
+  for (const k of Object.keys(base) as (Key | BankKey)[]) out[k] = base[k].map(u);
   return out;
 }
 
@@ -207,21 +281,32 @@ export function dayGuardState(n: NotificationSettings, habits: Habit[], today: D
       until: toMin(n.morningUntil),
       habits: morningHabitIds(n, habits, today),
     },
-    // debt: last night comes off today's limit (DayGuard.debt)
-    day: { enabled: n.dailyLimit, limit: n.dailyLimitMin, debt: n.nightDebt ?? true },
+    // debt: last night comes off today's limit (DayGuard.debt); mode + bank: "Bank minut"
+    // (DayGuard.bankMode / bankRules) - the limit is earned natively from the rows.
+    day: {
+      enabled: n.dailyLimit,
+      limit: n.dailyLimitMin,
+      debt: n.nightDebt ?? true,
+      ...bankState(n),
+    },
   };
 }
 
 // ---------------------------------------------------------------- stats
 
-export type LimitDay = { key: string; minutes: number | null; over: boolean };
+export type LimitDay = { key: string; minutes: number | null; over: boolean; limit?: number };
 
-/** Social media minutes per day (last `days`, oldest first) against the limit. */
+/**
+ * Social media minutes per day (last `days`, oldest first) against the limit.
+ * With `limits` (bank mode: the day's actual balance, from the native guard)
+ * each day is judged against its own limit; days without one use `limit`.
+ */
 export function limitSeries(
   daySocial: Record<string, number>,
   limit: number,
   days = 14,
   now: Date = new Date(),
+  limits?: Record<string, number>,
 ): LimitDay[] {
   const out: LimitDay[] = [];
   for (let i = days - 1; i >= 0; i--) {
@@ -229,7 +314,10 @@ export function limitSeries(
     d.setDate(d.getDate() - i);
     const key = todayKey(d);
     const minutes = daySocial[key] ?? null;
-    out.push({ key, minutes, over: minutes != null && minutes > limit });
+    if (limits) {
+      const l = limits[key] ?? limit;
+      out.push({ key, minutes, over: minutes != null && minutes > l, limit: l });
+    } else out.push({ key, minutes, over: minutes != null && minutes > limit });
   }
   return out;
 }

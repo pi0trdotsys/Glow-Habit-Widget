@@ -15,6 +15,7 @@ import { CURFEW_PASS_MIN, DEBT_PER_PASS, DEBT_PER_SOCIAL_MIN, DEBT_FLOOR_MIN } f
 import { refreshNative } from "@/lib/widget/bridge";
 import { todayKey } from "@/lib/habits/utils";
 import { L } from "@/lib/i18n";
+import { isBank } from "@/lib/bank";
 
 /**
  * Settings → Guard: "Cisza nocna". After the deadline only the alarm, calls,
@@ -242,10 +243,15 @@ export function CurfewCard() {
             {L("Noc kosztuje dzień", "The night costs the day")}
           </div>
           <div className="text-xs text-muted-foreground">
-            {L(
-              `Każda minuta social mediów po północy zabiera ${DEBT_PER_SOCIAL_MIN} min z dziennego limitu, każdy wyjątek ${DEBT_PER_PASS} min (zostaje co najmniej ${DEBT_FLOOR_MIN}).`,
-              `Every social media minute after midnight takes ${DEBT_PER_SOCIAL_MIN} min off the next day's limit, every urgent pass ${DEBT_PER_PASS} min (at least ${DEBT_FLOOR_MIN} stay).`,
-            )}
+            {isBank(notif)
+              ? L(
+                  `Każda minuta social mediów po północy zabiera ${DEBT_PER_SOCIAL_MIN} min z banku minut, każdy wyjątek ${DEBT_PER_PASS} min (bank może spaść do zera).`,
+                  `Every social media minute after midnight takes ${DEBT_PER_SOCIAL_MIN} min out of the minute bank, every urgent pass ${DEBT_PER_PASS} min (the bank can drop to zero).`,
+                )
+              : L(
+                  `Każda minuta social mediów po północy zabiera ${DEBT_PER_SOCIAL_MIN} min z dziennego limitu, każdy wyjątek ${DEBT_PER_PASS} min (zostaje co najmniej ${DEBT_FLOOR_MIN}).`,
+                  `Every social media minute after midnight takes ${DEBT_PER_SOCIAL_MIN} min off the next day's limit, every urgent pass ${DEBT_PER_PASS} min (at least ${DEBT_FLOOR_MIN} stay).`,
+                )}
             {st?.debt ? L(` Dziś: −${st.debt} min.`, ` Today: −${st.debt} min.`) : ""}
           </div>
         </div>

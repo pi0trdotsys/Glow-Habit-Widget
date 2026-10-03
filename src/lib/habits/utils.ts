@@ -516,6 +516,8 @@ export interface WeeklyReport {
   lastWeek: WeekTotals & { done: number };
   /** Percentage-point difference (this - last); 0 when there is nothing to compare with. */
   delta: number;
+  /** Forbidden-habit slips over the allowance in the window, this week vs last. */
+  slips: { this: number; last: number };
   /** No habit was due last week in the same window (e.g. the first week of use). */
   noBaseline: boolean;
   /** Label for the window, e.g. "pon-śr do 15:40". */
@@ -533,7 +535,19 @@ export interface WeeklyReport {
 const DAY_SHORT_PL = ["pon", "wt", "śr", "czw", "pt", "sob", "nd"];
 const DAY_SHORT_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-function dayWindow(
+/**
+ * Forbidden habits in the weekly score. Doing is harder than not doing, so a
+ * clean day weighs half a habit-day; a slip within the allowance is half
+ * credit; a slip over it costs (negative) - worse than a forgotten habit; an
+ * unanswered day (still open: today, or yesterday until noon) doesn't count
+ * either way. Mirrors nothing natively (the report is web-only).
+ */
+export const AVOID_WEIGHT = 0.5;
+export const AVOID_WITHIN_CREDIT = 0.5;
+export const AVOID_SLIP_PENALTY = -1;
+
+/** One habit-day in the weekly score: weighted value and weight ("due"). Exported for tests. */
+export function dayWindow(
   h: Habit,
   idx: EntryIndex,
   d: Date,
@@ -541,6 +555,14 @@ function dayWindow(
   cutoffMin?: number,
 ): { score: number; due: number } {
   if (!countsOn(h, idx, d, now, cutoffMin)) return { score: 0, due: 0 };
+  if (kindOf(h) === "avoid") {
+    const st = avoidStatus(h, idx, d, now, cutoffMin);
+    if (st === "pending") return { score: 0, due: 0 };
+    const w = AVOID_WEIGHT;
+    if (st === "clean") return { score: w, due: w };
+    const within = slipsInPeriod(h, idx, d, now) <= limitOf(h).times;
+    return { score: w * (within ? AVOID_WITHIN_CREDIT : AVOID_SLIP_PENALTY), due: w };
+  }
   if (h.schedule.type === "timesPerWeek") {
     // Weekly quota: every done day earns a point, the quota is spread evenly.
     const target = h.schedule.target ?? 1;
@@ -598,8 +620,8 @@ export function weeklyReport(
     }
     days.push({
       label: DAY_SHORT[i],
-      now: i <= todayIdx && ddT > 0 ? Math.round((Math.min(dsT, ddT) / ddT) * 100) : null,
-      prev: ddL > 0 ? Math.round((Math.min(dsL, ddL) / ddL) * 100) : null,
+      now: i <= todayIdx && ddT > 0 ? pct(dsT, ddT) : null,
+      prev: ddL > 0 ? pct(dsL, ddL) : null,
       isToday: i === todayIdx,
     });
   }
@@ -627,8 +649,19 @@ export function weeklyReport(
     });
   }
 
-  const rateT = dT === 0 ? 0 : Math.round((Math.min(sT, dT) / dT) * 100);
-  const rateL = dL === 0 ? 0 : Math.round((Math.min(sL, dL) / dL) * 100);
+  const rateT = dT === 0 ? 0 : pct(sT, dT);
+  const rateL = dL === 0 ? 0 : pct(sL, dL);
+  // Slips over the allowance in the same window (shown next to the score).
+  let slipsT = 0,
+    slipsL = 0;
+  for (const h of habits) {
+    if (kindOf(h) !== "avoid") continue;
+    for (let i = 0; i <= todayIdx; i++) {
+      const cut = i === todayIdx ? cutoff : undefined;
+      if (dayWindow(h, idx, addDays(startThis, i), now, cut).score < 0) slipsT++;
+      if (dayWindow(h, idx, addDays(startLast, i), lastWeekNow, cut).score < 0) slipsL++;
+    }
+  }
   const until = `${L("do", "until")} ${formatMinute(cutoff)}`;
   const windowLabel =
     todayIdx === 0
@@ -638,11 +671,17 @@ export function weeklyReport(
     thisWeek: { score: round1(sT), due: round1(dT), rate: rateT, done: round1(sT) },
     lastWeek: { score: round1(sL), due: round1(dL), rate: rateL, done: round1(sL) },
     delta: dL === 0 ? 0 : rateT - rateL,
+    slips: { this: slipsT, last: slipsL },
     noBaseline: dL === 0,
     windowLabel,
     days,
     perHabit,
   };
+}
+
+/** Score as a percentage of the weight, 0..100 (penalties can't push it below 0). */
+function pct(score: number, due: number): number {
+  return Math.round((Math.max(0, Math.min(score, due)) / due) * 100);
 }
 
 function round1(n: number): number {

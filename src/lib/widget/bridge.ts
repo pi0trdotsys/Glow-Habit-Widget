@@ -36,8 +36,10 @@ import {
 import { lateAfterMin, syncSensors, DEFAULT_LATE_LIMIT } from "@/lib/sensors";
 import type { HabitColor } from "@/lib/habits/types";
 import { BACKUP_PREF_KEY } from "@/lib/backup";
+import { isAppsHabit } from "@/lib/apps";
 import { liveState, liveStatus } from "@/lib/live";
 import { billLines } from "@/lib/night";
+import { forecastSnapshot } from "@/lib/habits/forecast";
 import { catCondition, formaStreaks } from "@/lib/habits/gamification";
 import { lateBasisOf } from "@/lib/sensors";
 import { getLang, L } from "@/lib/i18n";
@@ -46,6 +48,8 @@ import { focusHabit } from "@/lib/habits/focus";
 import { minimumOf, rescueOn } from "@/lib/habits/rescue";
 import { isLightTheme, resolveTheme, systemPrefersDark } from "@/lib/theme";
 import { contextPools, useLinesReady } from "@/lib/habits/szpila";
+import { jabSnapshot } from "@/lib/habits/jabs";
+import { syncJabs } from "@/lib/jab-sync";
 
 const STATE_KEY = "widget_state";
 const PENDING_KEY = "widget_pending";
@@ -102,6 +106,9 @@ export interface PendingOp {
   minute?: number;
   /** Judged automatically (screen time) - never overrides a manual answer. */
   auto?: boolean;
+  /** Minutes from apps: the app minutes `amount` was based on natively (+ per-app split). */
+  appMin?: number;
+  appSplit?: Record<string, number>;
 }
 
 const toMin = (t: string) => {
@@ -169,6 +176,14 @@ export function buildState() {
       ),
       boost: h.id === focusId || rescueOn(h, idx, today),
       source: h.source ?? "",
+      // Minutes from apps (WidgetShared.syncApps): packages + the app minutes today's amount is based on.
+      ...(isAppsHabit(h)
+        ? {
+            apps: h.apps ?? [],
+            appMin: idx.get(`${h.id}|${key}`)?.appMin ?? 0,
+            appSplit: idx.get(`${h.id}|${key}`)?.appSplit ?? {},
+          }
+        : {}),
       ...(h.source === "screen"
         ? {
             lateAfter: lateAfterMin(h),
@@ -226,14 +241,24 @@ export function buildState() {
     ...themeFields(),
     // Health Connect steps: "auto" or one app's package (HealthSteps.source).
     stepsSource: stepsSource || "auto",
+    // The phone's calendars (CalendarBusy.java): picked ids, quiet during meetings, free-window hint.
+    calendar: {
+      ids: useHabits.getState().calendars,
+      quiet: notifications.meetingQuiet,
+      windows: notifications.freeWindows,
+    },
     // "Kot w domu": groomed / normal / neglected (widget overlay + mood).
     cat: catCondition(habits, completions, today),
     // Forma streak (current / best) for the widgets.
     forma: formaStreaks(habits, completions, today),
     // Morning "rachunek za noc" comments (HabitNotifier.billText).
     bill: billLines(level, userName),
+    // "Prognoza na dziś": per-habit models + lines for the morning bill (Forecast.java).
+    forecast: forecastSnapshot(habits, idx, useHabits.getState().nightReports, level, today),
     allDone: allDoneLines(level),
     evening: eveningLines(level),
+    // "Co na ciebie działa": learned arm stats (HabitNotifier.pickJab samples from these + newer native log).
+    jabs: jabSnapshot(useHabits.getState().jabLearn),
     habits: rows,
   };
 }
@@ -274,6 +299,10 @@ export function applyPendingOps(ops: PendingOp[]): void {
     const h = s.habits.find((x) => x.id === op.habitId);
     if (!h) continue;
     if (op.amount != null && kindOf(h) === "build") {
+      // Apps habit: first the app minutes the widget saw, then its amount - so the
+      // manual adjustment is exactly what the widget made it (amount - appMin).
+      if (op.appMin != null && isAppsHabit(h))
+        s.setAppMinutes(op.habitId, op.date, op.appMin, op.appSplit, op.minute);
       s.setAmount(op.habitId, op.date, op.amount, op.minute);
     } else if (op.status !== undefined && kindOf(h) === "avoid") {
       const existing = useHabits
@@ -292,6 +321,7 @@ async function syncNightHits(): Promise<void> {
   const st = await liveStatus();
   if (st?.hits) useHabits.getState().mergeNightHits(st.hits);
   if (st?.day) useHabits.getState().mergeDaySocial(st.day);
+  if (st?.dayLimit) useHabits.getState().mergeDayLimits(st.dayLimit);
 }
 
 let started = false;
@@ -301,7 +331,9 @@ export function startWidgetBridge(): void {
   started = true;
 
   // Apply any taps made on the widget, pull steps/screen time, then publish.
-  const catchUp = () => void reconcile().then(syncSensors).then(syncNightHits).then(mirror);
+  // Jab outcomes after reconcile: the completions log they're judged by is complete then.
+  const catchUp = () =>
+    void reconcile().then(syncSensors).then(syncNightHits).then(syncJabs).then(mirror);
   catchUp();
   // Steps keep changing while the app is open.
   setInterval(() => {

@@ -249,10 +249,15 @@ final class WidgetShared {
     // ------------------------------------------------------------------
 
     static int nextMinute(JSONObject h) {
+        return nextMinute(h, nowMinute());
+    }
+
+    /** Same, at a given minute of the day (pure - for tests and callers that pass the time). */
+    static int nextMinute(JSONObject h, int now) {
         int start = h.optInt("start", 12 * 60);
         if (isAvoid(h)) return start;
         return nextMinute(start, h.optInt("end", start), Math.max(1, h.optInt("units", 1)),
-            amount(h) / step(h), nowMinute());
+            amount(h) / step(h), now);
     }
 
     /**
@@ -366,6 +371,10 @@ final class WidgetShared {
                     h.put("boost", rescue || h.optBoolean("focus", false));
                     h.put("done", false);
                     h.put("amount", 0);
+                    if (h.has("appMin")) {
+                        h.put("appMin", 0);
+                        h.put("appSplit", new JSONObject());
+                    }
                     if (isAvoid(h)) h.put("status", "pending");
                 }
             }
@@ -544,6 +553,20 @@ final class WidgetShared {
                 && syncSteps(context)) {
             return;
         }
+        // Minutes from apps (Duolingo...): fresh app minutes first, the tap adds on top (manual part).
+        if (AppMinutes.isApps(row)) {
+            syncApps(context);
+            edit(context, habitId, (h, date) -> {
+                if (forwardOnly && isDone(h)) return null;
+                int appMin = h.optInt("appMin", 0);
+                int a = AppMinutes.tapAmount(amount(h), appMin, target(h), step(h));
+                if (a == amount(h)) return null;
+                h.put("amount", a);
+                h.put("done", a >= target(h));
+                return new JSONObject().put("amount", a).put("appMin", appMin);
+            });
+            return;
+        }
         edit(context, habitId, (h, date) -> {
             if (forwardOnly && isDone(h)) return null;
             JSONObject op = new JSONObject();
@@ -598,6 +621,32 @@ final class WidgetShared {
             if (!Kropi.applyTo(h, date, day)) return null;
             changed[0] = true;
             return new JSONObject().put("amount", h.optInt("amount"));
+        });
+        return changed[0];
+    }
+
+    /**
+     * Today's foreground minutes of the chosen apps into habits with source
+     * "apps" (usage access). The manual adjustment (amount - appMin) stays on
+     * top. True if anything changed.
+     */
+    static boolean syncApps(Context context) {
+        java.util.Set<String> watched = new java.util.HashSet<>();
+        JSONArray a = habits(context);
+        for (int i = 0; i < a.length(); i++) {
+            JSONObject h = a.optJSONObject(i);
+            if (AppMinutes.isApps(h)) watched.addAll(AppMinutes.apps(h));
+        }
+        if (watched.isEmpty()) return false;
+        java.util.List<java.util.Map<String, Integer>> days = AppMinutes.perDay(context, watched, 0);
+        if (days == null || days.isEmpty()) return false;
+        final java.util.Map<String, Integer> today = days.get(0);
+        final boolean[] changed = {false};
+        edit(context, null, (h, date) -> {
+            if (!AppMinutes.isApps(h)) return null;
+            JSONObject op = AppMinutes.applyTo(h, today);
+            if (op != null) changed[0] = true;
+            return op;
         });
         return changed[0];
     }

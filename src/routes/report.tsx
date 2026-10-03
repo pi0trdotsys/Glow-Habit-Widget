@@ -6,6 +6,7 @@ import { useHabits } from "@/lib/habits/store";
 import { weeklyReport, kindOf, formatMinute } from "@/lib/habits/utils";
 import { habitInsights, sleepInsights, trackedDays, usualMinute } from "@/lib/habits/insights";
 import { MonthCalendar } from "@/components/MonthCalendar";
+import { ForecastHitRate } from "@/components/RiskCard";
 import { AVOID_COLOR, HABIT_COLOR_VAR } from "@/lib/habits/colors";
 import { MonthsView, TrendView } from "@/components/LongStats";
 import { useState } from "react";
@@ -118,8 +119,28 @@ function ReportPage() {
             </div>
             <div className="mt-1 text-xs text-muted-foreground">
               {L(
-                `${fmt(r.thisWeek.score)} z ${fmt(r.thisWeek.due)} wykonań · tydzień temu ${fmt(r.lastWeek.score)} z ${fmt(r.lastWeek.due)}`,
-                `${fmt(r.thisWeek.score)} of ${fmt(r.thisWeek.due)} done · last week ${fmt(r.lastWeek.score)} of ${fmt(r.lastWeek.due)}`,
+                `Wynik ${r.thisWeek.rate}% · tydzień temu ${r.lastWeek.rate}%`,
+                `Score ${r.thisWeek.rate}% · last week ${r.lastWeek.rate}%`,
+              )}
+            </div>
+            {(r.slips.this > 0 || r.slips.last > 0) && (
+              <div
+                className="mt-0.5 text-xs"
+                data-week-slips
+                style={{
+                  color: r.slips.this > r.slips.last ? "var(--avoid)" : "var(--muted-foreground)",
+                }}
+              >
+                {L(
+                  `Wpadki z zakazanymi: ${r.slips.this} · tydzień temu ${r.slips.last}`,
+                  `Forbidden-habit slips: ${r.slips.this} · last week ${r.slips.last}`,
+                )}
+              </div>
+            )}
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              {L(
+                "Liczą się zadania do zrobienia, a zakazane z wagą ½: czysty dzień na plus, wpadka ponad limit na minus, niepotwierdzony dzień jeszcze się nie liczy.",
+                "Habits to do count fully, forbidden ones at ½ weight: a clean day adds, a slip over the allowance subtracts, an unanswered day doesn't count yet.",
               )}
             </div>
           </div>
@@ -184,6 +205,7 @@ function ReportPage() {
             ))}
           </ul>
         )}
+        <ForecastHitRate />
       </section>
 
       <section className="mx-5 mt-4 rounded-3xl bg-card p-5">

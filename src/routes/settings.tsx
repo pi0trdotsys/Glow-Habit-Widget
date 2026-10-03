@@ -48,8 +48,10 @@ import { formatMinute } from "@/lib/habits/utils";
 import { L, pick } from "@/lib/i18n";
 import { StepsSources } from "@/components/StepsSources";
 import { KropiSource } from "@/components/KropiSource";
+import { AppsSources } from "@/components/AppSources";
 import { CurfewCard } from "@/components/CurfewCard";
 import { ShopGuardCard } from "@/components/ShopGuardCard";
+import { CalendarCard } from "@/components/CalendarCard";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: L("Ustawienia - Szpila", "Settings - Szpila") }] }),
@@ -512,6 +514,8 @@ function SettingsPage() {
               </p>
             </div>
 
+            <CalendarCard onMessage={setMsg} />
+
             <WidgetsCard onMessage={setMsg} />
           </div>
         )}
@@ -663,8 +667,8 @@ function SensorsCard({ onMessage }: { onMessage: (m: string) => void }) {
       <div className="font-medium">{L("Automatyczne śledzenie", "Auto-tracking")}</div>
       <p className="mt-1 text-xs text-muted-foreground">
         {L(
-          "Włącz źródło tutaj, a potem wybierz je w edycji zadania („Kroki z Health Connect” albo „Oceniaj z czasu ekranu”).",
-          "Turn a source on here, then pick it when editing a habit (“Steps from Health Connect” or “Judge by screen time”).",
+          "Włącz źródło tutaj, a potem wybierz je w edycji zadania („Kroki z Health Connect”, „Minuty z aplikacji” albo „Oceniaj z czasu ekranu”).",
+          "Turn a source on here, then pick it when editing a habit (“Steps from Health Connect”, “Minutes from apps” or “Judge by screen time”).",
         )}
       </p>
 
@@ -709,6 +713,7 @@ function SensorsCard({ onMessage }: { onMessage: (m: string) => void }) {
       </div>
       {steps?.granted && <StepsSources onMessage={onMessage} />}
       <KropiSource onMessage={onMessage} />
+      <AppsSources onMessage={onMessage} />
 
       {steps?.available && steps.sleep != null && (
         <div className="mt-4 flex items-center gap-3" data-sleep-sensor>

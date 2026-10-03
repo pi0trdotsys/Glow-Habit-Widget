@@ -371,9 +371,11 @@ await check("Today: one swipeable status card (Szpila + social media) with dots"
     `document.querySelectorAll("[data-status-carousel] [role=tab]")[1].getAttribute("aria-selected") === "true"`,
   );
   const social = await page.eval<string>(`document.querySelector("[data-social-today]").innerText`);
-  // last night's 22 min of Instagram cost 2 × 22 = 44 min of today's 60
-  assert(social.includes("30/16 min"), `social: ${social}`);
-  assert(social.includes("Noc zabrała 44 min"), `no night debt: ${social}`);
+  // the minute bank (default): base 5 + 10 per finished habit, minus last night's debt
+  // (22 min of Instagram = 44 min, capped at what was earned), minus the 30 min spent
+  assert(/Bank: 0 min/.test(social), `social: ${social}`);
+  assert(/noc −[0-9]+|night −[0-9]+/.test(social), `no night debt: ${social}`);
+  assert(/[+]10/.test(social), `no "how to earn": ${social}`);
   // the habits are visible without scrolling
   const tileTop = await page.eval<number>(
     `document.querySelector("[data-tile]").getBoundingClientRect().top`,

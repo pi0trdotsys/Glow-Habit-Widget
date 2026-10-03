@@ -1,0 +1,162 @@
+{
+  "constants": {
+    "windowMin": 30,
+    "logCap": 500,
+    "explorePct": 15,
+    "priorA": 1,
+    "priorB": 1,
+    "sampleCap": 30,
+    "afternoonFrom": 720,
+    "eveningFrom": 1080,
+    "kinds": [
+      "nag",
+      "rage",
+      "memory",
+      "ctx:zero",
+      "ctx:almost",
+      "ctx:late",
+      "ctx:morning",
+      "rescue",
+      "focus"
+    ]
+  },
+  "rng": {
+    "seed": 42,
+    "values": [
+      0.6011037519201636, 0.44829055899754167, 0.8524657934904099, 0.6697340414393693,
+      0.17481389874592423, 0.5265925421845168, 0.2732279943302274, 0.6247446539346129
+    ]
+  },
+  "rngNeg": {
+    "seed": -123456789,
+    "values": [0.9335711891762912, 0.2907314267940819, 0.865351774264127, 0.04375693411566317]
+  },
+  "hashes": [
+    ["", 0],
+    ["a", 97],
+    ["Rusz dupę, {u}.", 1862513903],
+    ["Zostało tylko {left}. Serio?", 1068599523],
+    ["Ziemniaki zażółć gęślą jaźń 😼", -587668202],
+    ["“{name}” is waiting", -284537971]
+  ],
+  "styles": [
+    ["Rusz dupę, Ola.", "Ola", "name"],
+    ["Czy to już?", null, "q"],
+    ["Plain line.", "", "plain"],
+    ["KURWA, Ola? Serio?", "ola", "swear,name,q"],
+    ["What the fuck, Sam", "Sam", "swear,name"],
+    ["Gówno prawda.", null, "swear"]
+  ],
+  "beta": [
+    {
+      "s": 0,
+      "n": 0,
+      "seed": 1,
+      "v": 0.6270739405881613
+    },
+    {
+      "s": 3,
+      "n": 9,
+      "seed": 2,
+      "v": 0.3572446557227522
+    },
+    {
+      "s": 7,
+      "n": 9,
+      "seed": 3,
+      "v": 0.5526072245556861
+    },
+    {
+      "s": 40,
+      "n": 80,
+      "seed": 4,
+      "v": 0.5084968542214483
+    },
+    {
+      "s": 12,
+      "n": 10,
+      "seed": 5,
+      "v": 0.9056215002201498
+    }
+  ],
+  "choose": [
+    {
+      "seed": 1,
+      "cands": [],
+      "expected": -1
+    },
+    {
+      "seed": 2,
+      "cands": [
+        [0, 0],
+        [0, 0]
+      ],
+      "expected": -1
+    },
+    {
+      "seed": 3,
+      "cands": [
+        [1, 10],
+        [9, 10],
+        [0, 0]
+      ],
+      "expected": 1
+    },
+    {
+      "seed": 4,
+      "cands": [
+        [1, 10],
+        [9, 10],
+        [0, 0]
+      ],
+      "expected": 1
+    },
+    {
+      "seed": 5,
+      "cands": [
+        [5, 5],
+        [0, 5]
+      ],
+      "expected": 0
+    },
+    {
+      "seed": 6,
+      "cands": [
+        [2, 40],
+        [30, 40],
+        [1, 1]
+      ],
+      "expected": 1
+    },
+    {
+      "seed": 7,
+      "cands": [[0, 3]],
+      "expected": -1
+    },
+    {
+      "seed": 8,
+      "cands": [
+        [3, 4],
+        [4, 4],
+        [1, 2],
+        [0, 1],
+        [2, 9]
+      ],
+      "expected": 1
+    }
+  ],
+  "dayparts": [
+    [0, "morning"],
+    [719, "morning"],
+    [720, "afternoon"],
+    [1079, "afternoon"],
+    [1080, "evening"],
+    [1439, "evening"]
+  ],
+  "effective": [
+    [3, 9, 3, 9],
+    [40, 80, 15, 30],
+    [31, 31, 30, 30],
+    [45, 60, 23, 30]
+  ]
+}

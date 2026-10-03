@@ -143,6 +143,20 @@ Eight glasses of water? Spread evenly from morning to night.
 - **Sleep from your band** 😴: Mi Fitness writes sleep to Health Connect, and
   the night bill shows how long you really slept and how many minutes after
   putting the phone down you fall asleep.
+- **Minute bank** 💰: social media isn't free. You start with 5 minutes, get
+  +10 for every habit done and +5 per 1000 steps, and a night of scrolling
+  takes from the bank. Empty bank = blocked.
+- **Today's forecast** 🔮: in the morning Szpila tells you what you'll most
+  likely skip today and why (_"after a night with 40 min of scrolling and
+  5.5 h of sleep you usually skip reading (78%)"_), while you can still act.
+- **Szpila learns what works**: it remembers which jabs actually get you
+  moving within 30 minutes and hits your sore spots more and more often.
+- **Minutes from apps**: "Learn a language" counts itself from Duolingo and
+  Busuu (reading e.g. from Kindle), and your own additions add up.
+- **Calendar** 🗓: no jabs during meetings (work calendars synced to the
+  phone too) and suggestions for free windows.
+- **A fair week vs week**: forbidden habits count too. A clean day adds, a
+  slip over the allowance subtracts, an unanswered day doesn't count yet.
 
 ## ◉ Forbidden. In red.
 

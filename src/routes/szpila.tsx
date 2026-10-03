@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { SzpilaAvatar, conditionMood, useCatCondition } from "@/components/Szpila";
 import { useHabits } from "@/lib/habits/store";
+import { isBank } from "@/lib/bank";
 import {
   FACES,
   HUMORS,
@@ -25,6 +26,7 @@ import {
 } from "@/lib/habits/gamification";
 import { L, pick } from "@/lib/i18n";
 import { focusChallenge, focusHabit } from "@/lib/habits/focus";
+import { JabLearnCard } from "@/components/JabLearnCard";
 
 export const Route = createFileRoute("/szpila")({
   head: () => ({
@@ -59,13 +61,16 @@ function SzpilaPage() {
   const limitOn = useHabits((s) => s.notifications.dailyLimit);
   const limitMin = useHabits((s) => s.notifications.dailyLimitMin);
   const daySocial = useHabits((s) => s.daySocial);
+  const bank = useHabits((s) => isBank(s.notifications));
+  const dayLimits = useHabits((s) => s.dayLimits);
   // The "within the limit" challenge only once the limit is on and there's data.
+  // Bank mode: each day against what the bank held that day.
   const dayLimit = useMemo(
     () =>
       limitOn && Object.keys(daySocial).length > 0
-        ? { limit: limitMin, social: daySocial }
+        ? { limit: limitMin, social: daySocial, ...(bank ? { limits: dayLimits } : {}) }
         : undefined,
-    [limitOn, limitMin, daySocial],
+    [limitOn, limitMin, daySocial, bank, dayLimits],
   );
   const look = useHabits((s) => s.szpila);
   const setSzpila = useHabits((s) => s.setSzpila);
@@ -168,6 +173,8 @@ function SzpilaPage() {
             : ""}
         </p>
       </section>
+
+      <JabLearnCard />
 
       <section className="mx-5 mt-4 rounded-3xl bg-card p-5">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">

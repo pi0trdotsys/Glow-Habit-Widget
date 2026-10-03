@@ -286,6 +286,8 @@
 
     <!-- Water from Kropi (the user's hydration app, same signing key): read its days -->
     <uses-permission android:name="com.kropi.hydration.permission.READ_HYDRATION" />
+    <!-- The phone's calendars (any synced account, e.g. work via Outlook/Exchange): busy meetings only -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
 
     <queries>
         <package android:name="com.kropi.hydration" />

@@ -111,7 +111,7 @@ describe("daily limit", () => {
   test("the snapshot carries morning + day settings and their lines (DayGuard.java)", () => {
     const st = dayGuardState(n({ morningUntil: "10:30", dailyLimitMin: 45 }), habits, now);
     expect(st.morning).toEqual({ enabled: true, until: 630, habits: [teeth.id, water.id] });
-    expect(st.day).toEqual({ enabled: true, limit: 45, debt: true });
+    expect(st.day).toMatchObject({ enabled: true, limit: 45, debt: true, mode: "bank" });
     const live = liveState(n(), "hard", null, undefined, habits);
     expect(live.morning.habits).toEqual([teeth.id, water.id]);
     for (const k of ["morning", "morningDone", "dayOver", "dayEscalate", "dayWarn", "dayBlock"]) {
@@ -126,7 +126,7 @@ describe("daily limit", () => {
   });
 
   test("lines: only known placeholders, hard swears, soft doesn't, English is English", () => {
-    const known = /\{(tasks|app|used|limit|over|left|m|time|u)\}/g;
+    const known = /\{(tasks|app|used|limit|over|left|bank|earn|m|time|u)\}/g;
     for (const lang of ["pl", "en"] as const) {
       setLang(lang);
       const hard = dayLines("hard", "Ola");

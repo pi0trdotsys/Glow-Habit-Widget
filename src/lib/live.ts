@@ -493,6 +493,12 @@ export interface LiveStatus {
   /** The daily limit as set, and what last night took off it today. */
   limitBase?: number;
   debt?: number;
+  /** "Bank minut": the mode, minutes earned today (capped), today's actual limit. */
+  limitMode?: "fixed" | "bank";
+  bankEarned?: number;
+  limit?: number;
+  /** The day's actual limit per day ("yyyy-MM-dd" -> min; the bank's balance in bank mode). */
+  dayLimit?: Record<string, number>;
   /** "24 h do namysłu", per calendar day: blocks, held-through passes, "add to the list" taps. */
   shopBlocks?: Record<string, number>;
   shopPasses?: Record<string, number>;

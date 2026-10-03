@@ -237,6 +237,8 @@ export interface DayLimit {
   limit: number;
   /** Minutes per day ("yyyy-MM-dd"). */
   social: Record<string, number>;
+  /** "Bank minut": each day is judged against its own balance (falls back to `limit`). */
+  limits?: Record<string, number>;
 }
 
 export function progressOf(
@@ -473,18 +475,26 @@ export function weeklyChallenges(
       let over = 0;
       let within = 0;
       for (let i = 0; i <= last; i++) {
-        const m = dayLimit.social[todayKey(day(i))];
+        const k = todayKey(day(i));
+        const m = dayLimit.social[k];
         if (m == null) continue;
-        if (m > dayLimit.limit) over++;
+        // In bank mode today's balance can still grow - only finished days fail.
+        if (dayLimit.limits && i === sinceMonday) continue;
+        if (m > (dayLimit.limits?.[k] ?? dayLimit.limit)) over++;
         else if (i < sinceMonday) within++; // that day is over
       }
       return {
         id: "limit7",
         title: L("Tydzień w limicie social mediów", "A week within the social media limit"),
-        detail: L(
-          `Każdego dnia najwyżej ${dayLimit.limit} min social mediów.`,
-          `At most ${dayLimit.limit} min of social media every day.`,
-        ),
+        detail: dayLimit.limits
+          ? L(
+              "Każdego dnia najwyżej tyle social mediów, ile masz w banku minut.",
+              "Every day, no more social media than your minute bank holds.",
+            )
+          : L(
+              `Każdego dnia najwyżej ${dayLimit.limit} min social mediów.`,
+              `At most ${dayLimit.limit} min of social media every day.`,
+            ),
         progress: within,
         goal: 7,
         status: over > 0 ? "failed" : weekOver ? "done" : "active",

@@ -6,8 +6,66 @@ import { refreshNative } from "@/lib/widget/bridge";
 import { autoMorningHabits, morningHabitIds } from "@/lib/day-guard";
 import { kindOf, todayKey } from "@/lib/habits/utils";
 import { L } from "@/lib/i18n";
+import { bankHowTo, bankToday, isBank } from "@/lib/bank";
 
 const LIMITS = [15, 30, 45, 60, 90, 120, 180];
+// "Bank minut" rules (src/lib/bank.ts).
+const BASES = [0, 5, 10, 15, 30];
+const PER_HABIT = [5, 10, 15, 20, 30];
+const PER_K_STEPS = [0, 2, 5, 10];
+const CAPS = [30, 60, 90, 120, 180, 240];
+
+/** The next value of a fixed list (an off-list value snaps to the nearest step). */
+function stepIn(list: number[], value: number, d: number): number {
+  let i = list.indexOf(value);
+  if (i < 0) {
+    i = list.findIndex((v) => v > value);
+    if (i < 0) i = list.length;
+    if (d > 0) i -= 1;
+  }
+  return list[Math.min(list.length - 1, Math.max(0, i + d))];
+}
+
+function Stepper({
+  label,
+  value,
+  unit,
+  list,
+  onChange,
+  data,
+}: {
+  label: string;
+  value: number;
+  unit: string;
+  list: number[];
+  onChange: (v: number) => void;
+  data?: string;
+}) {
+  return (
+    <div className="mt-3 flex items-center justify-between" data-stepper={data}>
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <div className="flex items-center gap-2">
+        <button
+          aria-label={L("Mniej", "Less")}
+          onClick={() => onChange(stepIn(list, value, -1))}
+          className="grid h-8 w-8 place-items-center rounded-full border border-border"
+        >
+          <Minus size={14} />
+        </button>
+        <span className="w-16 text-center text-sm font-semibold tabular-nums">
+          {value} {unit}
+        </span>
+        <button
+          aria-label={L("Więcej", "More")}
+          onClick={() => onChange(stepIn(list, value, 1))}
+          className="grid h-8 w-8 place-items-center rounded-full border border-border"
+        >
+          <Plus size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 /** Settings: the guard during the day - morning lock + daily social media limit (Android). */
 export function DayGuardCard() {
@@ -15,6 +73,8 @@ export function DayGuardCard() {
   const setNotifications = useHabits((s) => s.setNotifications);
   const habits = useHabits((s) => s.habits);
   const daySocial = useHabits((s) => s.daySocial);
+  const completions = useHabits((s) => s.completions);
+  const reports = useHabits((s) => s.nightReports);
   if (!Capacitor.isNativePlatform()) return null;
 
   const update = (patch: Partial<typeof notif>) => {
@@ -25,6 +85,9 @@ export function DayGuardCard() {
   const chosen = new Set(morningHabitIds(notif, habits));
   const auto = notif.morningHabits == null;
   const used = daySocial[todayKey()] ?? 0;
+  const bankOn = isBank(notif);
+  const bank = bankOn ? bankToday(notif, habits, completions, reports, used) : null;
+  const todayLimit = bank ? bank.limit : notif.dailyLimitMin;
   const idx = Math.max(0, LIMITS.indexOf(notif.dailyLimitMin));
   const step = (d: number) => {
     const i = LIMITS.indexOf(notif.dailyLimitMin);
@@ -125,15 +188,86 @@ export function DayGuardCard() {
             )}
             <span
               className="font-semibold"
-              style={{ color: used > notif.dailyLimitMin ? "var(--avoid)" : undefined }}
+              style={{ color: used > todayLimit ? "var(--avoid)" : undefined }}
             >
-              {used}/{notif.dailyLimitMin} min
+              {used}/{todayLimit} min
             </span>
           </div>
         </div>
         <Toggle checked={notif.dailyLimit} onChange={(on) => update({ dailyLimit: on })} />
       </div>
       {notif.dailyLimit && (
+        <div
+          className="mt-3 flex rounded-full bg-background p-1 text-xs font-semibold"
+          data-limit-mode
+        >
+          {(
+            [
+              ["bank", L("💰 Bank minut", "💰 Minute bank")],
+              ["fixed", L("Stały limit", "Fixed limit")],
+            ] as const
+          ).map(([mode, label]) => {
+            const on = (mode === "bank") === bankOn;
+            return (
+              <button
+                key={mode}
+                aria-pressed={on}
+                onClick={() => update({ limitMode: mode })}
+                className="flex-1 rounded-full px-3 py-1.5 transition"
+                style={{
+                  backgroundColor: on ? "var(--card)" : "transparent",
+                  color: on ? "var(--foreground)" : "var(--muted-foreground)",
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {notif.dailyLimit && bank && (
+        <div data-bank-settings>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {L(
+              `Social media trzeba zarobić: na start ${bank.rules.base} min, ${bankHowTo(bank.rules)}, najwyżej ${bank.rules.cap} min dziennie. Noc dalej kosztuje. Dziś w banku: ${bank.left} min (zarobione ${bank.earned}, wydane ${used}).`,
+              `Social media has to be earned: ${bank.rules.base} min to start, ${bankHowTo(bank.rules)}, at most ${bank.rules.cap} min a day. Nights still cost. In the bank today: ${bank.left} min (earned ${bank.earned}, spent ${used}).`,
+            )}
+          </p>
+          <Stepper
+            data="base"
+            label={L("Na start dnia", "To start the day")}
+            value={bank.rules.base}
+            unit="min"
+            list={BASES}
+            onChange={(v) => update({ bankBase: v })}
+          />
+          <Stepper
+            data="habit"
+            label={L("Za każde zadanie", "Per habit")}
+            value={bank.rules.perHabit}
+            unit="min"
+            list={PER_HABIT}
+            onChange={(v) => update({ bankPerHabit: v })}
+          />
+          <Stepper
+            data="steps"
+            label={L("Za 1000 kroków", "Per 1000 steps")}
+            value={bank.rules.perKSteps}
+            unit="min"
+            list={PER_K_STEPS}
+            onChange={(v) => update({ bankPerKSteps: v })}
+          />
+          <Stepper
+            data="cap"
+            label={L("Najwięcej dziennie", "Most per day")}
+            value={bank.rules.cap}
+            unit="min"
+            list={CAPS}
+            onChange={(v) => update({ bankCap: v })}
+          />
+        </div>
+      )}
+      {notif.dailyLimit && !bank && (
         <div className="mt-3 flex items-center justify-between">
           <span className="text-xs text-muted-foreground">
             {L("Limit na dzień", "Limit per day")}

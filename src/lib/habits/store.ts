@@ -9,9 +9,12 @@ import { isThemePref, type ThemePref } from "@/lib/theme";
 import { translateHabit } from "./seed-names";
 import { linkStepsPatch } from "@/lib/steps";
 import { linkKropiPatch, type KropiDay } from "@/lib/kropi";
+import { appShift, cleanSplit, sameSplit } from "@/lib/apps";
 import { normalizeWishlist, wishReady, type WishItem } from "@/lib/shop";
 import { weekKey, type WeeklyFocus } from "./focus";
 import { goalOf, kindOf, minuteOfDay, todayKey } from "./utils";
+import { normalizeCalendarIds } from "@/lib/calendar";
+import { emptyJabLearn, mergeJabLog, normalizeJabLearn, type JabLearn } from "./jabs";
 
 export type TauntLevel = "hard" | "soft";
 
@@ -59,6 +62,17 @@ export interface NotificationSettings {
   dailyLimit: boolean;
   dailyLimitMin: number;
   /**
+   * "Bank minut": "fixed" = dailyLimitMin a day; "bank" = the limit is earned
+   * (bankBase + bankPerHabit per finished habit to do + bankPerKSteps per 1000
+   * steps, at most bankCap), see src/lib/bank.ts. Default "bank" (also for
+   * existing installs - backfilled by merge).
+   */
+  limitMode: "fixed" | "bank";
+  bankBase: number;
+  bankPerHabit: number;
+  bankPerKSteps: number;
+  bankCap: number;
+  /**
    * "Cisza nocna": after liveFrom every app outside curfewAllow is blocked at
    * once (alarm, calls, home screen always work). Urgent passes: a growing hold.
    */
@@ -75,6 +89,10 @@ export interface NotificationSettings {
   shopOff: string[];
   /** Minutes of shopping a pass gives (hold-through or "Kupuję" after 24 h). */
   shopPassMin: number;
+  /** "Nie szpiluj w trakcie spotkań": jabs inside a busy event of the picked calendars wait for its end. */
+  meetingQuiet: boolean;
+  /** "Podpowiadaj wolne okna": free windows for minutes habits (Today, one jab a day) + plan times out of meetings. */
+  freeWindows: boolean;
 }
 
 /** The cat's look + voice (unlocked by forma streaks, see gamification.ts). */
@@ -110,6 +128,11 @@ const defaultNotifications: NotificationSettings = {
   morningHabits: null,
   dailyLimit: true,
   dailyLimitMin: 60,
+  limitMode: "bank",
+  bankBase: 5,
+  bankPerHabit: 10,
+  bankPerKSteps: 5,
+  bankCap: 120,
   curfew: false,
   curfewAllow: [],
   curfewDim: true,
@@ -117,6 +140,8 @@ const defaultNotifications: NotificationSettings = {
   shopGuard: false,
   shopOff: [],
   shopPassMin: 15,
+  meetingQuiet: true,
+  freeWindows: true,
 };
 
 const defaultLook: SzpilaLook = { face: "wredny", humor: "wredny" };
@@ -146,12 +171,28 @@ interface HabitsState {
   /** Where steps come from: "auto" or the package of one Health Connect source (e.g. Mi Fitness). */
   stepsSource: string;
   setStepsSource: (source: string) => void;
+  /** Ids of the phone's calendars to respect (Android calendar provider, any account incl. work). */
+  calendars: string[];
+  setCalendars: (ids: string[]) => void;
   /** Fill a habit from the band's steps (source "steps"; a goal in thousands becomes real steps). */
   linkSteps: (habitId: string) => void;
   /** Fill a water habit from Kropi (source "kropi", ml; history from Kropi's days). */
   linkKropi: (habitId: string, days: KropiDay[]) => void;
   /** Back to logging by hand (the ml goal stays). */
   unlinkKropi: (habitId: string) => void;
+  /** Count a minutes habit from apps (source "apps", e.g. Duolingo + Busuu); empty list unlinks. */
+  linkApps: (habitId: string, apps: string[]) => void;
+  /**
+   * source "apps": the day's app minutes (and per-app split) from the phone.
+   * The manual adjustment (amount - appMin) stays on top (src/lib/apps.ts appShift).
+   */
+  setAppMinutes: (
+    habitId: string,
+    dateKey: string,
+    minutes: number,
+    split?: Record<string, number>,
+    minute?: number,
+  ) => void;
   /** Daily automatic backup to Download/Szpila (Android). */
   autoBackup: boolean;
   setAutoBackup: (on: boolean) => void;
@@ -164,8 +205,17 @@ interface HabitsState {
   /** Social media minutes per day (05:00 .. bedtime), from the native guard. */
   daySocial: Record<string, number>;
   mergeDaySocial: (m: Record<string, number>) => void;
+  /** The day's actual limit ("yyyy-MM-dd" -> min; what the bank held in bank mode), from the native guard. */
+  dayLimits: Record<string, number>;
+  mergeDayLimits: (m: Record<string, number>) => void;
   szpila: SzpilaLook;
   setSzpila: (look: Partial<SzpilaLook>) => void;
+  /** "Co na ciebie działa": what Szpila learned about its jabs (src/lib/habits/jabs.ts). */
+  jabLearn: JabLearn;
+  /** Fold the native jab log (HabitWidget.jabStats) into jabLearn; idempotent. */
+  mergeJabs: (entries: unknown[], now?: number) => void;
+  /** Forget everything learned (older native log entries are ignored from now on). */
+  resetJabs: (now?: number) => void;
   /** "24 h do namysłu": things to buy wait a day before they can be bought (src/lib/shop.ts). */
   wishlist: WishItem[];
   addWish: (w: { name: string; price?: number; app?: string }, now?: Date) => string;
@@ -327,6 +377,8 @@ export const useHabits = create<HabitsState>()(
         }),
       stepsSource: "auto",
       setStepsSource: (source) => set({ stepsSource: source || "auto" }),
+      calendars: [],
+      setCalendars: (ids) => set({ calendars: normalizeCalendarIds(ids) }),
       linkKropi: (habitId, days) =>
         set((s) => {
           const h = s.habits.find((x) => x.id === habitId);
@@ -345,6 +397,48 @@ export const useHabits = create<HabitsState>()(
             x.id === habitId && x.source === "kropi" ? { ...x, source: undefined } : x,
           ),
         })),
+      linkApps: (habitId, apps) =>
+        set((s) => {
+          const h = s.habits.find((x) => x.id === habitId);
+          if (!h || kindOf(h) === "avoid") return {};
+          const list = [...new Set(apps.filter(Boolean))];
+          return {
+            habits: s.habits.map((x) =>
+              x.id !== habitId
+                ? x
+                : list.length
+                  ? {
+                      ...x,
+                      source: "apps" as const,
+                      apps: list,
+                      goal:
+                        goalOf(x).type === "minutes"
+                          ? x.goal
+                          : { type: "minutes", target: 15, step: 5 },
+                    }
+                  : { ...x, source: x.source === "apps" ? undefined : x.source, apps: undefined },
+            ),
+          };
+        }),
+      setAppMinutes: (habitId, dateKey, minutes, split, minute = minuteOfDay()) => {
+        const cur = get().completions.find((c) => c.habitId === habitId && c.date === dateKey);
+        const m = Math.max(0, Math.round(minutes));
+        const sp = split ? cleanSplit(split) : (cur?.appSplit ?? {});
+        if (!cur && m === 0) return;
+        if (cur && cur.appMin === m && sameSplit(cur.appSplit, sp)) return;
+        const { amount, prev } = appShift(cur, m);
+        const moved = !cur || amount !== (cur.amount ?? 1);
+        const next: Completion = {
+          ...(cur ?? { habitId, date: dateKey }),
+          amount,
+          appMin: m,
+        };
+        if (Object.keys(sp).length) next.appSplit = sp;
+        else delete next.appSplit;
+        if (prev) next.prev = prev;
+        if (moved) next.log = withLog(cur, minute, amount);
+        set((s) => ({ completions: upsert(s.completions, habitId, dateKey, next) }));
+      },
       linkSteps: (habitId) =>
         set((s) => {
           const h = s.habits.find((x) => x.id === habitId);
@@ -418,8 +512,31 @@ export const useHabits = create<HabitsState>()(
           for (const k of keys.slice(0, Math.max(0, keys.length - 120))) delete next[k];
           return { daySocial: next };
         }),
+      dayLimits: {},
+      mergeDayLimits: (m) =>
+        set((s) => {
+          const next = { ...s.dayLimits };
+          let changed = false;
+          for (const [k, v] of Object.entries(m)) {
+            if (typeof v === "number" && v !== next[k]) {
+              next[k] = v;
+              changed = true;
+            }
+          }
+          if (!changed) return {};
+          const keys = Object.keys(next).sort();
+          for (const k of keys.slice(0, Math.max(0, keys.length - 120))) delete next[k];
+          return { dayLimits: next };
+        }),
       szpila: defaultLook,
       setSzpila: (look) => set((s) => ({ szpila: { ...s.szpila, ...look } })),
+      jabLearn: emptyJabLearn(),
+      mergeJabs: (entries, now = Date.now()) =>
+        set((s) => {
+          const next = mergeJabLog(s.jabLearn, entries, s.completions, s.habits, now);
+          return next === s.jabLearn ? {} : { jabLearn: next };
+        }),
+      resetJabs: (now = Date.now()) => set({ jabLearn: emptyJabLearn(now) }),
       wishlist: [],
       addWish: (w, now = new Date()) => {
         const id = uid();
@@ -488,7 +605,16 @@ export const useHabits = create<HabitsState>()(
             dateKey,
             // An explicit 0 stays (with its undo stack) so a clear can be undone too.
             a > 0 || before > 0
-              ? { habitId, date: dateKey, amount: a, log: withLog(cur, minute, a), prev }
+              ? {
+                  habitId,
+                  date: dateKey,
+                  amount: a,
+                  log: withLog(cur, minute, a),
+                  prev,
+                  // Minutes from apps: the amount set by hand only moves the manual part.
+                  ...(cur?.appMin != null ? { appMin: cur.appMin } : {}),
+                  ...(cur?.appSplit ? { appSplit: cur.appSplit } : {}),
+                }
               : null,
           ),
         }));
@@ -503,7 +629,8 @@ export const useHabits = create<HabitsState>()(
         }
         const stack = cur.prev ?? [];
         if (stack.length === 0) {
-          if ((cur.amount ?? 1) === 0) return null;
+          // Only app minutes (nothing typed by hand): nothing to undo - they'd sync right back.
+          if ((cur.amount ?? 1) === 0 || cur.appMin != null) return null;
           set((s) => ({ completions: upsert(s.completions, habitId, dateKey, null) }));
           return 0;
         }
@@ -569,10 +696,13 @@ export const useHabits = create<HabitsState>()(
           nightHits: s.nightHits,
           nightReports: s.nightReports,
           daySocial: s.daySocial,
+          dayLimits: s.dayLimits,
           stepsSource: s.stepsSource,
+          calendars: s.calendars,
           wishlist: s.wishlist,
           focus: s.focus,
           szpila: s.szpila,
+          jabLearn: s.jabLearn,
           language: s.language,
           theme: s.theme,
           iconFollowsTheme: s.iconFollowsTheme,
@@ -590,10 +720,13 @@ export const useHabits = create<HabitsState>()(
           nightHits: Record<string, number>;
           nightReports: Record<string, NightReport>;
           daySocial: Record<string, number>;
+          dayLimits: Record<string, number>;
           stepsSource: string;
+          calendars: unknown;
           wishlist: unknown;
           focus: WeeklyFocus | null;
           szpila: Partial<SzpilaLook>;
+          jabLearn: unknown;
           iconFollowsTheme: boolean;
         }>;
         const valid =
@@ -618,6 +751,7 @@ export const useHabits = create<HabitsState>()(
           nightHits:
             data.nightHits && typeof data.nightHits === "object" ? data.nightHits : s.nightHits,
           szpila: data.szpila ? { ...defaultLook, ...data.szpila } : s.szpila,
+          jabLearn: data.jabLearn ? normalizeJabLearn(data.jabLearn) : s.jabLearn,
           iconFollowsTheme:
             typeof data.iconFollowsTheme === "boolean" ? data.iconFollowsTheme : s.iconFollowsTheme,
           nightReports:
@@ -626,7 +760,12 @@ export const useHabits = create<HabitsState>()(
               : s.nightReports,
           daySocial:
             data.daySocial && typeof data.daySocial === "object" ? data.daySocial : s.daySocial,
+          dayLimits:
+            data.dayLimits && typeof data.dayLimits === "object" ? data.dayLimits : s.dayLimits,
           stepsSource: typeof data.stepsSource === "string" ? data.stepsSource : s.stepsSource,
+          calendars: Array.isArray(data.calendars)
+            ? normalizeCalendarIds(data.calendars)
+            : s.calendars,
           wishlist: Array.isArray(data.wishlist) ? normalizeWishlist(data.wishlist) : s.wishlist,
           focus:
             data.focus &&
@@ -697,13 +836,16 @@ export const useHabits = create<HabitsState>()(
           ...p,
           notifications: { ...defaultNotifications, ...(p.notifications ?? {}) },
           szpila: { ...defaultLook, ...(p.szpila ?? {}) },
+          jabLearn: normalizeJabLearn(p.jabLearn),
           nightHits: p.nightHits ?? {},
           nightReports: p.nightReports ?? {},
           daySocial: p.daySocial ?? {},
+          dayLimits: p.dayLimits ?? {},
           // A palette this version does not know (e.g. from a newer backup) = like the phone.
           theme: isThemePref(p.theme) ? p.theme : "system",
           iconFollowsTheme: typeof p.iconFollowsTheme === "boolean" ? p.iconFollowsTheme : true,
           stepsSource: p.stepsSource || "auto",
+          calendars: normalizeCalendarIds(p.calendars),
           wishlist: normalizeWishlist(p.wishlist),
           focus: p.focus ?? null,
         };

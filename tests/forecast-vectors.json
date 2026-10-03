@@ -1,0 +1,6362 @@
+{
+  "models": [
+    {
+      "id": "read",
+      "name": "Czytanie",
+      "kind": "build",
+      "min": "5 min",
+      "n": 70,
+      "base": 0.375,
+      "days": [0, 1, 2, 3, 4, 5, 6],
+      "wd": [
+        {
+          "l": -0.2657,
+          "g": 1
+        },
+        {
+          "l": 0.107,
+          "g": 1
+        },
+        {
+          "l": 0.107,
+          "g": 1
+        },
+        {
+          "l": 0.107,
+          "g": 1
+        },
+        {
+          "l": 0.107,
+          "g": 1
+        },
+        {
+          "l": 0.107,
+          "g": 1
+        },
+        {
+          "l": -0.2657,
+          "g": 1
+        }
+      ],
+      "night": {
+        "y": 2.162,
+        "n": -2.7753
+      },
+      "sleep": {
+        "y": 2.162,
+        "n": -2.7753
+      },
+      "rescue": {
+        "y": 0.0975,
+        "n": -0.0619
+      }
+    },
+    {
+      "id": "water",
+      "name": "Woda",
+      "kind": "build",
+      "min": "2 szklanki",
+      "n": 70,
+      "base": 0.2778,
+      "days": [0, 1, 2, 3, 4, 5, 6],
+      "wd": [
+        {
+          "l": 1.1081,
+          "g": 1
+        },
+        {
+          "l": -0.8071,
+          "g": 0
+        },
+        {
+          "l": -0.8071,
+          "g": 0
+        },
+        {
+          "l": -0.6382,
+          "g": 1
+        },
+        {
+          "l": -0.6382,
+          "g": 1
+        },
+        {
+          "l": -0.6382,
+          "g": 1
+        },
+        {
+          "l": 3.2002,
+          "g": 0
+        }
+      ],
+      "night": {
+        "y": 0.0683,
+        "n": -0.037
+      },
+      "sleep": {
+        "y": 0.0683,
+        "n": -0.037
+      },
+      "rescue": {
+        "y": 1.0699,
+        "n": -0.5894
+      }
+    },
+    {
+      "id": "food",
+      "name": "Fast food",
+      "kind": "avoid",
+      "min": "",
+      "n": 69,
+      "base": 0.2535,
+      "days": [0, 1, 2, 3, 4, 5, 6],
+      "wd": [
+        {
+          "l": -0.8013,
+          "g": 1
+        },
+        {
+          "l": -0.71,
+          "g": 0
+        },
+        {
+          "l": -0.71,
+          "g": 0
+        },
+        {
+          "l": 3.2021,
+          "g": 0
+        },
+        {
+          "l": 0.2618,
+          "g": 1
+        },
+        {
+          "l": 0.2618,
+          "g": 1
+        },
+        {
+          "l": -0.8013,
+          "g": 1
+        }
+      ],
+      "night": {
+        "y": -0.1594,
+        "n": 0.077
+      },
+      "sleep": {
+        "y": -0.1594,
+        "n": 0.077
+      },
+      "rescue": {
+        "y": 0.9933,
+        "n": -0.4884
+      }
+    },
+    {
+      "id": "walk",
+      "name": "Spacer",
+      "kind": "build",
+      "min": "",
+      "n": 70,
+      "base": 0.5694,
+      "days": [0, 1, 2, 3, 4, 5, 6],
+      "wd": [
+        {
+          "l": 0.0972,
+          "g": 0
+        },
+        {
+          "l": -0.2392,
+          "g": 0
+        },
+        {
+          "l": 0.0972,
+          "g": 0
+        },
+        {
+          "l": 0.0972,
+          "g": 0
+        },
+        {
+          "l": 0.0972,
+          "g": 0
+        },
+        {
+          "l": 0.0972,
+          "g": 0
+        },
+        {
+          "l": -0.2392,
+          "g": 0
+        }
+      ],
+      "night": {
+        "y": 0,
+        "n": 0
+      },
+      "sleep": {
+        "y": 0,
+        "n": 0
+      },
+      "rescue": {
+        "y": -1.3792,
+        "n": 3.1862
+      }
+    },
+    {
+      "id": "hand1",
+      "name": "Siłownia",
+      "kind": "build",
+      "min": "",
+      "n": 30,
+      "base": 0.3,
+      "days": [1, 3, 5],
+      "night": {
+        "y": 0.4,
+        "n": -0.2
+      },
+      "sleep": {
+        "y": 0.9,
+        "n": -0.1
+      },
+      "rescue": {
+        "y": 1.2,
+        "n": -0.3
+      },
+      "wd": [
+        null,
+        {
+          "l": 0.5,
+          "g": 0
+        },
+        null,
+        {
+          "l": 0.05,
+          "g": 0
+        },
+        null,
+        {
+          "l": -0.6,
+          "g": 1
+        },
+        null
+      ]
+    },
+    {
+      "id": "hand2",
+      "name": "Słodycze",
+      "kind": "avoid",
+      "min": "",
+      "n": 25,
+      "base": 0.45,
+      "days": [0, 1, 2, 3, 4, 5, 6],
+      "night": {
+        "y": 0.15,
+        "n": 0.3
+      },
+      "wd": [
+        {
+          "l": 0.8,
+          "g": 1
+        },
+        {
+          "l": -0.2,
+          "g": 1
+        },
+        {
+          "l": -0.2,
+          "g": 1
+        },
+        {
+          "l": -0.2,
+          "g": 1
+        },
+        {
+          "l": -0.2,
+          "g": 1
+        },
+        {
+          "l": -0.2,
+          "g": 1
+        },
+        {
+          "l": 0.8,
+          "g": 1
+        }
+      ]
+    },
+    {
+      "id": "hand3",
+      "name": "Bieganie",
+      "kind": "build",
+      "min": "10 min",
+      "n": 40,
+      "base": 0.35,
+      "days": [0, 1, 2, 3, 4, 5, 6],
+      "sleep": {
+        "y": 1.5,
+        "n": -0.3
+      },
+      "wd": [null, null, null, null, null, null, null]
+    }
+  ],
+  "nights": [
+    {
+      "social": 52,
+      "screen": 61,
+      "sleep": 330
+    },
+    {
+      "social": 0,
+      "screen": 45,
+      "sleep": 400
+    },
+    {
+      "social": 0,
+      "screen": 5,
+      "sleep": 470
+    },
+    {
+      "social": 0,
+      "screen": 8,
+      "sleep": 300
+    },
+    {
+      "social": 0,
+      "screen": 0,
+      "sleep": -1
+    },
+    {
+      "social": 12,
+      "screen": 20,
+      "sleep": -1
+    }
+  ],
+  "cases": [
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.974542913,
+      "pct": 97,
+      "reason": "nightSleep",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.970274518,
+      "pct": 97,
+      "reason": "nightSleep",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.972008792,
+      "pct": 97,
+      "reason": "nightSleep",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.982323322,
+      "pct": 97,
+      "reason": "nightSleep",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.979331803,
+      "pct": 97,
+      "reason": "nightSleep",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.980548242,
+      "pct": 97,
+      "reason": "nightSleep",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.974542913,
+      "pct": 97,
+      "reason": "nightSleep",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.970274518,
+      "pct": 97,
+      "reason": "nightSleep",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.972008792,
+      "pct": 97,
+      "reason": "nightSleep",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.215459435,
+      "pct": 22,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.189736133,
+      "pct": 19,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.199435596,
+      "pct": 20,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.285034182,
+      "pct": 29,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.253690453,
+      "pct": 25,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.265587672,
+      "pct": 27,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.215459435,
+      "pct": 22,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.189736133,
+      "pct": 19,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.199435596,
+      "pct": 20,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.001966315,
+      "pct": 0,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.001677075,
+      "pct": 0,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.001783975,
+      "pct": 0,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.002851867,
+      "pct": 0,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.002432681,
+      "pct": 0,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.00258762,
+      "pct": 0,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.001966315,
+      "pct": 0,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.001677075,
+      "pct": 0,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.001783975,
+      "pct": 0,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.215459435,
+      "pct": 22,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.189736133,
+      "pct": 19,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.199435596,
+      "pct": 20,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.285034182,
+      "pct": 29,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.253690453,
+      "pct": 25,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.265587672,
+      "pct": 27,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.215459435,
+      "pct": 22,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.189736133,
+      "pct": 19,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.199435596,
+      "pct": 20,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.336478808,
+      "pct": 34,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.301866469,
+      "pct": 30,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.315069176,
+      "pct": 32,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.424011865,
+      "pct": 42,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.385628429,
+      "pct": 39,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.400393541,
+      "pct": 40,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.336478808,
+      "pct": 34,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.301866469,
+      "pct": 30,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.315069176,
+      "pct": 32,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.815021422,
+      "pct": 82,
+      "reason": "night",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.789775775,
+      "pct": 79,
+      "reason": "night",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.79986877,
+      "pct": 80,
+      "reason": "night",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.864791964,
+      "pct": 86,
+      "reason": "night",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.84504752,
+      "pct": 85,
+      "reason": "night",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.852980866,
+      "pct": 85,
+      "reason": "night",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.815021422,
+      "pct": 82,
+      "reason": "night",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.789775775,
+      "pct": 79,
+      "reason": "night",
+      "warn": true
+    },
+    {
+      "model": "read",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.79986877,
+      "pct": 80,
+      "reason": "night",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.795629536,
+      "pct": 80,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.425532872,
+      "pct": 43,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.571824587,
+      "pct": 57,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.404415448,
+      "pct": 40,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.114416578,
+      "pct": 11,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.188926492,
+      "pct": 19,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.969269866,
+      "pct": 97,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.857172224,
+      "pct": 86,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.915397867,
+      "pct": 92,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.777974122,
+      "pct": 78,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.400015463,
+      "pct": 40,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.545870488,
+      "pct": 55,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.379328192,
+      "pct": 38,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.104172408,
+      "pct": 10,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.173316762,
+      "pct": 17,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.965973584,
+      "pct": 97,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.843789595,
+      "pct": 84,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.906878156,
+      "pct": 91,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.759254984,
+      "pct": 76,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.375029284,
+      "pct": 38,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.519664682,
+      "pct": 52,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.354869918,
+      "pct": 35,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.094747309,
+      "pct": 9,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.158744333,
+      "pct": 16,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.962337464,
+      "pct": 96,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.829402605,
+      "pct": 83,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.897596461,
+      "pct": 90,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.777974122,
+      "pct": 78,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.400015463,
+      "pct": 40,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.545870488,
+      "pct": 55,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.379328192,
+      "pct": 38,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.104172408,
+      "pct": 10,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.173316762,
+      "pct": 17,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.965973584,
+      "pct": 97,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.843789595,
+      "pct": 84,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.906878156,
+      "pct": 91,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.772520658,
+      "pct": 77,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.392527412,
+      "pct": 39,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.538100826,
+      "pct": 54,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.371987299,
+      "pct": 37,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.101287454,
+      "pct": 10,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.16887791,
+      "pct": 17,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.964929656,
+      "pct": 96,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.83961945,
+      "pct": 84,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.90420099,
+      "pct": 90,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.78429937,
+      "pct": 78,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.40892753,
+      "pct": 41,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.555026053,
+      "pct": 56,
+      "reason": "wd",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.388077476,
+      "pct": 39,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.107676182,
+      "pct": 11,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.178682293,
+      "pct": 18,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.967168977,
+      "pct": 97,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.848604719,
+      "pct": 85,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "water",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.909956124,
+      "pct": 91,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.230262109,
+      "pct": 23,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.06365347,
+      "pct": 6,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.099738655,
+      "pct": 10,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.942490094,
+      "pct": 94,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.788326643,
+      "pct": 79,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.858546306,
+      "pct": 86,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.230262109,
+      "pct": 23,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.06365347,
+      "pct": 6,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.099738655,
+      "pct": 10,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.274794445,
+      "pct": 27,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.079282795,
+      "pct": 8,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.123063749,
+      "pct": 12,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.954041493,
+      "pct": 95,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.825096825,
+      "pct": 83,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.884899478,
+      "pct": 88,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.274794445,
+      "pct": 27,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.079282795,
+      "pct": 8,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.123063749,
+      "pct": 12,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.324310602,
+      "pct": 32,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.098346637,
+      "pct": 10,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.150929191,
+      "pct": 15,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.963362879,
+      "pct": 96,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.856641154,
+      "pct": 86,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.906875529,
+      "pct": 91,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.324310602,
+      "pct": 32,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.098346637,
+      "pct": 10,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.150929191,
+      "pct": 15,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.274794445,
+      "pct": 27,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.079282795,
+      "pct": 8,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.123063749,
+      "pct": 12,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.954041493,
+      "pct": 95,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.825096825,
+      "pct": 83,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.884899478,
+      "pct": 88,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.274794445,
+      "pct": 27,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.079282795,
+      "pct": 8,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.123063749,
+      "pct": 12,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.291516163,
+      "pct": 29,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.08551011,
+      "pct": 9,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.132235976,
+      "pct": 13,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.957522236,
+      "pct": 96,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.836671527,
+      "pct": 84,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.893029661,
+      "pct": 89,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.291516163,
+      "pct": 29,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.08551011,
+      "pct": 9,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.132235976,
+      "pct": 13,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.259718572,
+      "pct": 26,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.073841,
+      "pct": 7,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.114992237,
+      "pct": 11,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.950544806,
+      "pct": 95,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.813705266,
+      "pct": 81,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.876821424,
+      "pct": 88,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.259718572,
+      "pct": 26,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.073841,
+      "pct": 7,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "food",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.114992237,
+      "pct": 11,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.268431243,
+      "pct": 27,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.97242286,
+      "pct": 97,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.59305367,
+      "pct": 59,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.268431243,
+      "pct": 27,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.97242286,
+      "pct": 97,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.59305367,
+      "pct": 59,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.207675147,
+      "pct": 21,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.96181589,
+      "pct": 96,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.510049544,
+      "pct": 51,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.268431243,
+      "pct": 27,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.97242286,
+      "pct": 97,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.59305367,
+      "pct": 59,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.268431243,
+      "pct": 27,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.97242286,
+      "pct": 97,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.59305367,
+      "pct": 59,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.207675147,
+      "pct": 21,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.96181589,
+      "pct": 96,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.510049544,
+      "pct": 51,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.268431243,
+      "pct": 27,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.97242286,
+      "pct": 97,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.59305367,
+      "pct": 59,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.268431243,
+      "pct": 27,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.97242286,
+      "pct": 97,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.59305367,
+      "pct": 59,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.207675147,
+      "pct": 21,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.96181589,
+      "pct": 96,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.510049544,
+      "pct": 51,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.268431243,
+      "pct": 27,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.97242286,
+      "pct": 97,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.59305367,
+      "pct": 59,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.268431243,
+      "pct": 27,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.97242286,
+      "pct": 97,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.59305367,
+      "pct": 59,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.207675147,
+      "pct": 21,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.96181589,
+      "pct": 96,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.510049544,
+      "pct": 51,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.268431243,
+      "pct": 27,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.97242286,
+      "pct": 97,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.59305367,
+      "pct": 59,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.268431243,
+      "pct": 27,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.97242286,
+      "pct": 97,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.59305367,
+      "pct": 59,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.207675147,
+      "pct": 21,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.96181589,
+      "pct": 96,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.510049544,
+      "pct": 51,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.268431243,
+      "pct": 27,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.97242286,
+      "pct": 97,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.59305367,
+      "pct": 59,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.268431243,
+      "pct": 27,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.97242286,
+      "pct": 97,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.59305367,
+      "pct": 59,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.207675147,
+      "pct": 21,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.96181589,
+      "pct": 96,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "walk",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.510049544,
+      "pct": 51,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.839255918,
+      "pct": 84,
+      "reason": "rescue",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.538101526,
+      "pct": 54,
+      "reason": "nightSleep",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.611281499,
+      "pct": 61,
+      "reason": "nightSleep",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.84588732,
+      "pct": 85,
+      "reason": "rescue",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.550502731,
+      "pct": 55,
+      "reason": "nightSleep",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.623094134,
+      "pct": 62,
+      "reason": "nightSleep",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.839255918,
+      "pct": 84,
+      "reason": "rescue",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.538101526,
+      "pct": 54,
+      "reason": "nightSleep",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.611281499,
+      "pct": 61,
+      "reason": "nightSleep",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.657619125,
+      "pct": 66,
+      "reason": "rescue",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.3,
+      "pct": 30,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.366491553,
+      "pct": 37,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.668786599,
+      "pct": 67,
+      "reason": "rescue",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.310603829,
+      "pct": 31,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.378175891,
+      "pct": 38,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.657619125,
+      "pct": 66,
+      "reason": "rescue",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.3,
+      "pct": 30,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.366491553,
+      "pct": 37,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.513172486,
+      "pct": 51,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.190417776,
+      "pct": 19,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.240982986,
+      "pct": 24,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.52565299,
+      "pct": 53,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.19824525,
+      "pct": 20,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.250246536,
+      "pct": 25,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.513172486,
+      "pct": 51,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.190417776,
+      "pct": 19,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.240982986,
+      "pct": 24,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.741293446,
+      "pct": 74,
+      "reason": "rescue",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.390003416,
+      "pct": 39,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.463241971,
+      "pct": 46,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.750766063,
+      "pct": 75,
+      "reason": "rescue",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.401961731,
+      "pct": 40,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.475694706,
+      "pct": 48,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.741293446,
+      "pct": 74,
+      "reason": "rescue",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.390003416,
+      "pct": 39,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.463241971,
+      "pct": 46,
+      "reason": "sleep",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.587272687,
+      "pct": 59,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.240982986,
+      "pct": 24,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.3,
+      "pct": 30,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.599336705,
+      "pct": 60,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.250246536,
+      "pct": 25,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.310603829,
+      "pct": 31,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.587272687,
+      "pct": 59,
+      "reason": "rescue",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.240982986,
+      "pct": 24,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.3,
+      "pct": 30,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.679767197,
+      "pct": 68,
+      "reason": "rescue",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.321410368,
+      "pct": 32,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.390003416,
+      "pct": 39,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.690552198,
+      "pct": 69,
+      "reason": "rescue",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.332411599,
+      "pct": 33,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.401961731,
+      "pct": 40,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.679767197,
+      "pct": 68,
+      "reason": "rescue",
+      "warn": true
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.321410368,
+      "pct": 32,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand1",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.390003416,
+      "pct": 39,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.437658425,
+      "pct": 44,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.437658425,
+      "pct": 44,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.437658425,
+      "pct": 44,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.437658425,
+      "pct": 44,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.437658425,
+      "pct": 44,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.437658425,
+      "pct": 44,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.710811655,
+      "pct": 71,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.710811655,
+      "pct": 71,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.710811655,
+      "pct": 71,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.47485356,
+      "pct": 47,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.47485356,
+      "pct": 47,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.47485356,
+      "pct": 47,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.710811655,
+      "pct": 71,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.710811655,
+      "pct": 71,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.710811655,
+      "pct": 71,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.710811655,
+      "pct": 71,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.710811655,
+      "pct": 71,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.710811655,
+      "pct": 71,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.47485356,
+      "pct": 47,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.47485356,
+      "pct": 47,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.47485356,
+      "pct": 47,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.710811655,
+      "pct": 71,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.710811655,
+      "pct": 71,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.710811655,
+      "pct": 71,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.645502847,
+      "pct": 65,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.645502847,
+      "pct": 65,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.645502847,
+      "pct": 65,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.401151209,
+      "pct": 40,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.401151209,
+      "pct": 40,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.401151209,
+      "pct": 40,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.645502847,
+      "pct": 65,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.645502847,
+      "pct": 65,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.645502847,
+      "pct": 65,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.437658425,
+      "pct": 44,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.437658425,
+      "pct": 44,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.437658425,
+      "pct": 44,
+      "reason": "night",
+      "warn": false
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand2",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.67903254,
+      "pct": 68,
+      "reason": "wd",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 0,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 0,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": true,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 0,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 1,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 1,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": false,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 1,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 2,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 2,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": false,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 2,
+      "p": 0.285153703,
+      "pct": 29,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 3,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 3,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": false,
+        "short": true,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 3,
+      "p": 0.707021281,
+      "pct": 71,
+      "reason": "sleep",
+      "warn": true
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 4,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 4,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": null,
+        "short": null,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 4,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 0,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 3,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": true
+      },
+      "night": 5,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": false
+      },
+      "night": 5,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    },
+    {
+      "model": "hand3",
+      "f": {
+        "bad": true,
+        "short": null,
+        "wd": 6,
+        "rescue": null
+      },
+      "night": 5,
+      "p": 0.35,
+      "pct": 35,
+      "reason": null,
+      "warn": false
+    }
+  ],
+  "texts": {
+    "pl_hard": {
+      "lines": {
+        "build": [
+          "{reason} zwykle odpuszczasz „{habit}” ({pct}%). Ogarnij to przed {until}, zanim dzień cię wydyma.",
+          "Prognoza na dziś: „{habit}” leży na {pct}%, bo {reason} zwykle się sypiesz. Przed {until} i nie pierdol.",
+          "{pct}% szans, że „{habit}” dziś pójdzie się jebać - {reason} tak masz. Zrób to przed {until}, kurwa.",
+          "Znam cię: {reason} „{habit}” ląduje w koszu ({pct}%). Odhacz to przed {until}, zanim wymyślisz wymówkę.",
+          "Kot przewiduje: {reason} „{habit}” idzie w pizdu w {pct}% przypadków. Przed {until} udowodnij, że kot się myli."
+        ],
+        "buildMin": [
+          "{reason} zwykle odpuszczasz „{habit}” ({pct}%). Zrób minimum ({min}) przed {until}, zanim dzień cię wydyma.",
+          "Prognoza na dziś: „{habit}” leży na {pct}%, bo {reason} zwykle się sypiesz. {min} przed {until} i nie pierdol.",
+          "{pct}% szans, że „{habit}” dziś pójdzie się jebać - {reason} tak masz. {min} przed {until}, kurwa, i po sprawie.",
+          "Statystyka nie kłamie: {reason} „{habit}” wypada w {pct}% przypadków. Minimum to {min}. Przed {until}. Bez dyskusji.",
+          "Znam cię: {reason} „{habit}” ląduje w koszu ({pct}%). Zrób {min} przed {until}, zanim wymyślisz wymówkę.",
+          "Kot przewiduje: {reason} „{habit}” idzie w pizdu w {pct}% przypadków. {min} przed {until} i udowodnij, że kot się myli."
+        ],
+        "avoid": [
+          "{reason} zwykle wpadasz z „{habit}” ({pct}%). Dziś trzymasz łapy przy sobie, kurwa.",
+          "Prognoza wpadki: „{habit}” na {pct}%, bo {reason} zwykle pękasz. Nie dziś.",
+          "{pct}% szans, że „{habit}” dziś cię dorwie - {reason} tak masz. Pokaż, że statystyka może się pierdolić.",
+          "Znam cię: {reason} „{habit}” kusi najbardziej ({pct}%). Zaplanuj, co robisz zamiast tego, zanim przyjdzie ochota.",
+          "Kot przewiduje wpadkę z „{habit}” ({pct}%), bo {reason} zwykle dajesz dupy. Zrób kotu na złość."
+        ]
+      },
+      "reasons": {
+        "night": "po nocy z {screen} min ekranu po północy",
+        "nightSocial": "po nocy z {social} min scrollowania",
+        "sleep": "po {sleep} snu",
+        "nightSleep": "po nocy z {screen} min ekranu i {sleep} snu",
+        "nightSocialSleep": "po nocy z {social} min scrollowania i {sleep} snu",
+        "rescue": "dzień po odpuszczeniu",
+        "rescueAvoid": "dzień po wpadce",
+        "wd": [
+          "w niedziele",
+          "w poniedziałki",
+          "we wtorki",
+          "w środy",
+          "w czwartki",
+          "w piątki",
+          "w soboty"
+        ],
+        "weekend": "w weekendy",
+        "workday": "w dni robocze"
+      },
+      "cases": [
+        {
+          "i": 0,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Statystyka nie kłamie: po nocy z 52 min scrollowania i 5 h 30 min snu „Czytanie” wypada w 97% przypadków. Minimum to 5 min. Przed 12:00. Bez dyskusji."
+        },
+        {
+          "i": 5,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "Po nocy z 52 min scrollowania i 5 h 30 min snu zwykle odpuszczasz „Czytanie” (97%). Zrób minimum (5 min) przed 14:00, zanim dzień cię wydyma."
+        },
+        {
+          "i": 45,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Statystyka nie kłamie: po nocy z 12 min scrollowania „Czytanie” wypada w 82% przypadków. Minimum to 5 min. Przed 12:00. Bez dyskusji."
+        },
+        {
+          "i": 50,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "Po nocy z 12 min scrollowania zwykle odpuszczasz „Czytanie” (85%). Zrób minimum (5 min) przed 14:00, zanim dzień cię wydyma."
+        },
+        {
+          "i": 60,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Znam cię: w soboty „Woda” ląduje w koszu (97%). Zrób 2 szklanki przed 12:00, zanim wymyślisz wymówkę."
+        },
+        {
+          "i": 70,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Znam cię: w soboty „Woda” ląduje w koszu (84%). Zrób 2 szklanki przed 12:00, zanim wymyślisz wymówkę."
+        },
+        {
+          "i": 80,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Znam cię: w soboty „Woda” ląduje w koszu (90%). Zrób 2 szklanki przed 12:00, zanim wymyślisz wymówkę."
+        },
+        {
+          "i": 90,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "77% szans, że „Woda” dziś pójdzie się jebać - w weekendy tak masz. 2 szklanki przed 12:00, kurwa, i po sprawie."
+        },
+        {
+          "i": 105,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Znam cię: w soboty „Woda” ląduje w koszu (97%). Zrób 2 szklanki przed 12:00, zanim wymyślisz wymówkę."
+        },
+        {
+          "i": 120,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "W środy zwykle wpadasz z „Fast food” (95%). Dziś trzymasz łapy przy sobie, kurwa."
+        },
+        {
+          "i": 130,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "W środy zwykle wpadasz z „Fast food” (86%). Dziś trzymasz łapy przy sobie, kurwa."
+        },
+        {
+          "i": 140,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "W środy zwykle wpadasz z „Fast food” (88%). Dziś trzymasz łapy przy sobie, kurwa."
+        },
+        {
+          "i": 225,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "66% szans, że „Siłownia” dziś pójdzie się jebać - dzień po odpuszczeniu tak masz. Zrób to przed 12:00, kurwa."
+        },
+        {
+          "i": 270,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Znam cię: w weekendy „Słodycze” kusi najbardziej (68%). Zaplanuj, co robisz zamiast tego, zanim przyjdzie ochota."
+        },
+        {
+          "i": 280,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Znam cię: w weekendy „Słodycze” kusi najbardziej (68%). Zaplanuj, co robisz zamiast tego, zanim przyjdzie ochota."
+        },
+        {
+          "i": 285,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Znam cię: w weekendy „Słodycze” kusi najbardziej (68%). Zaplanuj, co robisz zamiast tego, zanim przyjdzie ochota."
+        },
+        {
+          "i": 290,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Znam cię: w weekendy „Słodycze” kusi najbardziej (71%). Zaplanuj, co robisz zamiast tego, zanim przyjdzie ochota."
+        },
+        {
+          "i": 295,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Znam cię: w weekendy „Słodycze” kusi najbardziej (71%). Zaplanuj, co robisz zamiast tego, zanim przyjdzie ochota."
+        },
+        {
+          "i": 305,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Znam cię: w weekendy „Słodycze” kusi najbardziej (71%). Zaplanuj, co robisz zamiast tego, zanim przyjdzie ochota."
+        },
+        {
+          "i": 315,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Znam cię: w weekendy „Słodycze” kusi najbardziej (68%). Zaplanuj, co robisz zamiast tego, zanim przyjdzie ochota."
+        },
+        {
+          "i": 325,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Prognoza na dziś: „Bieganie” leży na 71%, bo po 5 h 30 min snu zwykle się sypiesz. 10 min przed 12:00 i nie pierdol."
+        },
+        {
+          "i": 330,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Statystyka nie kłamie: po 5 h 30 min snu „Bieganie” wypada w 71% przypadków. Minimum to 10 min. Przed 12:00. Bez dyskusji."
+        },
+        {
+          "i": 355,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "Znam cię: po 5 h snu „Bieganie” ląduje w koszu (71%). Zrób 10 min przed 14:00, zanim wymyślisz wymówkę."
+        }
+      ]
+    },
+    "pl_soft": {
+      "lines": {
+        "build": [
+          "{reason} „{habit}” często wypada ({pct}%). Może zrobisz to przed {until}?",
+          "Mała prognoza: {reason} „{habit}” bywa trudniejsze ({pct}%). Spróbuj przed {until}.",
+          "Uwaga na „{habit}”: {reason} wypada w {pct}% przypadków. Zrób to przed {until} i spokój."
+        ],
+        "buildMin": [
+          "{reason} „{habit}” często wypada ({pct}%). Może zrobisz minimum ({min}) przed {until}?",
+          "Mała prognoza: {reason} „{habit}” bywa trudniejsze ({pct}%). {min} przed {until} wystarczy.",
+          "Uwaga na „{habit}”: {reason} wypada w {pct}% przypadków. Wersja minimum ({min}) przed {until} i spokój."
+        ],
+        "avoid": [
+          "{reason} łatwiej o wpadkę z „{habit}” ({pct}%). Dziś zaplanuj coś w zamian.",
+          "Mała prognoza: {reason} „{habit}” kusi mocniej ({pct}%). Uważaj na siebie dziś.",
+          "Uwaga na „{habit}”: {reason} wpadka zdarza się w {pct}% przypadków. Dasz radę!"
+        ]
+      },
+      "reasons": {
+        "night": "po nocy z {screen} min ekranu po północy",
+        "nightSocial": "po nocy z {social} min scrollowania",
+        "sleep": "po {sleep} snu",
+        "nightSleep": "po nocy z {screen} min ekranu i {sleep} snu",
+        "nightSocialSleep": "po nocy z {social} min scrollowania i {sleep} snu",
+        "rescue": "dzień po odpuszczeniu",
+        "rescueAvoid": "dzień po wpadce",
+        "wd": [
+          "w niedziele",
+          "w poniedziałki",
+          "we wtorki",
+          "w środy",
+          "w czwartki",
+          "w piątki",
+          "w soboty"
+        ],
+        "weekend": "w weekendy",
+        "workday": "w dni robocze"
+      },
+      "cases": [
+        {
+          "i": 0,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Po nocy z 52 min scrollowania i 5 h 30 min snu „Czytanie” często wypada (97%). Może zrobisz minimum (5 min) przed 12:00?"
+        },
+        {
+          "i": 5,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "Po nocy z 52 min scrollowania i 5 h 30 min snu „Czytanie” często wypada (97%). Może zrobisz minimum (5 min) przed 14:00?"
+        },
+        {
+          "i": 45,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Po nocy z 12 min scrollowania „Czytanie” często wypada (82%). Może zrobisz minimum (5 min) przed 12:00?"
+        },
+        {
+          "i": 50,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "Po nocy z 12 min scrollowania „Czytanie” często wypada (85%). Może zrobisz minimum (5 min) przed 14:00?"
+        },
+        {
+          "i": 60,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Mała prognoza: w soboty „Woda” bywa trudniejsze (97%). 2 szklanki przed 12:00 wystarczy."
+        },
+        {
+          "i": 70,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Mała prognoza: w soboty „Woda” bywa trudniejsze (84%). 2 szklanki przed 12:00 wystarczy."
+        },
+        {
+          "i": 80,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Mała prognoza: w soboty „Woda” bywa trudniejsze (90%). 2 szklanki przed 12:00 wystarczy."
+        },
+        {
+          "i": 90,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Uwaga na „Woda”: w weekendy wypada w 77% przypadków. Wersja minimum (2 szklanki) przed 12:00 i spokój."
+        },
+        {
+          "i": 105,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Mała prognoza: w soboty „Woda” bywa trudniejsze (97%). 2 szklanki przed 12:00 wystarczy."
+        },
+        {
+          "i": 120,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "W środy łatwiej o wpadkę z „Fast food” (95%). Dziś zaplanuj coś w zamian."
+        },
+        {
+          "i": 130,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "W środy łatwiej o wpadkę z „Fast food” (86%). Dziś zaplanuj coś w zamian."
+        },
+        {
+          "i": 140,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "W środy łatwiej o wpadkę z „Fast food” (88%). Dziś zaplanuj coś w zamian."
+        },
+        {
+          "i": 225,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Uwaga na „Siłownia”: dzień po odpuszczeniu wypada w 66% przypadków. Zrób to przed 12:00 i spokój."
+        },
+        {
+          "i": 270,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "W weekendy łatwiej o wpadkę z „Słodycze” (68%). Dziś zaplanuj coś w zamian."
+        },
+        {
+          "i": 280,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "W weekendy łatwiej o wpadkę z „Słodycze” (68%). Dziś zaplanuj coś w zamian."
+        },
+        {
+          "i": 285,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Uwaga na „Słodycze”: w weekendy wpadka zdarza się w 68% przypadków. Dasz radę!"
+        },
+        {
+          "i": 290,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "W weekendy łatwiej o wpadkę z „Słodycze” (71%). Dziś zaplanuj coś w zamian."
+        },
+        {
+          "i": 295,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Uwaga na „Słodycze”: w weekendy wpadka zdarza się w 71% przypadków. Dasz radę!"
+        },
+        {
+          "i": 305,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Uwaga na „Słodycze”: w weekendy wpadka zdarza się w 71% przypadków. Dasz radę!"
+        },
+        {
+          "i": 315,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "W weekendy łatwiej o wpadkę z „Słodycze” (68%). Dziś zaplanuj coś w zamian."
+        },
+        {
+          "i": 325,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Mała prognoza: po 5 h 30 min snu „Bieganie” bywa trudniejsze (71%). 10 min przed 12:00 wystarczy."
+        },
+        {
+          "i": 330,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Po 5 h 30 min snu „Bieganie” często wypada (71%). Może zrobisz minimum (10 min) przed 12:00?"
+        },
+        {
+          "i": 355,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "Mała prognoza: po 5 h snu „Bieganie” bywa trudniejsze (71%). 10 min przed 14:00 wystarczy."
+        }
+      ]
+    },
+    "en_hard": {
+      "lines": {
+        "build": [
+          "{reason}, you usually bail on “{habit}” ({pct}%). Get it done before {until}, before the day screws you.",
+          "Today's forecast: “{habit}” is {pct}% likely to flop, because {reason}, you usually fall apart. Before {until}, no bullshit.",
+          "{pct}% chance “{habit}” goes to shit today - {reason}, that's how you roll. Do it before {until}, damn it.",
+          "I know you: {reason}, “{habit}” lands in the trash ({pct}%). Tick it off before {until}, before you invent an excuse.",
+          "The cat predicts: {reason}, “{habit}” goes to hell {pct}% of the time. Before {until}, prove the cat wrong."
+        ],
+        "buildMin": [
+          "{reason}, you usually bail on “{habit}” ({pct}%). Do the minimum ({min}) before {until}, before the day screws you.",
+          "Today's forecast: “{habit}” is {pct}% likely to flop, because {reason}, you usually fall apart. {min} before {until}, no bullshit.",
+          "{pct}% chance “{habit}” goes to shit today - {reason}, that's how you roll. {min} before {until}, damn it, and done.",
+          "Stats don't lie: {reason}, “{habit}” falls through {pct}% of the time. The minimum is {min}. Before {until}. No discussion.",
+          "I know you: {reason}, “{habit}” lands in the trash ({pct}%). Do {min} before {until}, before you invent an excuse.",
+          "The cat predicts: {reason}, “{habit}” goes to hell {pct}% of the time. {min} before {until} and prove the cat wrong."
+        ],
+        "avoid": [
+          "{reason}, you usually slip with “{habit}” ({pct}%). Today you keep your damn paws to yourself.",
+          "Slip forecast: “{habit}” at {pct}%, because {reason}, you usually crack. Not today.",
+          "{pct}% chance “{habit}” gets you today - {reason}, that's how you roll. Show the stats they can fuck off.",
+          "I know you: {reason}, “{habit}” tempts you the most ({pct}%). Plan what you'll do instead before the urge hits.",
+          "The cat predicts a slip with “{habit}” ({pct}%), because {reason}, you usually screw it up. Spite the cat."
+        ]
+      },
+      "reasons": {
+        "night": "after a night with {screen} min of screen past midnight",
+        "nightSocial": "after a night with {social} min of scrolling",
+        "sleep": "after {sleep} of sleep",
+        "nightSleep": "after a night with {screen} min of screen and {sleep} of sleep",
+        "nightSocialSleep": "after a night with {social} min of scrolling and {sleep} of sleep",
+        "rescue": "the day after a skip",
+        "rescueAvoid": "the day after a slip",
+        "wd": [
+          "on Sundays",
+          "on Mondays",
+          "on Tuesdays",
+          "on Wednesdays",
+          "on Thursdays",
+          "on Fridays",
+          "on Saturdays"
+        ],
+        "weekend": "on weekends",
+        "workday": "on workdays"
+      },
+      "cases": [
+        {
+          "i": 0,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Stats don't lie: after a night with 52 min of scrolling and 5 h 30 min of sleep, “Czytanie” falls through 97% of the time. The minimum is 5 min. Before 12:00. No discussion."
+        },
+        {
+          "i": 5,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "After a night with 52 min of scrolling and 5 h 30 min of sleep, you usually bail on “Czytanie” (97%). Do the minimum (5 min) before 14:00, before the day screws you."
+        },
+        {
+          "i": 45,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Stats don't lie: after a night with 12 min of scrolling, “Czytanie” falls through 82% of the time. The minimum is 5 min. Before 12:00. No discussion."
+        },
+        {
+          "i": 50,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "After a night with 12 min of scrolling, you usually bail on “Czytanie” (85%). Do the minimum (5 min) before 14:00, before the day screws you."
+        },
+        {
+          "i": 60,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "I know you: on Saturdays, “Woda” lands in the trash (97%). Do 2 szklanki before 12:00, before you invent an excuse."
+        },
+        {
+          "i": 70,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "I know you: on Saturdays, “Woda” lands in the trash (84%). Do 2 szklanki before 12:00, before you invent an excuse."
+        },
+        {
+          "i": 80,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "I know you: on Saturdays, “Woda” lands in the trash (90%). Do 2 szklanki before 12:00, before you invent an excuse."
+        },
+        {
+          "i": 90,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "77% chance “Woda” goes to shit today - on weekends, that's how you roll. 2 szklanki before 12:00, damn it, and done."
+        },
+        {
+          "i": 105,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "I know you: on Saturdays, “Woda” lands in the trash (97%). Do 2 szklanki before 12:00, before you invent an excuse."
+        },
+        {
+          "i": 120,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "On Wednesdays, you usually slip with “Fast food” (95%). Today you keep your damn paws to yourself."
+        },
+        {
+          "i": 130,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "On Wednesdays, you usually slip with “Fast food” (86%). Today you keep your damn paws to yourself."
+        },
+        {
+          "i": 140,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "On Wednesdays, you usually slip with “Fast food” (88%). Today you keep your damn paws to yourself."
+        },
+        {
+          "i": 225,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "66% chance “Siłownia” goes to shit today - the day after a skip, that's how you roll. Do it before 12:00, damn it."
+        },
+        {
+          "i": 270,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "I know you: on weekends, “Słodycze” tempts you the most (68%). Plan what you'll do instead before the urge hits."
+        },
+        {
+          "i": 280,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "I know you: on weekends, “Słodycze” tempts you the most (68%). Plan what you'll do instead before the urge hits."
+        },
+        {
+          "i": 285,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "I know you: on weekends, “Słodycze” tempts you the most (68%). Plan what you'll do instead before the urge hits."
+        },
+        {
+          "i": 290,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "I know you: on weekends, “Słodycze” tempts you the most (71%). Plan what you'll do instead before the urge hits."
+        },
+        {
+          "i": 295,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "I know you: on weekends, “Słodycze” tempts you the most (71%). Plan what you'll do instead before the urge hits."
+        },
+        {
+          "i": 305,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "I know you: on weekends, “Słodycze” tempts you the most (71%). Plan what you'll do instead before the urge hits."
+        },
+        {
+          "i": 315,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "I know you: on weekends, “Słodycze” tempts you the most (68%). Plan what you'll do instead before the urge hits."
+        },
+        {
+          "i": 325,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Today's forecast: “Bieganie” is 71% likely to flop, because after 5 h 30 min of sleep, you usually fall apart. 10 min before 12:00, no bullshit."
+        },
+        {
+          "i": 330,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Stats don't lie: after 5 h 30 min of sleep, “Bieganie” falls through 71% of the time. The minimum is 10 min. Before 12:00. No discussion."
+        },
+        {
+          "i": 355,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "I know you: after 5 h of sleep, “Bieganie” lands in the trash (71%). Do 10 min before 14:00, before you invent an excuse."
+        }
+      ]
+    },
+    "en_soft": {
+      "lines": {
+        "build": [
+          "{reason}, “{habit}” often slips ({pct}%). How about doing it before {until}?",
+          "A small forecast: {reason}, “{habit}” tends to be harder ({pct}%). Try it before {until}.",
+          "Heads up on “{habit}”: {reason}, it falls through {pct}% of the time. Do it before {until} and you're set."
+        ],
+        "buildMin": [
+          "{reason}, “{habit}” often slips ({pct}%). How about the minimum ({min}) before {until}?",
+          "A small forecast: {reason}, “{habit}” tends to be harder ({pct}%). {min} before {until} is enough.",
+          "Heads up on “{habit}”: {reason}, it falls through {pct}% of the time. The minimum ({min}) before {until} and you're set."
+        ],
+        "avoid": [
+          "{reason}, a slip with “{habit}” is more likely ({pct}%). Plan something else for today.",
+          "A small forecast: {reason}, “{habit}” tempts more ({pct}%). Take care of yourself today.",
+          "Heads up on “{habit}”: {reason}, a slip happens {pct}% of the time. You've got this!"
+        ]
+      },
+      "reasons": {
+        "night": "after a night with {screen} min of screen past midnight",
+        "nightSocial": "after a night with {social} min of scrolling",
+        "sleep": "after {sleep} of sleep",
+        "nightSleep": "after a night with {screen} min of screen and {sleep} of sleep",
+        "nightSocialSleep": "after a night with {social} min of scrolling and {sleep} of sleep",
+        "rescue": "the day after a skip",
+        "rescueAvoid": "the day after a slip",
+        "wd": [
+          "on Sundays",
+          "on Mondays",
+          "on Tuesdays",
+          "on Wednesdays",
+          "on Thursdays",
+          "on Fridays",
+          "on Saturdays"
+        ],
+        "weekend": "on weekends",
+        "workday": "on workdays"
+      },
+      "cases": [
+        {
+          "i": 0,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "After a night with 52 min of scrolling and 5 h 30 min of sleep, “Czytanie” often slips (97%). How about the minimum (5 min) before 12:00?"
+        },
+        {
+          "i": 5,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "After a night with 52 min of scrolling and 5 h 30 min of sleep, “Czytanie” often slips (97%). How about the minimum (5 min) before 14:00?"
+        },
+        {
+          "i": 45,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "After a night with 12 min of scrolling, “Czytanie” often slips (82%). How about the minimum (5 min) before 12:00?"
+        },
+        {
+          "i": 50,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "After a night with 12 min of scrolling, “Czytanie” often slips (85%). How about the minimum (5 min) before 14:00?"
+        },
+        {
+          "i": 60,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "A small forecast: on Saturdays, “Woda” tends to be harder (97%). 2 szklanki before 12:00 is enough."
+        },
+        {
+          "i": 70,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "A small forecast: on Saturdays, “Woda” tends to be harder (84%). 2 szklanki before 12:00 is enough."
+        },
+        {
+          "i": 80,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "A small forecast: on Saturdays, “Woda” tends to be harder (90%). 2 szklanki before 12:00 is enough."
+        },
+        {
+          "i": 90,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Heads up on “Woda”: on weekends, it falls through 77% of the time. The minimum (2 szklanki) before 12:00 and you're set."
+        },
+        {
+          "i": 105,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "A small forecast: on Saturdays, “Woda” tends to be harder (97%). 2 szklanki before 12:00 is enough."
+        },
+        {
+          "i": 120,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "On Wednesdays, a slip with “Fast food” is more likely (95%). Plan something else for today."
+        },
+        {
+          "i": 130,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "On Wednesdays, a slip with “Fast food” is more likely (86%). Plan something else for today."
+        },
+        {
+          "i": 140,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "On Wednesdays, a slip with “Fast food” is more likely (88%). Plan something else for today."
+        },
+        {
+          "i": 225,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "Heads up on “Siłownia”: the day after a skip, it falls through 66% of the time. Do it before 12:00 and you're set."
+        },
+        {
+          "i": 270,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "On weekends, a slip with “Słodycze” is more likely (68%). Plan something else for today."
+        },
+        {
+          "i": 280,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "On weekends, a slip with “Słodycze” is more likely (68%). Plan something else for today."
+        },
+        {
+          "i": 285,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Heads up on “Słodycze”: on weekends, a slip happens 68% of the time. You've got this!"
+        },
+        {
+          "i": 290,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "On weekends, a slip with “Słodycze” is more likely (71%). Plan something else for today."
+        },
+        {
+          "i": 295,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Heads up on “Słodycze”: on weekends, a slip happens 71% of the time. You've got this!"
+        },
+        {
+          "i": 305,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "Heads up on “Słodycze”: on weekends, a slip happens 71% of the time. You've got this!"
+        },
+        {
+          "i": 315,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "On weekends, a slip with “Słodycze” is more likely (68%). Plan something else for today."
+        },
+        {
+          "i": 325,
+          "date": "2026-09-20",
+          "nowMin": 510,
+          "text": "A small forecast: after 5 h 30 min of sleep, “Bieganie” tends to be harder (71%). 10 min before 12:00 is enough."
+        },
+        {
+          "i": 330,
+          "date": "2026-09-26",
+          "nowMin": 510,
+          "text": "After 5 h 30 min of sleep, “Bieganie” often slips (71%). How about the minimum (10 min) before 12:00?"
+        },
+        {
+          "i": 355,
+          "date": "2026-09-23",
+          "nowMin": 615,
+          "text": "A small forecast: after 5 h of sleep, “Bieganie” tends to be harder (71%). 10 min before 14:00 is enough."
+        }
+      ]
+    }
+  }
+}

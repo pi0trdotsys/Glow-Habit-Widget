@@ -41,6 +41,17 @@ import type { Lines27 } from "./szpila-27";
 import { HARD_27X, SOFT_27X } from "./szpila-27-extra";
 import { CTX_HARD, CTX_SOFT } from "./szpila-ctx";
 import { CHAIN_CHANCE, focusPool, rescuePool } from "./chain";
+import {
+  armKey,
+  chooseArm,
+  daypartOf,
+  lineHash,
+  pickLine,
+  rng,
+  statOf,
+  type ArmStats,
+  type JabKind,
+} from "./jabs";
 import { focusRoast, type WeeklyFocus } from "./focus";
 import { create } from "zustand";
 import { addDays } from "date-fns";
@@ -965,6 +976,8 @@ export function szpilaNow(
   seed?: number,
   /** This week's focus habit id (its nags win part of the time). */
   focusId?: string | null,
+  /** Learned arm stats (store.jabLearn.arms): Thompson sampling picks the pool, like natively. */
+  learned?: ArmStats | null,
 ): SzpilaSay {
   const t = T();
   if (habits.length === 0) return { text: pick(t.EMPTY[level], seed), mood: "angry" };
@@ -994,6 +1007,15 @@ export function szpilaNow(
   const rescue = rescuePool(top.habit, completions, level, now).map((l) =>
     personal(l, top.habit, userName),
   );
+  const focused = focusPool(top.habit, focusId, level).map((l) => personal(l, top.habit, userName));
+  if (learned) {
+    const say = learnedSay(top, completions, level, userName, learned, seed, rage, ctx, {
+      rescue,
+      focus: focused,
+      ctx: ctxPool,
+    });
+    if (say) return say;
+  }
   if (rescue.length && roll < CHAIN_CHANCE.rescue) {
     return {
       text: fill(pick(rescue, seed), top.habit, top.amount),
@@ -1001,7 +1023,6 @@ export function szpilaNow(
       habitId: top.habit.id,
     };
   }
-  const focused = focusPool(top.habit, focusId, level).map((l) => personal(l, top.habit, userName));
   if (focused.length && roll < CHAIN_CHANCE.focus) {
     return {
       text: fill(pick(focused, seed), top.habit, top.amount),
@@ -1021,6 +1042,52 @@ export function szpilaNow(
     text: fill(line, top.habit, top.amount),
     mood: top.overdue ? "angry" : "smug",
     habitId: top.habit.id,
+  };
+}
+
+/** Last raw line per habit on the Today bubble (never the same one twice in a row). */
+const lastLines = new Map<string, number>();
+
+/**
+ * The learned pick for szpilaNow (mirrors HabitNotifier.pickJab): candidates in the
+ * native order (memory, rescue, focus, situation, nag/rage), only non-empty pools;
+ * Thompson sampling over this day part's stats. Null = keep the old random choice.
+ */
+function learnedSay(
+  top: PlanItem,
+  completions: Completion[],
+  level: TauntLevel,
+  userName: string | null,
+  learned: ArmStats,
+  seed: number | undefined,
+  rage: boolean,
+  ctx: Ctx | null,
+  pools: { rescue: string[]; focus: string[]; ctx: string[] },
+): SzpilaSay | null {
+  const h = top.habit;
+  const ragePool = rage ? rageLines(h, level, userName) : [];
+  const cands: [JabKind, string[]][] = [
+    ["memory", memoryLines(h, completions, level, userName)],
+    ["rescue", pools.rescue],
+    ["focus", pools.focus],
+    ...(ctx ? [[`ctx:${ctx}` as JabKind, pools.ctx] as [JabKind, string[]]] : []),
+    ragePool.length ? ["rage", ragePool] : ["nag", nagLines(h, level, userName)],
+  ];
+  const usable = cands.filter(([, pool]) => pool.length > 0);
+  const part = daypartOf(minuteOfDay());
+  const rand = rng(seed ?? Math.floor(Math.random() * 2 ** 31));
+  const i = chooseArm(
+    usable.map(([kind]) => statOf(learned, armKey(kind, part))),
+    rand,
+  );
+  if (i < 0) return null;
+  const [kind, pool] = usable[i];
+  const line = pickLine(pool, rand, lastLines.get(h.id));
+  lastLines.set(h.id, lineHash(line));
+  return {
+    text: fill(line, h, top.amount),
+    mood: kind === "rescue" || top.overdue ? "angry" : "smug",
+    habitId: h.id,
   };
 }
 

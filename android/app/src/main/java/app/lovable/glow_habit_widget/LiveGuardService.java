@@ -315,8 +315,16 @@ public class LiveGuardService extends Service {
                 tracker.reset(); // only the shopping guard runs now
                 return;
             }
-            int state = DayGuard.limitState((int) (usedMs / 60_000L), DayGuard.limit(c));
-            if (state == DayGuard.LIMIT_WARN && watched && DayGuard.onceToday(c, "day_warn")) warn(c);
+            // "Bank minut": the limit is what's been earned so far - it grows the moment a habit is ticked.
+            boolean bank = DayGuard.bankMode(c);
+            int limit = DayGuard.limit(c);
+            DayGuard.noteLimit(c, limit);
+            int state = DayGuard.limitState((int) (usedMs / 60_000L), limit, bank);
+            // The bank's heads-up comes again whenever it runs low from a new balance.
+            if (state == DayGuard.LIMIT_WARN && watched
+                    && (bank ? DayGuard.onceFor(c, "bank_warn", String.valueOf(limit)) : DayGuard.onceToday(c, "day_warn"))) {
+                warn(c);
+            }
             if (state != DayGuard.LIMIT_OVER) {
                 tracker.reset();
                 return;
@@ -639,7 +647,8 @@ public class LiveGuardService extends Service {
         String label = app != null ? app[1] : "social media";
         JSONObject lines = LiveGuard.settings(c).optJSONObject("lines");
         boolean day = phase == DayGuard.DAY;
-        String text = lines != null ? WidgetShared.pick(lines.optJSONArray(day ? "dayBlock" : "block")) : "";
+        boolean bank = day && DayGuard.bankMode(c);
+        String text = lines != null ? WidgetShared.pick(day ? dayPool(lines, "dayBlock", bank) : lines.optJSONArray("block")) : "";
         boolean en = WidgetShared.en(c);
         if (text.isEmpty()) {
             text = en ? "Enough. {m} minutes on {app} at {time}. Phone down."
@@ -649,7 +658,9 @@ public class LiveGuardService extends Service {
         String time = WidgetShared.fmtMinute(WidgetShared.nowMinute());
         text = fillDay(LiveGuard.fill(text, label, m, time, 0), c);
         String sub;
-        if (day) {
+        if (bank) {
+            sub = bankSub(en, usedMin(), DayGuard.limit(c), DayGuard.bankRules(c).optInt("perHabit", DayGuard.BANK_PER_HABIT));
+        } else if (day) {
             sub = en ? "Social media today: " + usedMin() + "/" + DayGuard.limit(c) + " min"
                 : "Social media dziś: " + usedMin() + "/" + DayGuard.limit(c) + " min";
         } else {
@@ -658,7 +669,8 @@ public class LiveGuardService extends Service {
                 : m + " min na " + label + " · " + time + " · po " + LiveGuard.BLOCK_AFTER + " szpilach czas na blokadę";
         }
         int cat = SzpilaWidgetProvider.catDrawable(WidgetShared.state(c).optString("face"), 1);
-        String out = day ? (en ? "📵  Enough for today" : "📵  Na dziś wystarczy") : null;
+        String out = bank ? (en ? "💪  I'll go earn some" : "💪  Idę zarobić minuty")
+            : day ? (en ? "📵  Enough for today" : "📵  Na dziś wystarczy") : null;
         boolean ok = LiveBlock.show(c, "SZPILA  " + HabitNotifier.EMOJI_ANGRY, text, sub, cat, out, null, new LiveBlock.Listener() {
             @Override
             public void onSleep() {
@@ -684,12 +696,33 @@ public class LiveGuardService extends Service {
         return (int) (usedMs / 60_000L);
     }
 
-    /** {used} {limit} {over} for the daily-limit lines. */
+    /** {used} {limit} {over} {left} for the daily-limit lines, {bank} {earn} for the bank's. */
     private String fillDay(String line, Context c) {
-        int limit = DayGuard.limit(c);
-        return line.replace("{used}", String.valueOf(usedMin())).replace("{limit}", String.valueOf(limit))
-            .replace("{over}", String.valueOf(Math.max(0, usedMin() - limit)))
-            .replace("{left}", String.valueOf(Math.max(0, limit - usedMin())));
+        return fillDay(line, usedMin(), DayGuard.limit(c), DayGuard.bankRules(c).optInt("perHabit", DayGuard.BANK_PER_HABIT));
+    }
+
+    static String fillDay(String line, int used, int limit, int earn) {
+        String left = String.valueOf(Math.max(0, limit - used));
+        return line.replace("{used}", String.valueOf(used)).replace("{limit}", String.valueOf(limit))
+            .replace("{over}", String.valueOf(Math.max(0, used - limit)))
+            .replace("{left}", left).replace("{bank}", left).replace("{earn}", String.valueOf(earn));
+    }
+
+    /** The day pool ("dayOver", "dayBlock"...), its bank variant ("bankOver"...) in bank mode when there is one. */
+    static JSONArray dayPool(JSONObject lines, String key, boolean bank) {
+        if (lines == null) return null;
+        if (bank && key.startsWith("day")) {
+            JSONArray b = lines.optJSONArray("bank" + key.substring(3));
+            if (b != null && b.length() > 0) return b;
+        }
+        return lines.optJSONArray(key);
+    }
+
+    /** The block's small print in bank mode (pure, for tests). */
+    static String bankSub(boolean en, int used, int limit, int earn) {
+        int left = Math.max(0, limit - used);
+        return en ? "Bank: " + left + " min · spent " + used + " of " + limit + " · +" + earn + " min per habit"
+            : "Bank: " + left + " min · wydane " + used + " z " + limit + " · +" + earn + " min za każde zadanie";
     }
 
     /** The pop-up. Lines come from the snapshot (src/lib/live.ts), per app. */
@@ -708,7 +741,7 @@ public class LiveGuardService extends Service {
         String text = "";
         if (lines != null) {
             JSONArray pool = morning ? lines.optJSONArray("morning")
-                : day ? lines.optJSONArray(action == LiveGuard.FIRST ? "dayOver" : "dayEscalate")
+                : day ? dayPool(lines, action == LiveGuard.FIRST ? "dayOver" : "dayEscalate", DayGuard.bankMode(c))
                 : pre ? lines.optJSONArray("pre")
                 : action == LiveGuard.FIRST ? lines.optJSONArray(key) : lines.optJSONArray("escalate");
             if (pool == null || pool.length() == 0) pool = lines.optJSONArray("generic");
@@ -750,12 +783,12 @@ public class LiveGuardService extends Service {
         }
     }
 
-    /** Once a day, 10 min before the limit. */
+    /** Once a day, 10 min before the limit (bank mode: 5 min before the bank runs dry, per balance). */
     private void warn(Context c) {
         if (!canNotify(c)) return;
         boolean en = WidgetShared.en(c);
         JSONObject lines = LiveGuard.settings(c).optJSONObject("lines");
-        String text = lines != null ? WidgetShared.pick(lines.optJSONArray("dayWarn")) : "";
+        String text = lines != null ? WidgetShared.pick(dayPool(lines, "dayWarn", DayGuard.bankMode(c))) : "";
         if (text.isEmpty()) text = en ? "{left} min of social media left today." : "Zostało {left} min social mediów na dziś.";
         text = fillDay(text, c);
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_LIVE)
@@ -825,6 +858,18 @@ public class LiveGuardService extends Service {
             (en ? "Watching: " : "Pilnuję: ") + watching};
     }
 
+    /** The ongoing notification in the day with the minute bank on (pure, for tests). */
+    static String[] bankGuardText(boolean en, int used, int limit, int earn) {
+        int left = Math.max(0, limit - used);
+        String title = "💰 " + (en ? "Bank: " + left + " min of social media" : "Bank: " + left + " min social mediów");
+        String text = used >= limit
+            ? (en ? "The bank's empty - Szpila is jabbing. Do a habit: +" + earn + " min."
+                : "Bank pusty - Szpila szpiluje. Zrób zadanie: +" + earn + " min.")
+            : (en ? "Spent " + used + " of " + limit + " min. +" + earn + " min per habit."
+                : "Wydane " + used + " z " + limit + " min. +" + earn + " min za każde zadanie.");
+        return new String[]{title, text};
+    }
+
     /** The ongoing notification while only the shopping guard runs (pure, for tests). */
     static String[] shopGuardText(boolean en, String shops) {
         return new String[]{
@@ -861,6 +906,8 @@ public class LiveGuardService extends Service {
                 if (ShopGuard.watched(this, pkg) && LiveGuard.installed(this, pkg)) shops.add(ShopGuard.label(pkg));
             }
             t = shopGuardText(en, shortList(shops, en, en ? "shopping apps" : "aplikacje zakupowe"));
+        } else if (phase == DayGuard.DAY && DayGuard.bankMode(this)) {
+            t = bankGuardText(en, usedMin(), DayGuard.limit(this), DayGuard.bankRules(this).optInt("perHabit", DayGuard.BANK_PER_HABIT));
         } else {
             t = guardText(phase, en, until, watching, pending, usedMin(), DayGuard.limit(this),
                 curfewNow(this), LiveGuard.curfewAllowed(this).size());

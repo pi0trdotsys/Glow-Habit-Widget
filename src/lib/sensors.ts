@@ -12,6 +12,7 @@ import { amountOn, goalOf, isDueOn, kindOf, todayKey } from "@/lib/habits/utils"
 import type { Habit } from "@/lib/habits/types";
 import type { StepsSource } from "@/lib/steps";
 import { isKropi, kropiDays, kropiUpdates } from "@/lib/kropi";
+import { APP_SYNC_DAYS, appMinutes, appUpdates, isAppsHabit } from "@/lib/apps";
 
 export interface StepsStatus {
   available: boolean;
@@ -172,6 +173,30 @@ export async function syncKropiNow(): Promise<void> {
   if (isNative()) await syncKropi().catch(() => {});
 }
 
+/**
+ * App minutes into the "apps" habits (today + the last days): the manual
+ * adjustment of each day stays on top (store.setAppMinutes).
+ */
+async function syncApps(): Promise<void> {
+  const { habits } = useHabits.getState();
+  const linked = habits.filter(isAppsHabit);
+  if (linked.length === 0) return;
+  const pkgs = [...new Set(linked.flatMap((h) => h.apps ?? []))];
+  const days = await appMinutes(pkgs, APP_SYNC_DAYS);
+  if (!days) return;
+  for (const h of linked) {
+    const { completions, setAppMinutes } = useHabits.getState();
+    const due = (date: string) => isDueOn(h, new Date(`${date}T12:00:00`));
+    for (const u of appUpdates(h, completions, days, due))
+      setAppMinutes(h.id, u.date, u.minutes, u.split);
+  }
+}
+
+/** Pull app minutes right now (after linking apps, on return to the app). */
+export async function syncAppsNow(): Promise<void> {
+  if (isNative()) await syncApps().catch(() => {});
+}
+
 /** Pull today's steps right now (e.g. after a source change or a band sync). */
 export async function syncStepsNow(): Promise<void> {
   if (isNative()) await syncSteps().catch(() => {});
@@ -270,6 +295,7 @@ export async function syncSensors(): Promise<void> {
   try {
     await syncSteps().catch(() => {});
     await syncKropi().catch(() => {});
+    await syncApps().catch(() => {});
     await syncScreen().catch(() => {});
     await syncNights().catch(() => {});
   } finally {

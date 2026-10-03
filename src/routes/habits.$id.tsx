@@ -26,6 +26,7 @@ import {
   unitLabel,
 } from "@/lib/habits/utils";
 import { L } from "@/lib/i18n";
+import { appsList, breakdown, isAppsHabit } from "@/lib/apps";
 import { doubleMisses, minimumLabel, minimumOf, neverTwiceStreak } from "@/lib/habits/rescue";
 
 export const Route = createFileRoute("/habits/$id")({
@@ -281,6 +282,11 @@ function AmountEditor({ habit, amount, color }: { habit: Habit; amount: number; 
   const setAmount = useHabits((s) => s.setAmount);
   const g = goalOf(habit);
   const key = todayKey();
+  // Minutes from apps: "Duolingo 9 min + Busuu 4 min + ręcznie 2 min"; edits here move the manual part.
+  const entry = useHabits((s) =>
+    s.completions.find((c) => c.habitId === habit.id && c.date === key),
+  );
+  const split = isAppsHabit(habit) ? breakdown(entry) : "";
   const [draft, setDraft] = useState<string | null>(null);
   const pct = Math.min(100, Math.round((amount / g.target) * 100));
   const set = (n: number) => setAmount(habit.id, key, Math.max(0, n));
@@ -332,6 +338,15 @@ function AmountEditor({ habit, amount, color }: { habit: Habit; amount: number; 
           style={{ width: `${pct}%`, backgroundColor: color }}
         />
       </div>
+      {isAppsHabit(habit) && (
+        <p className="mt-2 text-xs text-muted-foreground" data-apps-split>
+          {split ||
+            L(
+              `Dziś jeszcze nic w: ${appsList(habit.apps ?? [])}.`,
+              `Nothing yet today in: ${appsList(habit.apps ?? [])}.`,
+            )}
+        </p>
+      )}
     </div>
   );
 }

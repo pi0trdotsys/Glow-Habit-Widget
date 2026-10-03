@@ -37,6 +37,8 @@ import { boostSet } from "@/lib/habits/chain";
 import { isKropi, kropiAdd } from "@/lib/kropi";
 import { syncKropiNow } from "@/lib/sensors";
 import { focusHabit } from "@/lib/habits/focus";
+import { FreeWindowHint } from "@/components/FreeWindowHint";
+import { useCalendarPlan } from "@/lib/calendar-device";
 
 /** Tests/previews can show the native guard's status slides on the web. */
 const forceGuard =
@@ -79,6 +81,8 @@ function TodayPage() {
   const habits = useHabits((s) => s.habits);
   const completions = useHabits((s) => s.completions);
   const userName = useHabits((s) => s.userName);
+  // "Co na ciebie działa": the bubble picks pools the way the native jabs do.
+  const learnedArms = useHabits((s) => s.jabLearn.arms);
   const level = useHabits((s) => s.notifications.tauntLevel);
   const focus = useHabits((s) => s.focus);
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1000));
@@ -91,13 +95,15 @@ function TodayPage() {
   // Rescue days ("nigdy dwa razy") and the weekly focus go first once due.
   const boost = boostSet(habits, completions, focus, today);
   const focusH = focusHabit(habits, focus, today);
-  const plan = planDay(habits, completions, today, boost);
+  // The phone's calendars: plan times out of meetings + the next free window for a minutes habit.
+  const cal = useCalendarPlan(planDay(habits, completions, today, boost), today);
+  const plan = cal.plan;
   const report = weeklyReport(habits, completions, today);
   const topStreak = habits.reduce((acc, h) => Math.max(acc, currentStreak(h, completions)), 0);
   const say = useMemo(
-    () => szpilaNow(habits, completions, plan, level, userName, seed, focusH?.id),
+    () => szpilaNow(habits, completions, plan, level, userName, seed, focusH?.id, learnedArms),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [seed, completions, habits, level, userName, focusH?.id],
+    [seed, completions, habits, level, userName, focusH?.id, learnedArms],
   );
 
   // The whole day done: confetti + a little drum roll (only when it happens, not on load).
@@ -169,6 +175,7 @@ function TodayPage() {
           </section>
         )}
         {due.length > 0 && <NowCard plan={plan} />}
+        {due.length > 0 && cal.match && <FreeWindowHint match={cal.match} now={today} />}
         {due.length > 0 && (
           <PlanFold plan={plan} delta={report.delta} hasHistory={!report.noBaseline} />
         )}

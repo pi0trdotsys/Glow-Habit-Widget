@@ -16,12 +16,19 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
+import com.getcapacitor.PermissionState;
 
 /**
  * Native helpers for the web app: widget/notification refresh and backups
  * (see src/lib/widget/bridge.ts and src/lib/backup.ts).
  */
-@CapacitorPlugin(name = "HabitWidget")
+@CapacitorPlugin(
+    name = "HabitWidget",
+    // READ_CALENDAR: busy meetings of the calendars picked in Settings (CalendarBusy).
+    permissions = { @Permission(alias = "calendar", strings = { android.Manifest.permission.READ_CALENDAR }) }
+)
 public class HabitWidgetPlugin extends Plugin {
     /**
      * Haptic feedback for habit taps: { kind: "tick" | "success" | "celebrate" }.
@@ -94,6 +101,19 @@ public class HabitWidgetPlugin extends Plugin {
     public void refresh(PluginCall call) {
         WidgetShared.updateAll(getContext());
         call.resolve();
+    }
+
+    /** "Co na ciebie działa": the native jab log, outcomes settled first ({ entries: JabEntry[] }). */
+    @PluginMethod
+    public void jabStats(PluginCall call) {
+        JSObject ret = new JSObject();
+        try {
+            JabLearn.evaluate(getContext());
+            ret.put("entries", new JSArray(JabLearn.log(getContext()).toString()));
+        } catch (Exception e) {
+            ret.put("entries", new JSArray());
+        }
+        call.resolve(ret);
     }
 
     /** Saves { name, json } to Download/Loop; with share=true opens the system share sheet. */
@@ -192,7 +212,17 @@ public class HabitWidgetPlugin extends Plugin {
             ret.put("curfewPasses", new JSObject(LiveGuard.counts(getContext(), "curfew_passes").toString()));
             int base = DayGuard.baseLimit(getContext());
             ret.put("limitBase", base);
-            ret.put("debt", DayGuard.debt(getContext(), base));
+            ret.put("debt", DayGuard.debtNow(getContext()));
+            // "Bank minut": the mode, earned today, today's actual limit and the per-day record.
+            boolean bank = DayGuard.bankMode(getContext());
+            int limit = DayGuard.limit(getContext());
+            ret.put("limitMode", bank ? "bank" : "fixed");
+            ret.put("bankEarned", DayGuard.bankEarned(getContext()));
+            ret.put("limit", limit);
+            if (DayGuard.config(getContext()).day && WidgetShared.nowMinute() >= DayGuard.DAY_START) {
+                DayGuard.noteLimit(getContext(), limit);
+            }
+            ret.put("dayLimit", new JSObject(DayGuard.limitHistory(getContext()).toString()));
             // "24 h do namysłu": per calendar day, the shopping apps and an active pass.
             ret.put("shopBlocks", new JSObject(LiveGuard.counts(getContext(), "shop_blocks").toString()));
             ret.put("shopPasses", new JSObject(LiveGuard.counts(getContext(), "shop_passes").toString()));
@@ -439,6 +469,107 @@ public class HabitWidgetPlugin extends Plugin {
     }
 
     // ------------------------------------------------------------------
+    // The phone's calendars (READ_CALENDAR, CalendarBusy)
+    // ------------------------------------------------------------------
+
+    private JSObject calendarState() {
+        JSObject ret = new JSObject();
+        ret.put("granted", CalendarBusy.granted(getContext()));
+        return ret;
+    }
+
+    @PluginMethod
+    public void calendarStatus(PluginCall call) {
+        call.resolve(calendarState());
+    }
+
+    /** The system "allow access to your calendar" dialog; resolves { granted }. */
+    @PluginMethod
+    public void requestCalendar(PluginCall call) {
+        if (CalendarBusy.granted(getContext())) {
+            call.resolve(calendarState());
+            return;
+        }
+        requestPermissionForAlias("calendar", call, "onCalendarPermission");
+    }
+
+    @PermissionCallback
+    private void onCalendarPermission(PluginCall call) {
+        if (call == null) return;
+        if (getPermissionState("calendar") == PermissionState.GRANTED) WidgetShared.updateAll(getContext());
+        call.resolve(calendarState());
+    }
+
+    /** Every calendar on the phone: { granted, calendars: [{id, name, accountName, accountType, color, visible}] }. */
+    @PluginMethod
+    public void calendarList(PluginCall call) {
+        JSArray list = new JSArray();
+        for (CalendarBusy.Cal k : CalendarBusy.calendars(getContext())) {
+            JSObject o = new JSObject();
+            o.put("id", k.id);
+            o.put("name", k.name);
+            o.put("accountName", k.accountName);
+            o.put("accountType", k.accountType);
+            o.put("color", k.color);
+            o.put("visible", k.visible);
+            list.put(o);
+        }
+        JSObject ret = calendarState();
+        ret.put("calendars", list);
+        call.resolve(ret);
+    }
+
+    /**
+     * Instances of { ids } in [fromMs, toMs): { granted, events: [{begin, end, allDay,
+     * availability, declined, calendarId, title}] } (titles only for the Settings summary).
+     */
+    @PluginMethod
+    public void calendarEvents(PluginCall call) {
+        java.util.List<String> ids = new java.util.ArrayList<>();
+        JSArray a = call.getArray("ids", new JSArray());
+        for (int i = 0; i < a.length(); i++) {
+            String id = a.optString(i, "");
+            if (!id.isEmpty()) ids.add(id);
+        }
+        long now = System.currentTimeMillis();
+        long from = call.getLong("fromMs", now);
+        long to = call.getLong("toMs", now + 86_400_000L);
+        JSArray list = new JSArray();
+        for (CalendarBusy.Instance in : CalendarBusy.instances(getContext(), ids, from, to)) {
+            JSObject o = new JSObject();
+            o.put("begin", in.begin);
+            o.put("end", in.end);
+            o.put("allDay", in.allDay);
+            o.put("availability", in.availability);
+            o.put("declined", in.declined);
+            o.put("calendarId", in.calendarId);
+            o.put("title", in.title);
+            list.put(o);
+        }
+        JSObject ret = calendarState();
+        ret.put("events", list);
+        call.resolve(ret);
+    }
+
+    /** Opens the system calendar app (to add / sync a work account). */
+    @PluginMethod
+    public void openCalendarApp(PluginCall call) {
+        Intent i = new Intent(Intent.ACTION_VIEW, calendarTimeUri());
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            getContext().startActivity(i);
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("no calendar app");
+        }
+    }
+
+    private static Uri calendarTimeUri() {
+        return android.provider.CalendarContract.CONTENT_URI.buildUpon().appendPath("time")
+            .appendPath(String.valueOf(System.currentTimeMillis())).build();
+    }
+
+    // ------------------------------------------------------------------
     // Screen time (usage access)
     // ------------------------------------------------------------------
 
@@ -464,6 +595,49 @@ public class HabitWidgetPlugin extends Plugin {
             getContext().startActivity(fallback);
         }
         call.resolve();
+    }
+
+    /**
+     * Foreground minutes of apps per local day ("Minuty z aplikacji"):
+     * { packages?: string[] (missing/empty = every app), days } ->
+     * { granted, days: [{ daysAgo, date, total, apps: { pkg: minutes } }] }.
+     */
+    @PluginMethod
+    public void appMinutes(PluginCall call) {
+        int days = Math.max(0, Math.min(13, call.getInt("days", 7)));
+        java.util.Set<String> watched = null;
+        com.getcapacitor.JSArray pk = call.getArray("packages");
+        if (pk != null && pk.length() > 0) {
+            watched = new java.util.HashSet<>();
+            for (int i = 0; i < pk.length(); i++) {
+                String s = pk.optString(i, "");
+                if (!s.isEmpty()) watched.add(s);
+            }
+        }
+        JSObject ret = new JSObject();
+        JSArray out = new JSArray();
+        java.util.List<java.util.Map<String, Integer>> per = null;
+        try {
+            per = AppMinutes.perDay(getContext(), watched, days);
+        } catch (Exception ignored) {
+        }
+        ret.put("granted", per != null);
+        for (int d = 0; per != null && d < per.size(); d++) {
+            JSObject day = new JSObject();
+            JSObject apps = new JSObject();
+            int total = 0;
+            for (java.util.Map.Entry<String, Integer> e : per.get(d).entrySet()) {
+                apps.put(e.getKey(), e.getValue());
+                total += e.getValue();
+            }
+            day.put("daysAgo", d);
+            day.put("date", WidgetShared.dateKey(d));
+            day.put("total", total);
+            day.put("apps", apps);
+            out.put(day);
+        }
+        ret.put("days", out);
+        call.resolve(ret);
     }
 
     /**

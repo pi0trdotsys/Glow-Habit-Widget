@@ -86,7 +86,7 @@ describe("the night costs the day", () => {
     const { useGuardStatus } = await import("@/components/TodayGuard");
     expect(typeof useGuardStatus).toBe("function");
     const s = dayGuardState(notif({ nightDebt: true }), []);
-    expect(s.day).toEqual({ enabled: true, limit: 60, debt: true });
+    expect(s.day).toMatchObject({ enabled: true, limit: 60, debt: true });
     expect(dayGuardState(notif({ nightDebt: false }), []).day.debt).toBe(false);
   });
 });

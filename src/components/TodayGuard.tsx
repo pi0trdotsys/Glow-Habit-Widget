@@ -1,5 +1,5 @@
 import { Capacitor } from "@capacitor/core";
-import { Lock, Smartphone } from "lucide-react";
+import { Lock, PiggyBank, Smartphone } from "lucide-react";
 import { useHabits } from "@/lib/habits/store";
 import type { Habit } from "@/lib/habits/types";
 import { morningPending, morningWindow } from "@/lib/day-guard";
@@ -7,12 +7,20 @@ import { minuteOfDay, todayKey } from "@/lib/habits/utils";
 import { nightDebt } from "@/lib/curfew";
 import { addDays } from "date-fns";
 import { L } from "@/lib/i18n";
+import { bankHowTo, bankToday, isBank } from "@/lib/bank";
 
 export interface GuardStatus {
   /** Morning habits still blocking social media (empty = no lock right now). */
   morning: Habit[];
   /** Today's social media minutes vs the daily limit (null = limit off / no data yet). */
-  social: { used: number; limit: number; over: boolean; debt: number } | null;
+  social: {
+    used: number;
+    limit: number;
+    over: boolean;
+    debt: number;
+    /** "Bank minut": earned today (capped) and how to earn more. */
+    bank?: { earned: number; howTo: string };
+  } | null;
 }
 
 /**
@@ -30,6 +38,21 @@ export function useGuardStatus(now: Date, force = false): GuardStatus {
     ? morningPending(notif, habits, completions, now)
     : [];
   const used = daySocial[todayKey(now)];
+  if (isBank(notif)) {
+    // "Bank minut": the limit is earned (mirrors DayGuard.limit in bank mode).
+    if (!notif.dailyLimit) return { morning, social: null };
+    const b = bankToday(notif, habits, completions, reports, used ?? 0, now);
+    return {
+      morning,
+      social: {
+        used: used ?? 0,
+        limit: b.limit,
+        over: (used ?? 0) > b.limit,
+        debt: b.debt,
+        bank: { earned: b.earned, howTo: bankHowTo(b.rules) },
+      },
+    };
+  }
   // "Noc kosztuje dzień": last night's scrolling comes off today's limit (mirrors DayGuard.debt).
   const debt =
     (notif.nightDebt ?? true) && now.getHours() >= 5
@@ -74,13 +97,17 @@ export function SocialTodayCard({
   limit,
   over,
   debt = 0,
+  bank,
 }: {
   used: number;
   limit: number;
   over: boolean;
   /** Minutes last night took off today's limit. */
   debt?: number;
+  /** "Bank minut": earned today and how to earn more (bank mode only). */
+  bank?: { earned: number; howTo: string };
 }) {
+  if (bank) return <BankTodayCard used={used} limit={limit} debt={debt} {...bank} />;
   return (
     <section
       data-social-today
@@ -115,6 +142,68 @@ export function SocialTodayCard({
             {L(` Noc zabrała ${debt} min.`, ` Last night cost ${debt} min.`)}
           </span>
         )}
+      </div>
+    </section>
+  );
+}
+
+/** "Bank minut": what's in the bank, what was earned and spent, how to earn more. */
+export function BankTodayCard({
+  used,
+  limit,
+  debt,
+  earned,
+  howTo,
+}: {
+  used: number;
+  limit: number;
+  debt: number;
+  earned: number;
+  howTo: string;
+}) {
+  const left = Math.max(0, limit - used);
+  const empty = used >= limit;
+  return (
+    <section
+      data-social-today
+      data-bank
+      className="flex h-full flex-col justify-center rounded-2xl bg-card px-3 py-2.5"
+    >
+      <div className="flex items-center justify-between text-sm">
+        <span className="flex items-center gap-1.5 text-muted-foreground">
+          <PiggyBank size={15} /> {L("Bank minut", "Minute bank")}
+        </span>
+        <span
+          className="font-semibold tabular-nums"
+          data-bank-left
+          style={{ color: empty ? "var(--avoid)" : undefined }}
+        >
+          {L(`Bank: ${left} min`, `Bank: ${left} min`)}
+        </span>
+      </div>
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-background">
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${limit > 0 ? Math.min(100, (left / limit) * 100) : 0}%`,
+            backgroundColor: left <= 5 ? "var(--avoid)" : "var(--primary)",
+          }}
+        />
+      </div>
+      <div className="mt-1.5 text-xs text-muted-foreground" data-bank-detail>
+        {L(`zarobione ${earned}`, `earned ${earned}`)}
+        {debt > 0 && (
+          <span data-night-debt style={{ color: "var(--avoid)" }}>
+            {L(` · noc −${debt}`, ` · night −${debt}`)}
+          </span>
+        )}
+        {L(` · wydane ${used}`, ` · spent ${used}`)}
+        {used > limit && (
+          <span style={{ color: "var(--avoid)" }}>
+            {L(` · ponad bank o ${used - limit} min`, ` · ${used - limit} min over`)}
+          </span>
+        )}
+        {howTo && <div data-bank-howto>{L(`Zarób więcej: ${howTo}.`, `Earn more: ${howTo}.`)}</div>}
       </div>
     </section>
   );

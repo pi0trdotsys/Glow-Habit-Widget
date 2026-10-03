@@ -52,6 +52,8 @@ describe("scrolling in bed judged from screen time", () => {
     expect(avoidStatus(bed, c, addDays(now, -1), now)).toBe("clean");
     expect(avoidStatus(bed, c, addDays(now, -2), now)).toBe("slip");
     const r = weeklyReport([bed], c, now);
-    expect(r.thisWeek.due).toBe(2); // Mon + Tue decided, Wed undecided
+    // Mon + Tue decided (forbidden habits weigh half a habit-day), Wed undecided
+    expect(r.thisWeek.due).toBe(1);
+    expect(r.slips.this).toBe(1);
   });
 });

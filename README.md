@@ -145,6 +145,20 @@ szklanek wody? Rozłożone równo od rana do wieczora.
 - **Sen z opaski** 😴: Mi Fitness zapisuje sen w Health Connect, a rachunek
   za noc pokazuje, ile naprawdę śpisz i ile minut po odłożeniu telefonu
   zasypiasz.
+- **Bank minut** 💰: social mediów nie dostajesz za darmo. Start to 5 minut,
+  +10 za każde zrobione zadanie, +5 za każde 1000 kroków, a noc ze
+  scrollowaniem zabiera z banku. Pusty bank = blokada.
+- **Prognoza na dziś** 🔮: rano Szpila mówi, co dziś najpewniej odpuścisz i
+  dlaczego (_„po nocy z 40 min scrollowania i 5,5 h snu zwykle odpuszczasz
+  czytanie (78%)”_), póki da się jeszcze zareagować.
+- **Szpila uczy się, co działa**: zapamiętuje, po których szpilach naprawdę
+  ruszasz w ciągu 30 minut, i coraz częściej trafia w Twoje czułe punkty.
+- **Minuty z aplikacji**: „Ucz się języka” liczy się samo z Duolingo i Busuu
+  (czytanie np. z Kindle czy Legimi), a własne dopiski się sumują.
+- **Kalendarz** 🗓: Szpila nie szpiluje w trakcie spotkań (także z kalendarza
+  służbowego zsynchronizowanego na telefonie) i podpowiada wolne okna na zadania.
+- **Uczciwy tydzień do tygodnia**: zakazane też się liczą. Czysty dzień na
+  plus, wpadka ponad limit na minus, a niepotwierdzony dzień jeszcze wcale.
 
 ## ◉ Zakazane. Na czerwono.
 

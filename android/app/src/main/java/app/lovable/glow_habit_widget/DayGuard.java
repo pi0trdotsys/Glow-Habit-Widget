@@ -124,6 +124,65 @@ final class DayGuard {
     }
 
     /**
+     * Same, in bank mode too: an empty bank (limit 0) means over - social media
+     * has to be earned first; the heads-up comes BANK_WARN_MIN before it runs out.
+     * Mirrors limitState in src/lib/bank.ts.
+     */
+    static int limitState(int usedMin, int limitMin, boolean bank) {
+        if (!bank) return limitState(usedMin, limitMin);
+        if (limitMin <= 0 || usedMin >= limitMin) return LIMIT_OVER;
+        if (limitMin > BANK_WARN_MIN && limitMin - usedMin <= BANK_WARN_MIN) return LIMIT_WARN;
+        return LIMIT_OK;
+    }
+
+    // ------------------------------------------------------------------ "Bank minut" (pure)
+
+    /** Defaults of the earning rules (src/lib/bank.ts BANK_DEFAULTS). */
+    static final int BANK_BASE = 5, BANK_PER_HABIT = 10, BANK_PER_K_STEPS = 5, BANK_CAP = 120;
+    /** The bank's heads-up: this many minutes before it's empty. */
+    static final int BANK_WARN_MIN = 5;
+
+    /** Habits to do among today's rows with the full goal in (avoid rows never earn). */
+    static int doneBuilds(JSONArray rows) {
+        int n = 0;
+        for (int i = 0; rows != null && i < rows.length(); i++) {
+            JSONObject h = rows.optJSONObject(i);
+            if (h != null && !WidgetShared.isAvoid(h) && WidgetShared.isDone(h)) n++;
+        }
+        return n;
+    }
+
+    /** Today's steps: the highest amount among rows fed by Health Connect (source "steps"). */
+    static int stepsToday(JSONArray rows) {
+        int s = 0;
+        for (int i = 0; rows != null && i < rows.length(); i++) {
+            JSONObject h = rows.optJSONObject(i);
+            if (h != null && "steps".equals(h.optString("source"))) s = Math.max(s, WidgetShared.amount(h));
+        }
+        return s;
+    }
+
+    /** Minutes earned today, base included: base + perHabit x done + perKSteps x full 1000s, at most cap (0 = no cap). */
+    static int bankEarned(int base, int perHabit, int perKSteps, int cap, int done, int steps) {
+        long gross = (long) Math.max(0, base) + (long) Math.max(0, perHabit) * Math.max(0, done)
+            + (long) Math.max(0, perKSteps) * (Math.max(0, steps) / 1000);
+        if (cap > 0) gross = Math.min(cap, gross);
+        return (int) Math.min(Integer.MAX_VALUE, gross);
+    }
+
+    /** The same from snapshot rows and the `live.day.bank` rules. */
+    static int bankEarned(JSONArray rows, JSONObject rules) {
+        JSONObject r = rules != null ? rules : new JSONObject();
+        return bankEarned(r.optInt("base", BANK_BASE), r.optInt("perHabit", BANK_PER_HABIT),
+            r.optInt("perKSteps", BANK_PER_K_STEPS), r.optInt("cap", BANK_CAP), doneBuilds(rows), stepsToday(rows));
+    }
+
+    /** Today's limit in bank mode: earned minus last night's raw debt, never below 0. */
+    static int bankLimit(int earned, int rawDebt) {
+        return Math.max(0, earned - Math.max(0, rawDebt));
+    }
+
+    /**
      * Foreground time to add for one poll: the time since the last poll while a
      * watched app was in front, capped (a long gap means we weren't polling -
      * e.g. screen off - and must not count as use).
@@ -155,10 +214,53 @@ final class DayGuard {
         return d != null ? d : new JSONObject();
     }
 
-    /** Today's limit: the set one minus last night's debt (when "the night costs the day" is on). */
+    /**
+     * Today's limit: the set one minus last night's debt (when "the night costs
+     * the day" is on); in bank mode what's been earned today minus the debt.
+     */
     static int limit(Context c) {
+        if (bankMode(c)) return bankLimit(bankEarned(c), rawDebt(c));
         int base = baseLimit(c);
         return base - debt(c, base);
+    }
+
+    /** "Bank minut": the limit is earned (snapshot live.day.mode, src/lib/bank.ts). */
+    static boolean bankMode(Context c) {
+        return "bank".equals(daySettings(c).optString("mode", "fixed"));
+    }
+
+    static JSONObject bankRules(Context c) {
+        JSONObject b = daySettings(c).optJSONObject("bank");
+        return b != null ? b : new JSONObject();
+    }
+
+    private static String bankRaw;
+    private static String bankDay;
+    private static int bankCached;
+
+    /**
+     * Minutes earned today from the snapshot rows - re-read only when the
+     * snapshot changes (a tick on a widget saves a new one), so the guard's
+     * poll stays cheap. A snapshot from an earlier day counts as a fresh day.
+     */
+    static synchronized int bankEarned(Context c) {
+        String raw = WidgetShared.rawState(c);
+        String today = WidgetShared.today();
+        if (raw != null && raw == bankRaw && today.equals(bankDay)) return bankCached;
+        JSONObject s = WidgetShared.state(c);
+        JSONArray rows = today.equals(s.optString("date")) ? s.optJSONArray("habits") : null;
+        JSONObject live = s.optJSONObject("live");
+        JSONObject day = live != null ? live.optJSONObject("day") : null;
+        bankCached = bankEarned(rows, day != null ? day.optJSONObject("bank") : null);
+        bankRaw = raw;
+        bankDay = today;
+        return bankCached;
+    }
+
+    /** What last night takes off today's limit right now (both modes, for the app). */
+    static int debtNow(Context c) {
+        if (bankMode(c)) return Math.min(rawDebt(c), bankEarned(c));
+        return debt(c, baseLimit(c));
     }
 
     static int baseLimit(Context c) {
@@ -276,6 +378,57 @@ final class DayGuard {
         } catch (Exception ignored) {
         }
         return out;
+    }
+
+    // ------------------------------------------------------------------ the day's actual limit
+
+    private static final String KEY_LIMIT = "day_limit";
+    private static String noted;
+
+    /**
+     * Remembers today's limit (the bank's balance in bank mode) for the stats:
+     * the last value of the day is what the day is judged against. Writes only
+     * when it changes.
+     */
+    static synchronized void noteLimit(Context c, int limit) {
+        String today = WidgetShared.today();
+        String tag = today + "|" + limit;
+        if (tag.equals(noted)) return;
+        try {
+            JSONObject o = new JSONObject(LiveGuard.prefs(c).getString(KEY_LIMIT, "{}"));
+            if (o.optInt(today, -1) != limit) {
+                o.put(today, limit);
+                JSONArray names = o.names();
+                if (names != null && names.length() > 120) {
+                    String oldest = null;
+                    for (int i = 0; i < names.length(); i++) {
+                        String k = names.getString(i);
+                        if (oldest == null || k.compareTo(oldest) < 0) oldest = k;
+                    }
+                    o.remove(oldest);
+                }
+                LiveGuard.prefs(c).edit().putString(KEY_LIMIT, o.toString()).apply();
+            }
+            noted = tag;
+        } catch (Exception ignored) {
+        }
+    }
+
+    /** The day's actual limit per day ("yyyy-MM-dd" -> min), for the app's stats and challenges. */
+    static JSONObject limitHistory(Context c) {
+        try {
+            return new JSONObject(LiveGuard.prefs(c).getString(KEY_LIMIT, "{}"));
+        } catch (Exception e) {
+            return new JSONObject();
+        }
+    }
+
+    /** Once a day per tag (the bank's heads-up: once per balance it runs low from). */
+    static boolean onceFor(Context c, String key, String tag) {
+        String v = WidgetShared.today() + "|" + tag;
+        if (v.equals(LiveGuard.prefs(c).getString(key, ""))) return false;
+        LiveGuard.prefs(c).edit().putString(key, v).apply();
+        return true;
     }
 
     /** Once-a-day flags (the "10 min left" warning). */

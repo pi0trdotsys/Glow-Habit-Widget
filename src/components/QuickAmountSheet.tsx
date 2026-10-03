@@ -11,6 +11,7 @@ import { quickSteps, sliderMax, snapToStep } from "@/lib/habits/quick";
 import { useBackHandler } from "@/lib/back";
 import { haptic } from "@/lib/haptics";
 import { L } from "@/lib/i18n";
+import { appsFloor, breakdown, isAppsHabit } from "@/lib/apps";
 
 /**
  * Hold a tile longer: set today's amount in one go - +1 / +2 / +5 steps, a
@@ -31,6 +32,11 @@ export function QuickAmountSheet({
   const setAmount = useHabits((s) => s.setAmount);
   const g = goalOf(habit);
   const current = amountOn(habit, completions, new Date());
+  // Minutes from apps: what's set here only changes the part added by hand.
+  const entry = completions.find((c) => c.habitId === habit.id && c.date === todayKey());
+  const fromApps = isAppsHabit(habit);
+  const floor = appsFloor(habit, entry);
+  const split = fromApps ? breakdown(entry) : "";
   const [value, setValue] = useState(current);
   useEffect(() => {
     if (open) setValue(current);
@@ -88,6 +94,11 @@ export function QuickAmountSheet({
                   <div className="text-xs text-muted-foreground">
                     {L("Teraz", "Now")}: {amountText(habit, current)}
                   </div>
+                  {split && (
+                    <div className="truncate text-xs text-muted-foreground" data-quick-split>
+                      {split}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -148,10 +159,13 @@ export function QuickAmountSheet({
               </div>
               <div className="mt-2 grid grid-cols-[auto_1fr] gap-2">
                 <button
-                  onClick={() => save(0)}
+                  onClick={() => save(fromApps ? floor : 0)}
                   className="flex items-center gap-1.5 rounded-2xl bg-background px-4 py-3 text-sm font-semibold text-muted-foreground"
                 >
-                  <RotateCcw size={15} /> {L("Wyzeruj", "Reset")}
+                  <RotateCcw size={15} />{" "}
+                  {fromApps && floor > 0
+                    ? L("Tylko aplikacje", "Apps only")
+                    : L("Wyzeruj", "Reset")}
                 </button>
                 <button
                   data-quick-save

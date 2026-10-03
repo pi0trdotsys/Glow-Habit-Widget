@@ -113,6 +113,9 @@ public class NextTaskWidgetProvider extends AppWidgetProvider {
             List<JSONObject> morning = cfg.morning ? DayGuard.morningPending(c) : new java.util.ArrayList<>();
             in.morningPending = morning;
             int phase = DayGuard.phase(in.now, cfg, !morning.isEmpty());
+            // "Bank minut": the limit is the bank, re-read from the rows on every render.
+            in.bank = DayGuard.bankMode(c);
+            in.bankPerHabit = DayGuard.bankRules(c).optInt("perHabit", DayGuard.BANK_PER_HABIT);
             NextWidgetContent.guard(in, phase, morning.size(), cfg.day, DayGuard.usedMin(c), DayGuard.limit(c),
                 cfg.night, LiveGuard.bedtimeOn(c), cfg.nightStart, LiveGuard.from(c), cfg.nightEnd);
         } catch (Exception ignored) {

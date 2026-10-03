@@ -6,6 +6,7 @@ import {
   openUsageSettings,
   requestSteps,
   screenGranted,
+  syncAppsNow,
 } from "@/lib/sensors";
 import { Ban, Sparkles } from "lucide-react";
 import { HabitIcon } from "./HabitIcon";
@@ -15,6 +16,8 @@ import { getLang, L, pick } from "@/lib/i18n";
 import { useHabits } from "@/lib/habits/store";
 import { goalOf } from "@/lib/habits/utils";
 import { inThousands, stepsGoal } from "@/lib/steps";
+import { appsList, suggestedApps } from "@/lib/apps";
+import { AppPicker } from "./AppSources";
 import { autoMinimum } from "@/lib/habits/rescue";
 import type {
   GoalType,
@@ -197,6 +200,7 @@ export function HabitForm({
   const [reminderOn, setReminderOn] = useState(!!initial?.reminder);
   const [reminderTime, setReminderTime] = useState(initial?.reminder ?? "08:00");
   const [source, setSource] = useState<HabitSource | undefined>(initial?.source);
+  const [apps, setApps] = useState<string[]>(initial?.apps ?? []);
   const [lateAfter, setLateAfter] = useState(initial?.lateAfter ?? DEFAULT_LATE_AFTER);
   const [lateLimit, setLateLimit] = useState(initial?.lateLimit ?? DEFAULT_LATE_LIMIT);
   const [lateBasis, setLateBasis] = useState<"social" | "screen">(initial?.lateBasis ?? "social");
@@ -260,16 +264,22 @@ export function HabitForm({
       limit: avoid ? { times: limitTimes, period: limitPeriod } : undefined,
       minimum: avoid || goalType === "check" || minimum == null ? undefined : shownMin,
       timeOfDay,
-      // A source only makes sense for its kind: steps -> build count, screen -> avoid.
+      // A source only makes sense for its kind: steps / kropi -> build count, apps -> build
+      // minutes (with apps picked), screen -> avoid.
       source:
-        (source === "steps" && !avoid && goalType === "count") || (source === "screen" && avoid)
+        ((source === "steps" || source === "kropi") && !avoid && goalType === "count") ||
+        (source === "apps" && !avoid && goalType === "minutes" && apps.length > 0) ||
+        (source === "screen" && avoid)
           ? source
           : undefined,
+      apps: source === "apps" && !avoid && goalType === "minutes" && apps.length ? apps : undefined,
       lateAfter: source === "screen" && avoid ? lateAfter : undefined,
       lateLimit: source === "screen" && avoid ? lateLimit : undefined,
       lateBasis: source === "screen" && avoid ? lateBasis : undefined,
       reminder: reminderOn ? reminderTime : null,
     });
+    if (source === "apps" && !avoid && goalType === "minutes" && apps.length)
+      setTimeout(() => void syncAppsNow(), 250);
   };
 
   return (
@@ -545,6 +555,19 @@ export function HabitForm({
                       }}
                     />
                   </div>
+                )}
+                {isNative && goalType === "minutes" && (
+                  <AppsSourceBox
+                    draft={{ name, icon, kind }}
+                    on={source === "apps"}
+                    onToggle={(on) => {
+                      if (!on) return setSource(undefined);
+                      setSource("apps");
+                      if (apps.length === 0) setApps(suggestedApps({ name, icon, kind }, null));
+                    }}
+                    apps={apps}
+                    setApps={setApps}
+                  />
                 )}
               </div>
             )}
@@ -835,6 +858,49 @@ export function Toggle({
 }
 
 /** Avoid habits: judge the day automatically from late-night screen time. */
+/** "Minuty z aplikacji": count a minutes habit from apps (Duolingo, Busuu...), corrections by hand stay. */
+function AppsSourceBox({
+  draft,
+  on,
+  onToggle,
+  apps,
+  setApps,
+}: {
+  draft: Pick<Habit, "name" | "icon" | "kind">;
+  on: boolean;
+  onToggle: (on: boolean) => void;
+  apps: string[];
+  setApps: (a: string[]) => void;
+}) {
+  return (
+    <div className="border-t border-border pt-3" data-apps-source>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-medium">{L("Minuty z aplikacji", "Minutes from apps")}</div>
+          <div className="text-xs text-muted-foreground">
+            {on && apps.length
+              ? L(
+                  `Liczy czas w: ${appsList(apps)}. Przytrzymanie kafelka dalej dodaje minuty ręcznie.`,
+                  `Counts time in: ${appsList(apps)}. Holding the tile still adds minutes by hand.`,
+                )
+              : L(
+                  "Czas w wybranych aplikacjach (np. Duolingo, Kindle) wpisuje się sam. Wymaga dostępu do danych o użyciu.",
+                  "Time in the apps you pick (e.g. Duolingo, Kindle) fills in by itself. Needs usage access.",
+                )}
+          </div>
+        </div>
+        <Toggle checked={on} onChange={onToggle} />
+      </div>
+      {on && <AppPicker habit={draft} selected={apps} onChange={setApps} />}
+      {on && apps.length === 0 && (
+        <p className="mt-2 text-xs" style={{ color: "var(--avoid)" }}>
+          {L("Wybierz co najmniej jedną aplikację.", "Pick at least one app.")}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function ScreenSourceBox({
   on,
   onToggle,

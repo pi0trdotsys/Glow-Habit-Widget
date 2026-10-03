@@ -91,6 +91,23 @@ export async function launch(preload: string): Promise<Page> {
   ws.onmessage = (e) => {
     const m = JSON.parse(String(e.data));
     if (m.id && pending.has(m.id)) pending.get(m.id)!(m.result ?? { error: m.error });
+    // E2E_DEBUG=1: page errors in the output (uncaught exceptions + console.error)
+    if (process.env.E2E_DEBUG && m.method === "Runtime.exceptionThrown") {
+      const d = m.params.exceptionDetails;
+      console.log("  [page error]", d.exception?.description ?? d.text);
+    }
+    if (
+      process.env.E2E_DEBUG &&
+      m.method === "Runtime.consoleAPICalled" &&
+      m.params.type === "error"
+    ) {
+      console.log(
+        "  [console.error]",
+        m.params.args
+          .map((a: { value?: unknown; description?: string }) => a.value ?? a.description)
+          .join(" "),
+      );
+    }
   };
   const send = (method: string, params: object = {}) =>
     new Promise<CdpResponse>((r) => {
@@ -99,6 +116,7 @@ export async function launch(preload: string): Promise<Page> {
     });
 
   await send("Page.enable");
+  if (process.env.E2E_DEBUG) await send("Runtime.enable");
   await send("Emulation.setDeviceMetricsOverride", {
     width: 390,
     height: 844,
@@ -118,7 +136,7 @@ export async function launch(preload: string): Promise<Page> {
     return r.result?.value as T;
   };
 
-  return {
+  const page: Page = {
     send,
     eval: evaluate,
     goto: async (path) => {
@@ -139,6 +157,8 @@ export async function launch(preload: string): Promise<Page> {
       server.stop(true);
     },
   };
+  debugPage = page;
+  return page;
 }
 
 // ---------------------------------------------------------------- tiny runner
@@ -151,8 +171,18 @@ export async function check(name: string, fn: () => Promise<void>): Promise<void
   } catch (e) {
     failed++;
     console.log(`  ✗ ${name}\n    ${(e as Error).message.split("\n").join("\n    ")}`);
+    // E2E_DEBUG=1: what the page shows when a check fails
+    if (process.env.E2E_DEBUG && debugPage) {
+      const seen = await debugPage
+        .eval<string>(`location.pathname + " | " + document.body.innerText.slice(0, 300)`)
+        .catch(() => "?");
+      console.log(`    [page] ${seen.replace(/\s+/g, " ")}`);
+    }
   }
 }
+
+/** The page of the last launch(), for E2E_DEBUG. */
+let debugPage: Page | null = null;
 
 export function assert(cond: unknown, msg: string): void {
   if (!cond) throw new Error(msg);

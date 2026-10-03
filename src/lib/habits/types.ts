@@ -67,8 +67,11 @@ export interface Habit {
    * Automatic tracking. "steps": build count habit filled from Health Connect.
    * "screen": avoid habit judged from late-night screen time (usage access).
    * "kropi": build count habit in ml, filled from the Kropi hydration app.
+   * "apps": build minutes habit filled from the foreground time of `apps` (usage access).
    */
   source?: HabitSource;
+  /** source "apps": packages whose foreground minutes count (e.g. com.duolingo). */
+  apps?: string[];
   /** source "screen": screen use after this time ("HH:mm") counts as late. */
   lateAfter?: string;
   /** source "screen": minutes of late screen time tolerated before it's a slip. */
@@ -80,7 +83,7 @@ export interface Habit {
   lateBasis?: "social" | "screen";
 }
 
-export type HabitSource = "steps" | "screen" | "kropi";
+export type HabitSource = "steps" | "screen" | "kropi" | "apps";
 
 export interface Completion {
   habitId: string;
@@ -103,4 +106,12 @@ export interface Completion {
   prev?: number[];
   /** Set when the entry was judged automatically (screen time). Manual entries always win. */
   auto?: boolean;
+  /**
+   * source "apps": the app minutes `amount` is based on. The manual adjustment
+   * is amount - appMin (can be negative); a sync moves amount with the apps and
+   * keeps the adjustment (src/lib/apps.ts withAppMinutes).
+   */
+  appMin?: number;
+  /** source "apps": the day's minutes per package (only apps with any). */
+  appSplit?: Record<string, number>;
 }

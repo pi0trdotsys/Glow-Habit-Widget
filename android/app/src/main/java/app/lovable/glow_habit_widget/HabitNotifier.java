@@ -95,6 +95,10 @@ final class HabitNotifier {
         } catch (Exception ignored) {
             // never let a notification problem break widget updates
         }
+        try {
+            JabLearn.evaluate(c); // did the last jabs work? (runs after every tap / tick / app publish)
+        } catch (Exception ignored) {
+        }
         scheduleNext(c);
         try {
             LiveGuard.scheduleStart(c);
@@ -110,6 +114,7 @@ final class HabitNotifier {
             ensureChannels(c);
             WidgetShared.syncSteps(c);
             WidgetShared.syncWater(c, Kropi.today(c));
+            WidgetShared.syncApps(c);
             checkLateScreen(c);
             maybeTaunt(c);
             maybeReview(c);
@@ -471,21 +476,64 @@ final class HabitNotifier {
      * line, and the situation ("zostało tylko…", evening, morning) often wins.
      */
     static String lineFor(JSONObject h, int jabs) {
-        JSONArray memory = h.optJSONArray("memory");
-        if (memory != null && memory.length() > 0 && RNG.nextInt(10) < 4) {
-            return WidgetShared.fill(WidgetShared.pick(memory), h);
+        return pickJab(h, jabs, WidgetShared.nowMinute(), null, new JabLearn.Rng((int) System.nanoTime()), null).text;
+    }
+
+    private static JSONArray nonEmpty(JSONArray a) {
+        return a != null && a.length() > 0 ? a : null;
+    }
+
+    /** The row's raw pool of a jab kind (JabLearn.KINDS), or null when empty. */
+    static JSONArray poolOf(JSONObject h, String kind) {
+        switch (kind) {
+            case "memory": return nonEmpty(h.optJSONArray("memory"));
+            case "rescue": return nonEmpty(h.optJSONArray("rescueLines"));
+            case "focus": return nonEmpty(h.optJSONArray("focusLines"));
+            case "rage": return nonEmpty(h.optJSONArray("rage"));
+            case "nag": return nonEmpty(h.optJSONArray("nag"));
+            default:
+                JSONObject ctx = h.optJSONObject("ctx");
+                return kind.startsWith("ctx:") && ctx != null ? nonEmpty(ctx.optJSONArray(kind.substring(4))) : null;
         }
-        int now = WidgetShared.nowMinute();
-        int tier = tier(now - WidgetShared.nextMinute(h), jabs);
-        JSONArray chain = chainPool(h, RNG.nextInt(100));
-        if (chain != null) return WidgetShared.fill(WidgetShared.pick(chain), h);
-        JSONArray ctx = contextPool(h, now);
-        if (ctx != null && RNG.nextInt(100) < ctxChance(tier)) {
-            return WidgetShared.fill(WidgetShared.pick(ctx), h);
-        }
-        JSONArray pool = tier == 1 ? h.optJSONArray("rage") : h.optJSONArray("nag");
-        if (pool == null || pool.length() == 0) pool = h.optJSONArray("nag");
-        return WidgetShared.fill(WidgetShared.pick(pool), h);
+    }
+
+    /**
+     * The old random choice of pool (kept as the exploration floor): memory 40%,
+     * rescue/focus by CHAIN_*, the situation pool by ctxChance, else rage/nag by tier.
+     */
+    static String legacyKind(JSONObject h, int tier, int now, JabLearn.Rng r) {
+        if (poolOf(h, "memory") != null && r.nextInt(10) < 4) return "memory";
+        JSONArray chain = chainPool(h, r.nextInt(100));
+        if (chain != null) return chain == h.optJSONArray("rescueLines") ? "rescue" : "focus";
+        if (contextPool(h, now) != null && r.nextInt(100) < ctxChance(tier)) return "ctx:" + contextOf(h, now);
+        return tier == 1 && poolOf(h, "rage") != null ? "rage" : "nag";
+    }
+
+    /**
+     * Learned jab for a pending row (mirrors learnedSay() in szpila.ts): candidates
+     * memory, rescue (rescue day), focus, the situation pool, rage (tier 1) or nag -
+     * only non-empty pools. Thompson sampling over this day part's `stats`, with
+     * EXPLORE_PCT (or no evidence yet) falling back to legacyKind(). The line is
+     * never `lastHash` (the habit's previous jab) when the pool has another one.
+     */
+    static JabLearn.Pick pickJab(JSONObject h, int jabs, int now, JSONObject stats, JabLearn.Rng r, Integer lastHash) {
+        // the given minute, not the wall clock (the same jab must come out the same in tests)
+        int tier = tier(now - WidgetShared.nextMinute(h, now), jabs);
+        String ctx = contextOf(h, now);
+        String base = tier == 1 && poolOf(h, "rage") != null ? "rage" : "nag";
+        List<String> kinds = new ArrayList<>();
+        if (poolOf(h, "memory") != null) kinds.add("memory");
+        if (WidgetShared.rescueNow(h) && poolOf(h, "rescue") != null) kinds.add("rescue");
+        if (h.optBoolean("focus", false) && poolOf(h, "focus") != null) kinds.add("focus");
+        if (ctx != null && poolOf(h, "ctx:" + ctx) != null) kinds.add("ctx:" + ctx);
+        if (poolOf(h, base) != null) kinds.add(base);
+        String part = JabLearn.daypart(now);
+        int[][] sn = new int[kinds.size()][];
+        for (int i = 0; i < sn.length; i++) sn[i] = JabLearn.statOf(stats, JabLearn.armKey(kinds.get(i), part));
+        int i = JabLearn.choose(sn, r);
+        String kind = i >= 0 ? kinds.get(i) : legacyKind(h, tier, now, r);
+        String raw = JabLearn.pickLine(poolOf(h, kind), r, lastHash);
+        return new JabLearn.Pick(WidgetShared.fill(raw, h), raw, kind, i < 0);
     }
 
     static void maybeTaunt(Context c) {
@@ -495,8 +543,8 @@ final class HabitNotifier {
         if (rows.length() == 0) return;
         int[] slots = slots(s);
         int now = WidgetShared.nowMinute();
-        int slot = -1;
-        for (int m : slots) if (m <= now && now - m <= SLOT_GRACE) slot = m;
+        // "Nie szpiluj w trakcie spotkań": a slot inside a meeting waits for its end (CalendarMath).
+        int slot = CalendarMath.firingSlot(slots, jabTimes(c, s, slots, now), now);
         if (slot < 0 || isQuiet(bedtime(s), wake(s), now)) return;
         String key = WidgetShared.today() + "@" + slot;
         SharedPreferences p = own(c);
@@ -509,6 +557,7 @@ final class HabitNotifier {
         int jabs = jabsToday(c);
         String text;
         JSONObject target = null;
+        JabLearn.Pick jab = null; // learned jabs get logged ("Co na ciebie działa")
         if (plan.isEmpty()) {
             // Only gloat (grudgingly) once, at the last slot of the day.
             if (slot != slots[slots.length - 1]) return;
@@ -520,11 +569,36 @@ final class HabitNotifier {
         } else {
             // Mostly the most urgent task, sometimes the runner-up so it doesn't get repetitive.
             target = plan.get(plan.size() > 1 && RNG.nextInt(3) == 0 ? 1 : 0);
-            text = lineFor(target, jabs);
+            jab = pickJab(target, jabs, now, JabLearn.currentStats(c), new JabLearn.Rng((int) System.nanoTime()),
+                JabLearn.lastHash(c, target.optString("id")));
+            text = jab.text;
         }
         if (text.isEmpty()) return;
+        text = withWindowHint(c, s, text, target, now);
         p.edit().putString(KEY_JABS, WidgetShared.today() + ":" + (jabs + 1)).apply();
         postJab(c, text, target, jabs >= 3);
+        if (jab != null) JabLearn.record(c, jab, target);
+    }
+
+    private static final String KEY_WINDOW_HINT = "window_hint"; // date of today's "okno" hint
+
+    /** When each of today's slots fires (-1 = skipped / missed), meetings of the picked calendars respected. */
+    private static int[] jabTimes(Context c, JSONObject s, int[] slots, int now) {
+        return CalendarMath.jabTimes(slots, wake(s), bedtime(s), CalendarBusy.quietBusy(c), now, SLOT_GRACE);
+    }
+
+    /** Once a day a jab about a minutes habit gets the next free window that fits ("okno"). */
+    private static String withWindowHint(Context c, JSONObject s, String text, JSONObject target, int now) {
+        try {
+            SharedPreferences p = own(c);
+            if (target == null || WidgetShared.today().equals(p.getString(KEY_WINDOW_HINT, ""))) return text;
+            String hint = CalendarBusy.windowHint(c, target, now, CalendarMath.until(bedtime(s), wake(s)));
+            if (hint == null) return text;
+            p.edit().putString(KEY_WINDOW_HINT, WidgetShared.today()).apply();
+            return text + "\n🗓 " + hint;
+        } catch (Exception e) {
+            return text;
+        }
     }
 
     /** A jab with buttons. `target` null = no task buttons (just the snooze). */
@@ -708,6 +782,9 @@ final class HabitNotifier {
 
     private static void billPost(Context c, JSONObject r) {
         String[] t = billText(r, WidgetShared.state(c).optJSONObject("bill"), WidgetShared.en(c));
+        // "Prognoza na dziś": habits likely to fall through after this night (Forecast.java).
+        String forecast = forecastBlock(c, r);
+        if (!forecast.isEmpty()) t[1] = t[1] + "\n\n" + forecast;
         String first = t[1].split("\n")[0];
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_REVIEW)
             .setSmallIcon(R.drawable.ic_stat_szpila)
@@ -719,6 +796,17 @@ final class HabitNotifier {
         PendingIntent openApp = WidgetShared.openAppIntent(c, 7261);
         if (openApp != null) b.setContentIntent(openApp);
         post(c, ID_BILL, b);
+    }
+
+    /** This morning's risk forecast from the snapshot's models and last night's report ("" = none). */
+    static String forecastBlock(Context c, JSONObject r) {
+        try {
+            int wd = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1; // 0 = Sunday, like JS getDay()
+            return Forecast.block(Forecast.morning(WidgetShared.state(c), r, wd, WidgetShared.today(),
+                WidgetShared.dateKey(1), WidgetShared.nowMinute()));
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     static void maybeRoast(Context c) {
@@ -843,6 +931,8 @@ final class HabitNotifier {
         int next = (nowMin / 60 + 1) * 60; // next full hour (1440 = midnight)
         List<Integer> candidates = new ArrayList<>();
         if (s.optBoolean("taunts", true)) for (int m : slots(s)) candidates.add(m);
+        // A jab deferred past a meeting fires at the meeting's end.
+        if (s.optBoolean("taunts", true)) for (int m : jabTimes(c, s, slots(s), nowMin)) if (m >= 0) candidates.add(m);
         if (s.optBoolean("review", true)) candidates.add(s.optInt("reviewAt", 21 * 60 + 30));
         if (s.optBoolean("review", true)) candidates.add(wake(s) + 1);
         candidates.add(ROAST_MINUTE);
