@@ -209,10 +209,10 @@ describe("stats in English", () => {
   test("file names", () => {
     en();
     expect(csvFileName(now)).toBe("szpila-history-2026-09-23.csv");
-    expect(backupFileName(now)).toBe("szpila-backup-2026-09-23.json");
+    expect(backupFileName(now)).toBe("szpila-backup-2026-09-23-1540.json");
     setLang("pl");
     expect(csvFileName(now)).toBe("szpila-historia-2026-09-23.csv");
-    expect(backupFileName(now)).toBe("szpila-kopia-2026-09-23.json");
+    expect(backupFileName(now)).toBe("szpila-kopia-2026-09-23-1540.json");
   });
 });
 

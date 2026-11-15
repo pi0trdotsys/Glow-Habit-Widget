@@ -230,6 +230,10 @@ podzielone na cztery zakładki: Szpila, Strażnik, Powiadomienia, Dane.
 2. Otwórz go na telefonie i zezwól na instalację z tego źródła.
 3. Uruchom Szpilę, wybierz język, podaj imię i zgódź się na powiadomienia.
 
+Kolejne wersje instalujesz już z aplikacji: Szpila raz dziennie sprawdza, czy
+jest nowe wydanie, a w **Ustawienia → Dane → Wersja aplikacji** pobierzesz je
+jednym dotknięciem. Przed instalacją sprawdza sumę kontrolną i podpis.
+
 Na start dostajesz gotowe zadania: mycie zębów, wodę, 8000 kroków, czytanie,
 programowanie, naukę języka, scrollowanie w łóżku i fast food. Zmieniasz je,
 usuwasz albo dodajesz własne z ponad 20 szablonów.
@@ -253,9 +257,12 @@ usuwasz albo dodajesz własne z ponad 20 szablonów.
 ## ▸ Twoje dane są twoje
 
 Wszystko zostaje na telefonie. Bez konta, bez chmury, bez reklam, bez
-śledzenia. Szpila codziennie robi kopię do **Pobrane/Szpila** (ostatnie 7 dni).
-Kopię możesz też zapisać ręcznie, wysłać na Dysk albo mailem i przywrócić
-jednym dotknięciem.
+śledzenia. Szpila codziennie robi kopię do **Pobrane/Szpila/Kopie/Automatyczne**
+(ostatnie 14 dni), kopie zapisane ręcznie trafiają do **Pobrane/Szpila/Kopie**,
+a eksporty CSV do **Pobrane/Szpila/Eksport**. W **Ustawienia → Dane** widzisz
+listę kopii z datami: przywracasz albo usuwasz jednym dotknięciem (przed
+przywróceniem obecne dane lądują w osobnej kopii). Kopię możesz też wysłać na
+Dysk albo mailem.
 
 <br />
 

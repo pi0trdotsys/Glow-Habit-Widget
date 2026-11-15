@@ -307,6 +307,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Android 16+: "Postęp dnia" as a Live Update (lock screen + status bar chip, HabitNotifier) -->
     <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    <!-- In-app updates: hand the downloaded release APK to the system installer (UpdateManager) -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Steps from Health Connect (incl. background reads for widgets/notifications) -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />

@@ -229,6 +229,10 @@ Notifications, Data.
 2. Open it on your phone and allow installs from this source.
 3. Launch Szpila, pick a language, tell it your name and allow notifications.
 
+Later versions install from inside the app: Szpila checks for a new release once
+a day, and **Settings → Data → App version** downloads it in one tap. It checks
+the checksum and signature before installing.
+
 You start with ready-made habits: brush teeth, drink water, 8000 steps, read,
 code, learn a language, scrolling in bed and fast food. Edit them, delete them
 or add your own from 20+ templates.
@@ -252,8 +256,11 @@ or add your own from 20+ templates.
 ## ▸ Your data is yours
 
 Everything stays on your phone. No account, no cloud, no ads, no tracking.
-Szpila makes a daily backup to **Downloads/Szpila** (last 7 days). You can also
-save a backup by hand, send it to Drive or by email, and restore it in one tap.
+Szpila makes a daily backup to **Download/Szpila/Kopie/Automatyczne** (last 14
+days), backups you save go to **Download/Szpila/Kopie** and CSV exports to
+**Download/Szpila/Eksport**. **Settings → Data** lists your backups by date:
+restore or delete one in a tap (your current data is saved as a separate copy
+before a restore). You can also send a backup to Drive or by email.
 
 <br />
 

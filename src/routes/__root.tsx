@@ -26,6 +26,8 @@ import { useLinesReady } from "../lib/habits/szpila";
 import { THEME_BOOT, watchTheme } from "../lib/theme";
 import { L } from "../lib/i18n";
 import { takePendingRoute } from "../lib/shop";
+import { checkDue, checkForUpdate, updatesSupported } from "../lib/update";
+import { toast } from "sonner";
 import { SplashScreen } from "@/components/SplashScreen";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -198,6 +200,26 @@ function RootComponent() {
     // Mirror habit data to the native Android home-screen widget. No-op on web.
     if (booted) startWidgetBridge();
   }, [booted]);
+
+  useEffect(() => {
+    // Once a day: is there a newer release? A toast leads to Settings -> Dane (UpdateCard).
+    if (!booted || !updatesSupported() || !checkDue()) return;
+    void checkForUpdate()
+      .then((r) => {
+        if (!r.available || !r.latest) return;
+        toast(
+          L(`Nowa wersja Szpili: ${r.latest.version}`, `New Szpila version: ${r.latest.version}`),
+          {
+            duration: 10000,
+            action: {
+              label: L("Aktualizuj", "Update"),
+              onClick: () => void router.navigate({ to: "/settings", search: { tab: "data" } }),
+            },
+          },
+        );
+      })
+      .catch(() => {}); // offline: try again next start
+  }, [booted, router]);
 
   useEffect(() => {
     if (!booted) return;

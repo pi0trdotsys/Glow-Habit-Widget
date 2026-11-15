@@ -53,6 +53,8 @@ import { CurfewCard } from "@/components/CurfewCard";
 import { ShopGuardCard } from "@/components/ShopGuardCard";
 import { CalendarCard } from "@/components/CalendarCard";
 import { LiveUpdatesRow } from "@/components/LiveUpdatesRow";
+import { UpdateCard } from "@/components/UpdateCard";
+import { BackupsList } from "@/components/BackupsList";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: L("Ustawienia - Szpila", "Settings - Szpila") }] }),
@@ -112,10 +114,13 @@ function SettingsPage() {
     void lastAutoBackup().then(setLastAuto);
   }, []);
 
+  const [backupsKey, setBackupsKey] = useState(0);
+
   const doExport = async (share: boolean) => {
     try {
       const where = await saveBackup(share);
       setMsg(L(`Zapisano kopię: ${where}`, `Backup saved: ${where}`));
+      setBackupsKey((k) => k + 1);
     } catch (e) {
       setMsg((e as Error).message);
     }
@@ -529,6 +534,8 @@ function SettingsPage() {
         )}
         {tab === "data" && (
           <div className="space-y-3" data-tab-panel="data">
+            <UpdateCard />
+
             <div className="rounded-2xl bg-card p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -541,8 +548,8 @@ function SettingsPage() {
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
                 {L(
-                  "Raz dziennie zapisuje kopię do Pobrane/Szpila (po jednym pliku na dzień tygodnia, więc masz ostatnie 7 dni). Po reinstalacji przywrócisz ją przyciskiem „Przywróć z pliku”.",
-                  "Saves a backup to Downloads/Szpila once a day (one file per weekday, so you always have the last 7 days). After a reinstall, bring it back with “Restore from file”.",
+                  "Raz dziennie zapisuje kopię do Pobrane/Szpila/Kopie/Automatyczne i trzyma ostatnie 14 dni. Przywrócisz ją z listy niżej, a po reinstalacji przyciskiem „Przywróć z pliku”.",
+                  "Saves a backup to Download/Szpila/Kopie/Automatyczne once a day and keeps the last 14 days. Restore it from the list below, or after a reinstall with “Restore from file”.",
                 )}
                 {lastAuto && L(` Ostatnia: ${lastAuto}.`, ` Last one: ${lastAuto}.`)}
               </p>
@@ -573,6 +580,7 @@ function SettingsPage() {
                 e.target.value = "";
               }}
             />
+            <BackupsList refreshKey={backupsKey} onMessage={setMsg} />
             <Action
               icon={<RotateCcw size={18} />}
               label={L("Usuń wszystkie dane", "Delete all data")}

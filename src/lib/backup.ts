@@ -16,6 +16,9 @@ const downloadsPath = (name: string) => `${L("Pobrane", "Downloads")}/${name}`;
 interface BackupPlugin {
   saveBackup(opts: { name: string; json: string; share?: boolean }): Promise<{ location: string }>;
   backupInfo(): Promise<{ lastAuto: string }>;
+  listBackups(): Promise<{ backups: BackupFile[] }>;
+  readBackup(opts: { id: string }): Promise<{ json: string }>;
+  deleteBackup(opts: { id: string }): Promise<{ deleted: boolean }>;
   saveFile(opts: {
     name: string;
     text: string;
@@ -28,8 +31,58 @@ const Native = registerPlugin<BackupPlugin>("HabitWidget");
 /** SharedPreferences key read by BackupStore.java. */
 export const BACKUP_PREF_KEY = "loop_backup";
 
+/**
+ * "szpila-kopia-2026-11-15-2136.json": local date and time (not UTC), so backups sort by
+ * name and several a day don't overwrite each other. Native puts them in Download/Szpila/Kopie.
+ */
 export function backupFileName(d: Date = new Date()): string {
-  return `${pick("szpila-kopia", "szpila-backup")}-${todayKey(d)}.json`; // local date, not UTC
+  const hhmm = `${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}`;
+  return `${pick("szpila-kopia", "szpila-backup")}-${todayKey(d)}-${hhmm}.json`;
+}
+
+/** A backup file in Download/Szpila/Kopie (auto = the daily copy in Kopie/Automatyczne). */
+export interface BackupFile {
+  id: string;
+  name: string;
+  auto: boolean;
+  size: number;
+  /** Last modified, epoch ms. */
+  modified: number;
+}
+
+/** Backups on the phone, newest first (Android; empty on the web). */
+export async function listBackups(): Promise<BackupFile[]> {
+  if (!Capacitor.isNativePlatform()) return [];
+  try {
+    return (await Native.listBackups()).backups;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Restore a listed backup. Saves the current data first ("szpila-kopia-...-przed.json"),
+ * so a wrong pick can be undone. Returns the number of habits restored.
+ */
+export async function restoreListed(b: BackupFile): Promise<number> {
+  const { json } = await Native.readBackup({ id: b.id });
+  JSON.parse(json); // fail before touching anything if the file is broken
+  const safety = backupFileName().replace(/\.json$/, pick("-przed.json", "-before.json"));
+  await Native.saveBackup({ name: safety, json: useHabits.getState().exportData() });
+  try {
+    return useHabits.getState().importData(json);
+  } catch (e) {
+    throw new Error(
+      e instanceof SyntaxError
+        ? L("Plik nie jest poprawnym JSON-em.", "The file is not valid JSON.")
+        : (e as Error).message,
+    );
+  }
+}
+
+export async function deleteBackup(b: BackupFile): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false;
+  return (await Native.deleteBackup({ id: b.id })).deleted;
 }
 
 /** Save a backup. Returns a human-readable location for the confirmation message. */

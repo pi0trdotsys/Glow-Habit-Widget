@@ -158,7 +158,7 @@ public class HabitWidgetPlugin extends Plugin {
             return;
         }
         try {
-            BackupStore.Saved saved = BackupStore.write(getContext(), name, text, mime);
+            BackupStore.Saved saved = BackupStore.write(getContext(), BackupStore.Dir.EXPORT, name, text, mime);
             if (share) {
                 Intent send = new Intent(Intent.ACTION_SEND);
                 send.setType(mime);
@@ -339,6 +339,119 @@ public class HabitWidgetPlugin extends Plugin {
     public void backupInfo(PluginCall call) {
         JSObject ret = new JSObject();
         ret.put("lastAuto", BackupStore.lastAuto(getContext()));
+        call.resolve(ret);
+    }
+
+    // ------------------------------------------------------------------
+    // In-app updates (UpdateManager; src/lib/update.ts finds the GitHub release)
+    // ------------------------------------------------------------------
+
+    @PluginMethod
+    public void appVersion(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("name", UpdateManager.installedVersionName(getContext()));
+        try {
+            ret.put("code", UpdateManager.installedVersionCode(getContext()));
+        } catch (Exception e) {
+            ret.put("code", 0);
+        }
+        call.resolve(ret);
+    }
+
+    /**
+     * { url, sha256? } -> downloads and verifies the release APK; "updateProgress" events
+     * { received, total } while downloading. Resolves { ok } or { ok: false, error }.
+     */
+    @PluginMethod
+    public void downloadUpdate(PluginCall call) {
+        String url = call.getString("url");
+        String sha = call.getString("sha256", "");
+        new Thread(() -> {
+            JSObject ret = new JSObject();
+            try {
+                java.io.File apk = UpdateManager.download(getContext(), url, (received, total) -> {
+                    JSObject p = new JSObject();
+                    p.put("received", received);
+                    p.put("total", total);
+                    notifyListeners("updateProgress", p);
+                });
+                String problem = UpdateManager.verify(getContext(), apk, sha);
+                if (problem != null) {
+                    //noinspection ResultOfMethodCallIgnored
+                    apk.delete();
+                    ret.put("ok", false);
+                    ret.put("error", problem);
+                } else {
+                    ret.put("ok", true);
+                }
+            } catch (Exception e) {
+                ret.put("ok", false);
+                ret.put("error", e.getMessage());
+            }
+            call.resolve(ret);
+        }, "szpila-update").start();
+    }
+
+    /**
+     * Installs the downloaded update: { status: "started" } (system installer shown),
+     * "permission" (opened "Install unknown apps" - call again after allowing it) or "missing".
+     */
+    @PluginMethod
+    public void installUpdate(PluginCall call) {
+        JSObject ret = new JSObject();
+        java.io.File apk = UpdateManager.downloaded(getContext());
+        if (apk == null) {
+            ret.put("status", "missing");
+        } else if (!UpdateManager.canInstall(getContext())) {
+            UpdateManager.openInstallPermission(getContext());
+            ret.put("status", "permission");
+        } else {
+            UpdateManager.install(getContext(), apk);
+            ret.put("status", "started");
+        }
+        call.resolve(ret);
+    }
+
+    /** Backups in Download/Szpila/Kopie (+ /Automatyczne), newest first: { backups: [...] }. */
+    @PluginMethod
+    public void listBackups(PluginCall call) {
+        getBridge().execute(() -> {
+            JSArray arr = new JSArray();
+            for (BackupStore.Entry e : BackupStore.list(getContext())) {
+                JSObject o = new JSObject();
+                o.put("id", e.id);
+                o.put("name", e.name);
+                o.put("auto", e.auto);
+                o.put("size", e.size);
+                o.put("modified", e.modified);
+                arr.put(o);
+            }
+            JSObject ret = new JSObject();
+            ret.put("backups", arr);
+            call.resolve(ret);
+        });
+    }
+
+    /** The JSON of one listed backup ({ id } from listBackups): { json }. */
+    @PluginMethod
+    public void readBackup(PluginCall call) {
+        String id = call.getString("id");
+        getBridge().execute(() -> {
+            try {
+                JSObject ret = new JSObject();
+                ret.put("json", BackupStore.read(getContext(), id));
+                call.resolve(ret);
+            } catch (Exception e) {
+                call.reject(e.getMessage());
+            }
+        });
+    }
+
+    @PluginMethod
+    public void deleteBackup(PluginCall call) {
+        String id = call.getString("id");
+        JSObject ret = new JSObject();
+        ret.put("deleted", id != null && BackupStore.delete(getContext(), id));
         call.resolve(ret);
     }
 

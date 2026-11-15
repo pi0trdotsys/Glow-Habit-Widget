@@ -41,7 +41,7 @@ describe("timings", () => {
 describe("backups", () => {
   test("file name uses the local date (not UTC)", () => {
     const justAfterMidnight = new Date(2026, 8, 26, 0, 30); // UTC is still the 25th in CEST
-    expect(backupFileName(justAfterMidnight)).toBe("szpila-kopia-2026-09-26.json");
+    expect(backupFileName(justAfterMidnight)).toBe("szpila-kopia-2026-09-26-0030.json");
   });
 
   test("restore explains what went wrong", async () => {
