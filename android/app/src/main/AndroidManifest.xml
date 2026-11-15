@@ -282,6 +282,12 @@
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info4" />
         </receiver>
 
+        <!-- "Podsumowanie dnia": asks your own coach server for a comment (optional, network) -->
+        <service
+            android:name=".CoachJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
         <!-- Progress notification + Szpila: alarm ticks, notification action, re-arm after reboot/update -->
         <receiver android:name=".NotifierReceiver" android:exported="false">
             <intent-filter>

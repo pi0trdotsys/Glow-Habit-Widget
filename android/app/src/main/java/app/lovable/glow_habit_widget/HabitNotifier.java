@@ -789,17 +789,38 @@ final class HabitNotifier {
 
         boolean en = WidgetShared.en(c);
         String[] t = DaySummary.compose(rows, summary, en, WidgetShared::pick);
+        post(c, ID_SUMMARY, summaryBuilder(c, t[0], t[1], t[2]).setSilent(isQuiet(bedtime(s), wake(s), now)));
+        // Your own coach server (optional): a comment of its own replaces the opener in a minute.
+        if (CoachClient.configured(c)) CoachJob.schedule(c, t[0], t[4], t[3]);
+    }
+
+    private static NotificationCompat.Builder summaryBuilder(Context c, String title, String text, String big) {
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_REVIEW)
             .setSmallIcon(R.drawable.ic_stat_szpila)
             .setColor(WidgetShared.AVOID)
-            .setContentTitle(t[0])
-            .setContentText(t[1])
-            .setStyle(new NotificationCompat.BigTextStyle().bigText(t[2]))
-            .setSilent(isQuiet(bedtime(s), wake(s), now))
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(new NotificationCompat.BigTextStyle().bigText(big))
             .setAutoCancel(true);
         PendingIntent open = WidgetShared.openAppIntent(c, 7271);
         if (open != null) b.setContentIntent(open);
-        post(c, ID_SUMMARY, b);
+        return b;
+    }
+
+    /** The coach's comment instead of the opener - only while the recap is still showing, silently. */
+    static void coachSummary(Context c, String title, String comment, String rest) {
+        if (!canNotify(c) || !isShowing(c, ID_SUMMARY)) return;
+        post(c, ID_SUMMARY, summaryBuilder(c, title, comment, comment + rest).setSilent(true).setOnlyAlertOnce(true));
+    }
+
+    private static boolean isShowing(Context c, int id) {
+        if (Build.VERSION.SDK_INT < 23) return true;
+        NotificationManager nm = c.getSystemService(NotificationManager.class);
+        if (nm == null) return false;
+        for (android.service.notification.StatusBarNotification n : nm.getActiveNotifications()) {
+            if (n.getId() == id) return true;
+        }
+        return false;
     }
 
     /**

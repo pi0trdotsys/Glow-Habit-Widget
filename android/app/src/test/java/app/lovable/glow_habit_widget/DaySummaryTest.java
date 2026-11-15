@@ -71,6 +71,22 @@ public class DaySummaryTest {
         assertTrue(big, big.contains("⏳ Zabrakło: Kroki (6000/8000), Woda"));
         assertTrue(big, big.contains("💥 Wpadki: Fast food"));
         assertTrue(big, big.endsWith("💡 Woda: rano.")); // water got the least done (0%)
+        // the coach server gets facts only, and the rest of the text stays the app's own
+        JSONObject f = new JSONObject(t[3]);
+        assertEquals(55, f.getInt("pct"));
+        assertEquals("pl", f.getString("lang"));
+        assertEquals("Kroki", f.getJSONArray("missing").getString(0));
+        assertEquals("Fast food", f.getJSONArray("slips").getString(0));
+        assertEquals(t[1] + t[4], t[2]);
+    }
+
+    @Test
+    public void coachServerMustBeHttps() {
+        assertEquals("https://szpila.example.eu", CoachClient.normalizeUrl(" https://szpila.example.eu/ "));
+        assertEquals("https://box.local:8443/coach", CoachClient.normalizeUrl("https://box.local:8443/coach"));
+        assertEquals("", CoachClient.normalizeUrl("http://szpila.example.eu"));
+        assertEquals("", CoachClient.normalizeUrl("https://evil.example/?x=<script>"));
+        assertEquals("", CoachClient.normalizeUrl(null));
     }
 
     @Test
@@ -93,6 +109,7 @@ public class DaySummaryTest {
         assertEquals(1, open.length());
         String[] t = DaySummary.compose(open, summary(), false, DaySummary.FIRST);
         assertFalse(t[2].contains("dyskretne"));
+        assertFalse(t[3].contains("dyskretne"));
     }
 
     @Test

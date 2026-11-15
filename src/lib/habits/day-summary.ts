@@ -382,6 +382,9 @@ export interface SummarySnapshot {
   tips: Record<string, string[]>;
   /** Day-wide advice, for a finished day or when no habit has its own. */
   general: string[];
+  /** For the optional coach server's comment (CoachJob): the name and the tone. */
+  name: string;
+  level: TauntLevel;
 }
 
 /** Everything the native summary needs (bridge.ts -> "summary"). */
@@ -406,5 +409,7 @@ export function summarySnapshot(
     lines: summaryLines(level, userName),
     tips,
     general: generalTips(open, completions, idx, now),
+    name: userName ?? "",
+    level,
   };
 }

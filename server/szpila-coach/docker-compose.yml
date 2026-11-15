@@ -1,0 +1,24 @@
+# Szpila coach: a comment on the day from a local model (Ollama on this host), published
+# through its own Cloudflare tunnel (cloudflared/config.yml). Token in .env (COACH_TOKEN).
+services:
+  coach:
+    build: .
+    image: szpila-coach
+    container_name: szpila-coach
+    restart: unless-stopped
+    network_mode: host # listens on 127.0.0.1:8790 only; reaches Ollama on 172.17.0.1:11434
+    env_file: .env
+    read_only: true
+    mem_limit: 128m
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: szpila-cloudflared
+    restart: unless-stopped
+    network_mode: host
+    user: "1000:1000"
+    command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./cloudflared:/etc/cloudflared:ro
+    depends_on:
+      - coach

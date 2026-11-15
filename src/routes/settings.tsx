@@ -47,6 +47,7 @@ import {
 } from "@/lib/notifications";
 import { formatMinute } from "@/lib/habits/utils";
 import { summaryMinute } from "@/lib/habits/day-summary";
+import { coachSupported, getCoach, normalizeCoachUrl, setCoach, testCoach } from "@/lib/coach";
 import { L, pick } from "@/lib/i18n";
 import { StepsSources } from "@/components/StepsSources";
 import { KropiSource } from "@/components/KropiSource";
@@ -949,6 +950,97 @@ function DaySummaryCard({
               `Today around ${formatMinute(at)}. In a few days it adapts to your evenings.`,
             )}
       </p>
+      {on && <CoachBox />}
+    </div>
+  );
+}
+
+/** Optional: your own server with a small local model writes the recap's comment. */
+function CoachBox() {
+  const [url, setUrl] = useState("");
+  const [token, setToken] = useState("");
+  const [saved, setSaved] = useState<{ url: string; hasToken: boolean } | null>(null);
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    void getCoach().then((c) => {
+      setSaved(c);
+      setUrl(c.url);
+    });
+  }, []);
+
+  if (!coachSupported() || !saved) return null;
+
+  const save = async () => {
+    setBusy(true);
+    setMsg("");
+    try {
+      if (url.trim() && !normalizeCoachUrl(url)) {
+        setMsg(L("Adres musi zaczynać się od https://", "The address must start with https://"));
+        return;
+      }
+      await setCoach(url, token);
+      setToken("");
+      const c = await getCoach();
+      setSaved(c);
+      if (!c.url) return setMsg(L("Wyłączone.", "Off."));
+      if (!c.hasToken) return setMsg(L("Wpisz jeszcze token.", "Enter the token too."));
+      const r = await testCoach();
+      setMsg(
+        r.ok
+          ? L(`Połączono ✓ (model: ${r.model})`, `Connected ✓ (model: ${r.model})`)
+          : r.error === "token"
+            ? L("Serwer odrzucił token.", "The server rejected the token.")
+            : L(`Brak połączenia: ${r.error}`, `No connection: ${r.error}`),
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-3 border-t border-border pt-3" data-coach>
+      <div className="text-sm font-medium">
+        {L("Komentarz z własnego serwera AI", "Comment from your own AI server")}
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {L(
+          "Opcjonalnie: twój serwer z małym modelem dopisze komentarz do podsumowania (ok. minuty po nim). Wysyłane są tylko procent i nazwy zadań, nigdy dyskretne. Adres i token zostają w telefonie.",
+          "Optional: your server with a small model adds its comment to the recap (about a minute later). Only the percent and habit names are sent, never discreet ones. The address and token stay on the phone.",
+        )}
+      </p>
+      <input
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+        placeholder="https://…"
+        inputMode="url"
+        autoCapitalize="none"
+        autoCorrect="off"
+        className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none"
+      />
+      <input
+        value={token}
+        onChange={(e) => setToken(e.target.value)}
+        type="password"
+        placeholder={
+          saved.hasToken ? L("Token zapisany (zostaw puste)", "Token saved (leave empty)") : "Token"
+        }
+        autoCapitalize="none"
+        autoCorrect="off"
+        className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none"
+      />
+      <div className="mt-2 flex items-center gap-3">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void save()}
+          className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+        >
+          {busy ? L("Sprawdzam…", "Checking…") : L("Zapisz i sprawdź", "Save and test")}
+        </button>
+        {msg && <span className="text-xs text-muted-foreground">{msg}</span>}
+      </div>
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
 } from "@/lib/habits/day-summary";
 import { indexEntries } from "@/lib/habits/utils";
 import { setLang } from "@/lib/i18n";
+import { normalizeCoachUrl } from "@/lib/coach";
 import type { Completion } from "@/lib/habits/types";
 import { entry, habit } from "./helpers";
 
@@ -118,6 +119,15 @@ describe("podsumowanie dnia: advice from the history", () => {
     expect(tips[0]).toContain("100%");
     expect(tips[0]).toContain("50%");
     expect(generalTips([a, b], [], indexEntries([]), NOW)).toEqual([]);
+  });
+
+  test("the coach server gets the name and the tone, https only", () => {
+    const s = summarySnapshot([], [], "soft", "Ola", null, NOW);
+    expect(s.name).toBe("Ola");
+    expect(s.level).toBe("soft");
+    expect(normalizeCoachUrl(" https://szpila.example.eu/ ")).toBe("https://szpila.example.eu");
+    expect(normalizeCoachUrl("http://szpila.example.eu")).toBe("");
+    expect(normalizeCoachUrl("https://evil.example/?x=1")).toBe("");
   });
 
   test("discreet habits get no advice in the snapshot", () => {

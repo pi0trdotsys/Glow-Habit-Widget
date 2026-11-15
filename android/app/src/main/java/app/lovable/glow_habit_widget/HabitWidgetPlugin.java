@@ -346,6 +346,43 @@ public class HabitWidgetPlugin extends Plugin {
     // In-app updates (UpdateManager; src/lib/update.ts finds the GitHub release)
     // ------------------------------------------------------------------
 
+    /** The coach server: { url, hasToken } (the token itself never goes back to the web side). */
+    @PluginMethod
+    public void getCoach(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("url", CoachClient.url(getContext()));
+        ret.put("hasToken", CoachClient.configured(getContext()));
+        call.resolve(ret);
+    }
+
+    /** { url, token? } -> saved (empty url = off); { ok:false } when the url isn't https. */
+    @PluginMethod
+    public void setCoach(PluginCall call) {
+        boolean ok = CoachClient.save(getContext(), call.getString("url", ""), call.getString("token", ""));
+        JSObject ret = new JSObject();
+        ret.put("ok", ok);
+        call.resolve(ret);
+    }
+
+    /** Checks the saved server: { ok, model? , error? } (off the main thread). */
+    @PluginMethod
+    public void testCoach(PluginCall call) {
+        new Thread(() -> {
+            JSObject ret = new JSObject();
+            try {
+                ret.put("model", CoachClient.health(getContext()));
+                ret.put("ok", true);
+            } catch (SecurityException e) {
+                ret.put("ok", false);
+                ret.put("error", "token");
+            } catch (Exception e) {
+                ret.put("ok", false);
+                ret.put("error", String.valueOf(e.getMessage()));
+            }
+            call.resolve(ret);
+        }, "coach-test").start();
+    }
+
     @PluginMethod
     public void updateHint(PluginCall call) {
         JSObject ret = new JSObject();

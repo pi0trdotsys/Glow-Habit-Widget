@@ -187,6 +187,8 @@ switch away.
   got done, what was missing, and gives one tip for tomorrow from your own data
   (_"The gym lands at 20% on Wednesdays, tomorrow is Wednesday, do it in the
   morning"_). It picks the time itself, from when you usually wrap up the day.
+  Optionally a small AI model on your own server writes the comment
+  ([server/szpila-coach](server/szpila-coach)).
 
 ## ◉ No need to open the app
 

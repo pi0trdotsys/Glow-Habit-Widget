@@ -35,7 +35,11 @@ final class DaySummary {
         return allDone && now >= EARLY_FROM && now < at;
     }
 
-    /** [title, text, big text]. `rows` = today's rows without discreet ones; `pick` chooses from pools. */
+    /**
+     * [title, text, big text, coach facts (JSON), the part after the opener]. `rows` = today's
+     * rows without discreet ones; `pick` chooses from pools. The facts go to the optional coach
+     * server (CoachJob), which may replace the opener with a comment of its own.
+     */
     static String[] compose(JSONArray rows, JSONObject summary, boolean en, Picker pick) {
         List<JSONObject> counted = new ArrayList<>();
         for (int i = 0; i < rows.length(); i++) {
@@ -46,6 +50,7 @@ final class DaySummary {
         float sum = 0f;
         List<String> ok = new ArrayList<>();
         List<String> short_ = new ArrayList<>();
+        List<String> missingNames = new ArrayList<>();
         List<String> slips = new ArrayList<>();
         JSONObject worst = null;
         float worstF = 2f;
@@ -60,6 +65,7 @@ final class DaySummary {
                 if ("slip".equals(h.optString("status"))) slips.add(name);
             } else {
                 String amount = WidgetShared.amountText(h);
+                missingNames.add(name);
                 short_.add(amount.isEmpty() || WidgetShared.amount(h) == 0 ? name
                     : name + " (" + WidgetShared.amount(h) + "/" + WidgetShared.target(h) + ")");
                 // advice goes to the habit that got the least done today
@@ -79,7 +85,7 @@ final class DaySummary {
         opener = opener.replace("{pct}", String.valueOf(pct))
             .replace("{done}", String.valueOf(done)).replace("{total}", String.valueOf(total));
 
-        StringBuilder big = new StringBuilder(opener);
+        StringBuilder big = new StringBuilder();
         if (!ok.isEmpty()) big.append("\n✅ ").append(en ? "Done: " : "Zrobione: ").append(join(ok, 5, en));
         if (!short_.isEmpty()) big.append("\n⏳ ").append(en ? "Missing: " : "Zabrakło: ").append(join(short_, 4, en));
         if (!slips.isEmpty()) big.append("\n💥 ").append(en ? "Slips: " : "Wpadki: ").append(join(slips, 3, en));
@@ -90,7 +96,17 @@ final class DaySummary {
         if (!tip.isEmpty()) big.append("\n\n💡 ").append(tip);
 
         String title = (en ? "🍻 Day recap · " : "🍻 Podsumowanie dnia · ") + pct + "%";
-        return new String[]{title, opener, big.toString()};
+        String rest = big.toString();
+        JSONObject facts = new JSONObject();
+        try {
+            facts.put("lang", en ? "en" : "pl").put("pct", pct)
+                .put("name", summary != null ? summary.optString("name", "") : "")
+                .put("level", summary != null ? summary.optString("level", "hard") : "hard")
+                .put("done", new JSONArray(ok)).put("missing", new JSONArray(missingNames))
+                .put("slips", new JSONArray(slips));
+        } catch (Exception ignored) {
+        }
+        return new String[]{title, opener, opener + rest, facts.toString(), rest};
     }
 
     private static boolean hasTips(JSONObject summary, JSONObject h) {
