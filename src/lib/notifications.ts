@@ -20,6 +20,7 @@ import { formatMinute, kindOf, planDay, weeklyReport } from "@/lib/habits/utils"
 import { SZPILA_EMOJI, SZPILA_NAME, szpilaNow } from "@/lib/habits/szpila";
 import { boostSet } from "@/lib/habits/chain";
 import { focusHabit } from "@/lib/habits/focus";
+import { isDiscreet } from "@/lib/habits/discreet";
 import { isEn, L } from "@/lib/i18n";
 
 export type PermissionState = "granted" | "denied" | "default" | "unsupported";
@@ -174,6 +175,9 @@ function boostBody(slot: number): string {
 
 function reminderBody(habitId: string, name: string): string {
   const h = useHabits.getState().habits.find((x) => x.id === habitId);
+  // "Dyskretne": the reminder never names the habit.
+  if (h && isDiscreet(h))
+    return L("Masz coś do potwierdzenia w Szpili. 🔒", "Something to confirm in Szpila. 🔒");
   if (isEn())
     return h && kindOf(h) === "avoid" ? `Confirm a day without: ${name}` : `Time for: ${name}`;
   return h && kindOf(h) === "avoid" ? `Potwierdź, że dziś bez: ${name}` : `Pora na: ${name}`;
@@ -366,16 +370,17 @@ function webTick(): void {
     for (const m of slots) {
       if (formatMinute(m) !== hhmm) continue;
       const { focus } = useHabits.getState();
-      const plan = planDay(habits, completions, now, boostSet(habits, completions, focus, now));
+      const open = habits.filter((h) => !isDiscreet(h)); // never jab about a discreet habit
+      const plan = planDay(open, completions, now, boostSet(open, completions, focus, now));
       if (plan.length === 0) continue;
       const say = szpilaNow(
-        habits,
+        open,
         completions,
         plan,
         notifications.tauntLevel,
         userName,
         m,
-        focusHabit(habits, focus, now)?.id,
+        focusHabit(open, focus, now)?.id,
       );
       fire(
         `taunt-${m}`,

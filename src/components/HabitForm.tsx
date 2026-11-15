@@ -8,13 +8,14 @@ import {
   screenGranted,
   syncAppsNow,
 } from "@/lib/sensors";
-import { Ban, Sparkles } from "lucide-react";
+import { Ban, EyeOff, Sparkles } from "lucide-react";
 import { HabitIcon } from "./HabitIcon";
 import { AVOID_COLOR, HABIT_COLOR_VAR, HABIT_COLORS, HABIT_ICONS } from "@/lib/habits/colors";
 import { translateName, translateUnit } from "@/lib/habits/seed-names";
 import { getLang, L, pick } from "@/lib/i18n";
 import { useHabits } from "@/lib/habits/store";
 import { goalOf } from "@/lib/habits/utils";
+import { looksSensitive } from "@/lib/habits/discreet";
 import { inThousands, stepsGoal } from "@/lib/steps";
 import { appsList, suggestedApps } from "@/lib/apps";
 import { AppPicker } from "./AppSources";
@@ -204,6 +205,8 @@ export function HabitForm({
   const [lateAfter, setLateAfter] = useState(initial?.lateAfter ?? DEFAULT_LATE_AFTER);
   const [lateLimit, setLateLimit] = useState(initial?.lateLimit ?? DEFAULT_LATE_LIMIT);
   const [lateBasis, setLateBasis] = useState<"social" | "screen">(initial?.lateBasis ?? "social");
+  /** null = automatic (on for sensitive names, see discreet.ts) until the switch is touched. */
+  const [discreet, setDiscreet] = useState<boolean | null>(initial?.discreet ?? null);
   const isNative = Capacitor.isNativePlatform();
 
   const avoid = kind === "avoid";
@@ -276,6 +279,7 @@ export function HabitForm({
       lateAfter: source === "screen" && avoid ? lateAfter : undefined,
       lateLimit: source === "screen" && avoid ? lateLimit : undefined,
       lateBasis: source === "screen" && avoid ? lateBasis : undefined,
+      discreet: avoid && discreet !== null ? discreet : undefined,
       reminder: reminderOn ? reminderTime : null,
     });
     if (source === "apps" && !avoid && goalType === "minutes" && apps.length)
@@ -428,6 +432,11 @@ export function HabitForm({
                 setLateBasis={setLateBasis}
               />
             )}
+            <DiscreetBox
+              on={discreet ?? looksSensitive(name)}
+              auto={discreet === null && looksSensitive(name)}
+              onToggle={setDiscreet}
+            />
           </Section>
         ) : (
           <Section title={L("Cel dzienny", "Daily goal")}>
@@ -829,6 +838,40 @@ function Stepper({
       >
         +
       </button>
+    </div>
+  );
+}
+
+/** Avoid habits: "Dyskretne" - kept out of notifications, the lock screen and widgets. */
+function DiscreetBox({
+  on,
+  auto,
+  onToggle,
+}: {
+  on: boolean;
+  auto: boolean;
+  onToggle: (on: boolean) => void;
+}) {
+  return (
+    <div className="mt-3 rounded-2xl bg-card p-4" data-discreet>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <EyeOff size={18} style={{ color: AVOID_COLOR }} />
+          <span className="text-sm font-medium">{L("Dyskretne", "Discreet")}</span>
+        </div>
+        <Toggle checked={on} onChange={onToggle} />
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">
+        {L(
+          "Nie pokazuje się w powiadomieniach, na ekranie blokady ani na widżetach. Na ekranie „Dziś” leży pod pierwszym ekranem: zobaczysz je, gdy przewiniesz w dół.",
+          "Never shown in notifications, on the lock screen or on widgets. On the Today screen it sits below the first screen: scroll down to see it.",
+        )}
+        {auto &&
+          L(
+            " Włączone samo, bo nazwa wygląda na prywatną.",
+            " Switched on automatically, the name looks private.",
+          )}
+      </p>
     </div>
   );
 }

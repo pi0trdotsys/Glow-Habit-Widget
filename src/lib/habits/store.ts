@@ -44,6 +44,8 @@ export interface NotificationSettings {
   /** Evening review notification to settle all forbidden habits at once. */
   review: boolean;
   reviewAt: string;
+  /** "Podsumowanie dnia": a mate-style recap + one tip, at a time learned from the user's evenings. */
+  daySummary: boolean;
   /** "Szpila na żywo": pop up the moment a social media app opens at night (Android, usage access). */
   live: boolean;
   liveFrom: string;
@@ -119,6 +121,7 @@ const defaultNotifications: NotificationSettings = {
   quietTo: "09:00",
   review: true,
   reviewAt: "21:30",
+  daySummary: true,
   live: true,
   liveFrom: "00:00",
   liveUntil: "05:00",

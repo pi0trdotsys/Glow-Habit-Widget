@@ -62,6 +62,7 @@ final class HabitNotifier {
     static final int ID_PRAISE = 7400;
     static final int ID_MORNING = 7250;
     static final int ID_BILL = 7260;
+    static final int ID_SUMMARY = 7270;
 
     static final String ACTION_TICK = "app.lovable.glow_habit_widget.NOTIFIER_TICK";
     static final String ACTION_DO_NEXT = "app.lovable.glow_habit_widget.DO_NEXT";
@@ -82,6 +83,7 @@ final class HabitNotifier {
     private static final String KEY_LATE_EVAL = "late_eval";
     private static final String KEY_LAST_MORNING = "last_morning";
     private static final String KEY_LAST_BILL = "last_bill";
+    private static final String KEY_LAST_SUMMARY = "last_summary";
     /** Yesterday stays answerable until noon - mirrors AVOID_GRACE_MIN in utils.ts. */
     static final int GRACE_MIN = 12 * 60;
     /** A jab fires if its slot passed less than this many minutes ago (MIUI delays alarms). */
@@ -100,6 +102,7 @@ final class HabitNotifier {
         try {
             ensureChannels(c);
             updateProgress(c);
+            maybeDaySummary(c); // finishing the last habit after 18:00 sends the recap right away
         } catch (Exception ignored) {
             // never let a notification problem break widget updates
         }
@@ -126,6 +129,7 @@ final class HabitNotifier {
             checkLateScreen(c);
             maybeTaunt(c);
             maybeReview(c);
+            maybeDaySummary(c);
             maybeMorningReview(c);
             maybeNightBill(c);
             maybeRoast(c);
@@ -326,7 +330,12 @@ final class HabitNotifier {
             return;
         }
         WidgetShared.normalizeIfStale(c);
-        rows = WidgetShared.habits(c);
+        // Discreet habits don't even show up as a count or a bar segment on the lock screen.
+        rows = WidgetShared.withoutDiscreet(WidgetShared.habits(c));
+        if (rows.length() == 0) {
+            nm.cancel(ID_PROGRESS);
+            return;
+        }
         int total = 0;
         int done = 0;
         float sum = 0;
@@ -710,25 +719,29 @@ final class HabitNotifier {
 
         JSONArray rows = WidgetShared.habits(c);
         List<JSONObject> pending = new ArrayList<>();
+        int hidden = 0; // discreet ones: counted, never named
         for (int i = 0; i < rows.length(); i++) {
             JSONObject h = rows.optJSONObject(i);
             // Night habits (e.g. scrolling in bed, due 22:30) happen after the review - they
             // get settled in the morning review instead.
-            if (WidgetShared.isAvoid(h) && WidgetShared.isPending(h) && h.optInt("start", 0) <= at + 30) pending.add(h);
+            if (!WidgetShared.isAvoid(h) || !WidgetShared.isPending(h) || h.optInt("start", 0) > at + 30) continue;
+            if (WidgetShared.isDiscreet(h)) hidden++;
+            else pending.add(h);
         }
         p.edit().putString(KEY_LAST_REVIEW, WidgetShared.today()).apply();
-        if (pending.isEmpty()) return;
+        if (pending.isEmpty() && hidden == 0) return;
 
         boolean en = WidgetShared.en(c);
         StringBuilder big = new StringBuilder(en ? "Confirm you stayed clean today:" : "Potwierdź, że dziś bez:");
         for (JSONObject h : pending) big.append("\n⛔ ").append(h.optString("name"));
+        if (hidden > 0) big.append("\n").append(discreetLine(hidden, en));
         big.append(en ? "\n\nNot confirmed by midnight? Then I count it as a slip."
             : "\n\nBez potwierdzenia do północy liczę to jako wpadki.");
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_REVIEW)
             .setSmallIcon(R.drawable.ic_stat_szpila)
             .setColor(WidgetShared.AVOID)
-            .setContentTitle(en ? "Daily review · " + pending.size() + " to confirm"
-                : "Rozliczenie dnia · " + pending.size() + " do potwierdzenia")
+            .setContentTitle(en ? "Daily review · " + (pending.size() + hidden) + " to confirm"
+                : "Rozliczenie dnia · " + (pending.size() + hidden) + " do potwierdzenia")
             .setContentText(en ? "Confirm your forbidden habits before I count them as slips."
                 : "Potwierdź zakazane, zanim uznam je za wpadki.")
             .setStyle(new NotificationCompat.BigTextStyle().bigText(big.toString()))
@@ -743,6 +756,49 @@ final class HabitNotifier {
         post(c, ID_REVIEW, b);
     }
 
+    /**
+     * "Podsumowanie dnia": once a day, at the minute learned from the user's evenings
+     * (snapshot "summary.at"), or as soon as everything is done after 18:00. Silent during
+     * quiet hours. Discreet habits are never in it.
+     */
+    static void maybeDaySummary(Context c) {
+        JSONObject s = settings(c);
+        if (!s.optBoolean("daySummary", true) || !canNotify(c)) return;
+        JSONObject state = WidgetShared.state(c);
+        JSONObject summary = state.optJSONObject("summary");
+        if (summary == null || !WidgetShared.today().equals(state.optString("date"))) return;
+        SharedPreferences p = own(c);
+        if (WidgetShared.today().equals(p.getString(KEY_LAST_SUMMARY, ""))) return;
+        JSONArray rows = WidgetShared.withoutDiscreet(WidgetShared.habits(c));
+        if (rows.length() == 0) return;
+        int now = WidgetShared.nowMinute();
+        boolean allDone = rows.length() > 0 && WidgetShared.plan(c).isEmpty();
+        if (!DaySummary.due(now, summary.optInt("at", 21 * 60 + 45), allDone)) return;
+        p.edit().putString(KEY_LAST_SUMMARY, WidgetShared.today()).apply();
+
+        boolean en = WidgetShared.en(c);
+        String[] t = DaySummary.compose(rows, summary, en, WidgetShared::pick);
+        NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_REVIEW)
+            .setSmallIcon(R.drawable.ic_stat_szpila)
+            .setColor(WidgetShared.AVOID)
+            .setContentTitle(t[0])
+            .setContentText(t[1])
+            .setStyle(new NotificationCompat.BigTextStyle().bigText(t[2]))
+            .setSilent(isQuiet(bedtime(s), wake(s), now))
+            .setAutoCancel(true);
+        PendingIntent open = WidgetShared.openAppIntent(c, 7271);
+        if (open != null) b.setContentIntent(open);
+        post(c, ID_SUMMARY, b);
+    }
+
+    /** "🔒 +2 dyskretne" - discreet habits in a review: a count, never a name. */
+    static String discreetLine(int n, boolean en) {
+        if (en) return "🔒 +" + n + " discreet";
+        int d = n % 10, dd = n % 100;
+        boolean few = n == 1 || (d >= 2 && d <= 4 && !(dd >= 12 && dd <= 14));
+        return "🔒 +" + n + (few ? " dyskretne" : " dyskretnych");
+    }
+
     /** From wake-up until noon: settle yesterday's unanswered forbidden habits. */
     static void maybeMorningReview(Context c) {
         JSONObject s = settings(c);
@@ -751,19 +807,23 @@ final class HabitNotifier {
         if (now < wake(s) || now >= GRACE_MIN) return;
         SharedPreferences p = own(c);
         if (WidgetShared.today().equals(p.getString(KEY_LAST_MORNING, ""))) return;
-        JSONArray open = WidgetShared.yesterdayOpen(c);
+        JSONArray all = WidgetShared.yesterdayOpen(c);
         p.edit().putString(KEY_LAST_MORNING, WidgetShared.today()).apply();
-        if (open.length() == 0) return;
+        if (all.length() == 0) return;
+        // "Wczoraj czysto" still settles the discreet ones; they're only counted here.
+        JSONArray open = WidgetShared.withoutDiscreet(all);
+        int hidden = all.length() - open.length();
 
         boolean en = WidgetShared.en(c);
         StringBuilder big = new StringBuilder(en ? "Unconfirmed from yesterday:" : "Wczoraj bez potwierdzenia:");
         for (int i = 0; i < open.length(); i++) big.append("\n⛔ ").append(open.optJSONObject(i).optString("name"));
+        if (hidden > 0) big.append("\n").append(discreetLine(hidden, en));
         big.append(en ? "\n\nYou can still settle it until 12:00. After that I count it as a slip."
             : "\n\nDo 12:00 możesz to jeszcze rozliczyć. Potem liczę to jako wpadki.");
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_REVIEW)
             .setSmallIcon(R.drawable.ic_stat_szpila)
             .setColor(WidgetShared.AVOID)
-            .setContentTitle((en ? "Settle yesterday · " : "Rozlicz wczoraj · ") + open.length())
+            .setContentTitle((en ? "Settle yesterday · " : "Rozlicz wczoraj · ") + all.length())
             .setContentText(en ? "How did last night go? You have until 12:00."
                 : "Jak minęła wczorajsza noc? Masz czas do 12:00.")
             .setStyle(new NotificationCompat.BigTextStyle().bigText(big.toString()))
@@ -1005,6 +1065,10 @@ final class HabitNotifier {
         if (s.optBoolean("taunts", true)) for (int m : jabTimes(c, s, slots(s), nowMin)) if (m >= 0) candidates.add(m);
         if (s.optBoolean("review", true)) candidates.add(s.optInt("reviewAt", 21 * 60 + 30));
         if (s.optBoolean("review", true)) candidates.add(wake(s) + 1);
+        if (s.optBoolean("daySummary", true)) {
+            JSONObject sum = WidgetShared.state(c).optJSONObject("summary");
+            if (sum != null) candidates.add(sum.optInt("at", 21 * 60 + 45));
+        }
         candidates.add(ROAST_MINUTE);
         JSONArray rows = WidgetShared.habits(c);
         for (int i = 0; i < rows.length(); i++) {

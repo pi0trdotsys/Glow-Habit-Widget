@@ -34,7 +34,7 @@ import {
   weeklyRoast,
 } from "@/lib/habits/szpila";
 import { lateAfterMin, syncSensors, DEFAULT_LATE_LIMIT } from "@/lib/sensors";
-import type { HabitColor } from "@/lib/habits/types";
+import type { Habit, HabitColor } from "@/lib/habits/types";
 import { BACKUP_PREF_KEY } from "@/lib/backup";
 import { isAppsHabit } from "@/lib/apps";
 import { liveState, liveStatus } from "@/lib/live";
@@ -50,6 +50,8 @@ import { isLightTheme, resolveTheme, systemPrefersDark } from "@/lib/theme";
 import { contextPools, useLinesReady } from "@/lib/habits/szpila";
 import { jabSnapshot } from "@/lib/habits/jabs";
 import { syncJabs } from "@/lib/jab-sync";
+import { discreetLabel, isDiscreet } from "@/lib/habits/discreet";
+import { summarySnapshot } from "@/lib/habits/day-summary";
 
 const STATE_KEY = "widget_state";
 const PENDING_KEY = "widget_pending";
@@ -133,7 +135,11 @@ export function buildState() {
   const idx = indexEntries(completions);
   const focusId = focusHabit(habits, focus, today)?.id ?? null;
   const due = habits.filter((h) => isDueOn(h, today));
+  // "Dyskretne" never leave the app: the snapshot only gets a stand-in name and no lines,
+  // and the native side skips them (WidgetShared.isDiscreet). Counted, never named.
+  const open = habits.filter((h) => !isDiscreet(h));
   const rows = due.map((h) => {
+    if (isDiscreet(h)) return discreetRow(h, idx, today);
     const avoid = kindOf(h) === "avoid";
     const g = goalOf(h);
     const amount = avoid ? 0 : amountOn(h, idx, today);
@@ -212,8 +218,18 @@ export function buildState() {
       quietTo: toMin(notifications.quietTo),
       review: notifications.review,
       reviewAt: toMin(notifications.reviewAt),
+      daySummary: notifications.daySummary,
     },
-    roast: weeklyRoast(habits, completions, level, userName, focus),
+    // "Podsumowanie dnia" (DaySummary.java): when to send it, openers, advice from the history.
+    summary: summarySnapshot(
+      habits,
+      completions,
+      level,
+      userName,
+      notifications.review ? toMin(notifications.reviewAt) : null,
+      today,
+    ),
+    roast: weeklyRoast(open, completions, level, userName, focus),
     // Forbidden habits from yesterday still waiting for an answer (open until noon) - morning review.
     yesterday: {
       date: todayKey(addDays(today, -1)),
@@ -222,7 +238,11 @@ export function buildState() {
           (h) => kindOf(h) === "avoid" && h.source !== "screen" && isDueOn(h, addDays(today, -1)),
         )
         .filter((h) => avoidStatus(h, idx, addDays(today, -1), today) === "pending")
-        .map((h) => ({ id: h.id, name: h.name })),
+        .map((h) =>
+          isDiscreet(h)
+            ? { id: h.id, name: discreetLabel(), discreet: true }
+            : { id: h.id, name: h.name },
+        ),
     },
     // Night guard (LiveGuardService): window, ignored apps and per-app lines.
     live: liveState(
@@ -255,12 +275,58 @@ export function buildState() {
     // Morning "rachunek za noc" comments (HabitNotifier.billText).
     bill: billLines(level, userName),
     // "Prognoza na dziś": per-habit models + lines for the morning bill (Forecast.java).
-    forecast: forecastSnapshot(habits, idx, useHabits.getState().nightReports, level, today),
+    forecast: forecastSnapshot(open, idx, useHabits.getState().nightReports, level, today),
     allDone: allDoneLines(level),
     evening: eveningLines(level),
     // "Co na ciebie działa": learned arm stats (HabitNotifier.pickJab samples from these + newer native log).
     jabs: jabSnapshot(useHabits.getState().jabLearn),
     habits: rows,
+  };
+}
+
+/** A discreet avoid habit's row: status only, a stand-in name, no lines that could name it. */
+function discreetRow(h: Habit, idx: ReturnType<typeof indexEntries>, today: Date) {
+  const status = avoidStatus(h, idx, today, today);
+  const w = habitWindow(h, useHabits.getState().completions);
+  return {
+    id: h.id,
+    name: discreetLabel(),
+    icon: "EyeOff",
+    colorHex: AVOID_HEX,
+    kind: "avoid",
+    discreet: true,
+    goal: "check",
+    amount: 0,
+    target: 1,
+    step: 1,
+    unit: "",
+    unitForms: [],
+    units: 1,
+    status,
+    slipsLeft: slipsLeft(h, idx, today),
+    done: status === "clean",
+    start: w.start,
+    end: w.end,
+    nag: [],
+    rage: [],
+    memory: [],
+    ctx: {},
+    praise: "",
+    minimum: 0,
+    rescue: false,
+    rescueLines: [],
+    focus: false,
+    focusLines: [],
+    boost: false,
+    source: h.source ?? "",
+    ...(h.source === "screen"
+      ? {
+          lateAfter: lateAfterMin(h),
+          lateLimit: h.lateLimit ?? DEFAULT_LATE_LIMIT,
+          lateBasis: lateBasisOf(h),
+          caught: [],
+        }
+      : {}),
   };
 }
 

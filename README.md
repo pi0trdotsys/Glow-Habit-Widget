@@ -169,6 +169,12 @@ np. „najwyżej raz w tygodniu”.
 Zasada jest prosta i bezlitosna: codziennie potwierdzasz **„dziś czysto”**.
 Brak potwierdzenia = wpadka. Wczoraj rozliczysz jeszcze rano, do 12:00.
 
+**Dyskretne.** Niektóre zakazane to niczyja sprawa. Takie zadanie nie pojawia się
+w powiadomieniach, na ekranie blokady ani na widżetach, a na ekranie „Dziś” leży
+pod pierwszym ekranem: widzisz je dopiero, gdy przewiniesz w dół. Pornografia,
+alkohol, papierosy czy hazard są dyskretne od razu, każde inne włączysz jednym
+przełącznikiem.
+
 ## ◉ Liczby, które mówią prawdę
 
 - **Tydzień do tygodnia**, ale uczciwie: środa 14:35 kontra środa 14:35 sprzed
@@ -179,6 +185,10 @@ Brak potwierdzenia = wpadka. Wczoraj rozliczysz jeszcze rano, do 12:00.
 - **Powiązania między nawykami**: _„Dzień po nocy z telefonem robisz o 4000
   kroków mniej”_.
 - **Eksport do CSV** jednym dotknięciem, prosto do Excela albo Arkuszy.
+- **Podsumowanie dnia jak od kumpla**: wieczorem Szpila pisze, jak ci poszło, co
+  zrobione, czego zabrakło, i daje jedną radę na jutro z twoich danych (_„Siłownia
+  w środę wychodzi ci na 20%, jutro środa, zrób to rano”_). Godzinę dobiera sama,
+  z tego, kiedy zwykle kończysz dzień.
 
 ## ◉ Bez otwierania aplikacji
 

@@ -3,7 +3,7 @@ import { addDays, format } from "date-fns";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { L, dateLocale, pick } from "@/lib/i18n";
 import { AnimatePresence, m } from "framer-motion";
-import { Plus, ChevronDown, ChevronRight, Sunrise } from "lucide-react";
+import { Plus, ChevronDown, ChevronRight, EyeOff, Sunrise } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { HabitTile, praiseToast } from "@/components/HabitTile";
 import { HabitIcon } from "@/components/HabitIcon";
@@ -39,6 +39,7 @@ import { syncKropiNow } from "@/lib/sensors";
 import { focusHabit } from "@/lib/habits/focus";
 import { FreeWindowHint } from "@/components/FreeWindowHint";
 import { useCalendarPlan } from "@/lib/calendar-device";
+import { isDiscreet } from "@/lib/habits/discreet";
 
 /** Tests/previews can show the native guard's status slides on the web. */
 const forceGuard =
@@ -90,20 +91,24 @@ function TodayPage() {
   const today = new Date();
   const due = habits.filter((h) => isDueOn(h, today));
   const build = due.filter((h) => kindOf(h) === "build");
-  const avoid = due.filter((h) => kindOf(h) === "avoid");
+  // "Dyskretne" forbidden habits stay out of the first screen (plan, "Teraz", Szpila's bubble):
+  // they have their own section below the fold.
+  const avoid = due.filter((h) => kindOf(h) === "avoid" && !isDiscreet(h));
+  const hidden = due.filter(isDiscreet);
+  const shown = useMemo(() => habits.filter((h) => !isDiscreet(h)), [habits]);
   const progress = todayProgress(habits, completions, today);
   // Rescue days ("nigdy dwa razy") and the weekly focus go first once due.
-  const boost = boostSet(habits, completions, focus, today);
-  const focusH = focusHabit(habits, focus, today);
+  const boost = boostSet(shown, completions, focus, today);
+  const focusH = focusHabit(shown, focus, today);
   // The phone's calendars: plan times out of meetings + the next free window for a minutes habit.
-  const cal = useCalendarPlan(planDay(habits, completions, today, boost), today);
+  const cal = useCalendarPlan(planDay(shown, completions, today, boost), today);
   const plan = cal.plan;
   const report = weeklyReport(habits, completions, today);
   const topStreak = habits.reduce((acc, h) => Math.max(acc, currentStreak(h, completions)), 0);
   const say = useMemo(
-    () => szpilaNow(habits, completions, plan, level, userName, seed, focusH?.id, learnedArms),
+    () => szpilaNow(shown, completions, plan, level, userName, seed, focusH?.id, learnedArms),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [seed, completions, habits, level, userName, focusH?.id, learnedArms],
+    [seed, completions, shown, level, userName, focusH?.id, learnedArms],
   );
 
   // The whole day done: confetti + a little drum roll (only when it happens, not on load).
@@ -120,7 +125,7 @@ function TodayPage() {
 
   // Morning review: yesterday's unconfirmed forbidden habits can be settled until noon.
   const yesterday = addDays(today, -1);
-  const settleYesterday =
+  const openYesterday =
     minuteOfDay(today) < AVOID_GRACE_MIN
       ? habits.filter(
           (h) =>
@@ -130,80 +135,108 @@ function TodayPage() {
             avoidStatus(h, completions, yesterday, today) === "pending",
         )
       : [];
+  const settleYesterday = openYesterday.filter((h) => !isDiscreet(h));
+  const hiddenYesterday = openYesterday.filter(isDiscreet);
 
   return (
     <AppShell>
-      <header className="flex items-center justify-between gap-4 px-5 pt-10 pb-4">
-        <div className="min-w-0">
-          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            {format(today, pick("EEEE, d MMMM", "EEEE, MMMM d"), { locale: dateLocale() })}
-          </p>
-          <h1 className="mt-1.5 truncate font-display text-3xl font-bold tracking-tight">
-            {greetingFor(today)}
-            {userName ? `, ${userName}` : ""}
-          </h1>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {progress.done}/{progress.total} {L("zrobione", "done")}
-            {topStreak > 0 && ` · 🔥 ${L("seria", "streak")} ${daysLabel(topStreak)}`}
-          </p>
-        </div>
-        <ProgressRing fraction={progress.fraction} />
-      </header>
+      {/* The first screen: at least a viewport tall, so the discreet section starts below it. */}
+      <div
+        style={
+          hidden.length + hiddenYesterday.length > 0
+            ? { minHeight: "calc(100dvh - env(safe-area-inset-top))" }
+            : undefined
+        }
+      >
+        <header className="flex items-center justify-between gap-4 px-5 pt-10 pb-4">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              {format(today, pick("EEEE, d MMMM", "EEEE, MMMM d"), { locale: dateLocale() })}
+            </p>
+            <h1 className="mt-1.5 truncate font-display text-3xl font-bold tracking-tight">
+              {greetingFor(today)}
+              {userName ? `, ${userName}` : ""}
+            </h1>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {progress.done}/{progress.total} {L("zrobione", "done")}
+              {topStreak > 0 && ` · 🔥 ${L("seria", "streak")} ${daysLabel(topStreak)}`}
+            </p>
+          </div>
+          <ProgressRing fraction={progress.fraction} />
+        </header>
 
-      <div className="space-y-3 px-5">
-        <StatusCarousel
-          say={say}
-          onReroll={() => setSeed((s) => s + 1)}
-          now={today}
-          doneCount={progress.done}
-          allDone={allDone}
-          force={forceGuard}
-        />
-        {settleYesterday.length > 0 && (
-          <section
-            className="rounded-2xl p-3"
-            style={{ background: `color-mix(in oklab, ${AVOID_COLOR} 8%, var(--card))` }}
-          >
-            <div
-              className="mb-2 flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: AVOID_COLOR }}
+        <div className="space-y-3 px-5">
+          <StatusCarousel
+            say={say}
+            onReroll={() => setSeed((s) => s + 1)}
+            now={today}
+            doneCount={progress.done}
+            allDone={allDone}
+            force={forceGuard}
+          />
+          {settleYesterday.length > 0 && (
+            <section
+              className="rounded-2xl p-3"
+              style={{ background: `color-mix(in oklab, ${AVOID_COLOR} 8%, var(--card))` }}
             >
-              <Sunrise size={14} /> {L("Rozlicz wczoraj · do", "Settle yesterday · until")}{" "}
-              {formatMinute(AVOID_GRACE_MIN)}
-            </div>
-            <AvoidChips habits={settleYesterday} day={yesterday} />
-          </section>
-        )}
-        {due.length > 0 && <NowCard plan={plan} />}
-        {due.length > 0 && cal.match && <FreeWindowHint match={cal.match} now={today} />}
-        {due.length > 0 && (
-          <PlanFold plan={plan} delta={report.delta} hasHistory={!report.noBaseline} />
+              <div
+                className="mb-2 flex items-center gap-1.5 text-xs font-semibold"
+                style={{ color: AVOID_COLOR }}
+              >
+                <Sunrise size={14} /> {L("Rozlicz wczoraj · do", "Settle yesterday · until")}{" "}
+                {formatMinute(AVOID_GRACE_MIN)}
+              </div>
+              <AvoidChips habits={settleYesterday} day={yesterday} />
+            </section>
+          )}
+          {due.length > 0 && <NowCard plan={plan} />}
+          {due.length > 0 && cal.match && <FreeWindowHint match={cal.match} now={today} />}
+          {due.length > 0 && (
+            <PlanFold plan={plan} delta={report.delta} hasHistory={!report.noBaseline} />
+          )}
+        </div>
+
+        {due.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <>
+            {build.length > 0 && (
+              <div className="mt-7 grid grid-cols-3 gap-y-7 gap-x-2 px-5">
+                {build.map((h) => (
+                  <HabitTile key={h.id} habit={h} />
+                ))}
+              </div>
+            )}
+            {avoid.length > 0 && (
+              <section className="mt-8 px-5">
+                <h2
+                  className="mb-3 text-xs font-semibold uppercase tracking-[0.16em]"
+                  style={{ color: AVOID_COLOR }}
+                >
+                  {L("Zakazane · dotknij, by potwierdzić", "Forbidden · tap to confirm")}
+                </h2>
+                <AvoidChips habits={avoid} />
+              </section>
+            )}
+          </>
         )}
       </div>
 
-      {due.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <>
-          {build.length > 0 && (
-            <div className="mt-7 grid grid-cols-3 gap-y-7 gap-x-2 px-5">
-              {build.map((h) => (
-                <HabitTile key={h.id} habit={h} />
-              ))}
+      {hidden.length + hiddenYesterday.length > 0 && (
+        <section className="mt-8 px-5" data-discreet-section>
+          <h2 className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            <EyeOff size={13} /> {L("Dyskretne · tylko tutaj", "Discreet · only here")}
+          </h2>
+          {hiddenYesterday.length > 0 && (
+            <div className="mb-3">
+              <div className="mb-2 text-xs text-muted-foreground">
+                {L("Wczoraj · do", "Yesterday · until")} {formatMinute(AVOID_GRACE_MIN)}
+              </div>
+              <AvoidChips habits={hiddenYesterday} day={yesterday} />
             </div>
           )}
-          {avoid.length > 0 && (
-            <section className="mt-8 px-5">
-              <h2
-                className="mb-3 text-xs font-semibold uppercase tracking-[0.16em]"
-                style={{ color: AVOID_COLOR }}
-              >
-                {L("Zakazane · dotknij, by potwierdzić", "Forbidden · tap to confirm")}
-              </h2>
-              <AvoidChips habits={avoid} />
-            </section>
-          )}
-        </>
+          {hidden.length > 0 && <AvoidChips habits={hidden} />}
+        </section>
       )}
 
       {/* Anchored within the centered app column so it never clips off-screen. */}

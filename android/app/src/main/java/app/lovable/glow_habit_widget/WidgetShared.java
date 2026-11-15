@@ -102,6 +102,25 @@ final class WidgetShared {
         return "avoid".equals(h.optString("kind"));
     }
 
+    /**
+     * "Dyskretne" (src/lib/habits/discreet.ts): a forbidden habit that never shows outside the
+     * app. The snapshot already carries a stand-in name; native surfaces also skip it.
+     */
+    static boolean isDiscreet(JSONObject h) {
+        return h != null && h.optBoolean("discreet", false);
+    }
+
+    /** Rows without discreet ones - what notifications and the lock screen may show and count. */
+    static JSONArray withoutDiscreet(JSONArray a) {
+        JSONArray out = new JSONArray();
+        if (a == null) return out;
+        for (int i = 0; i < a.length(); i++) {
+            JSONObject h = a.optJSONObject(i);
+            if (h != null && !isDiscreet(h)) out.put(h);
+        }
+        return out;
+    }
+
     /** Avoid habit judged automatically from late-night screen time (ScreenTime). */
     static boolean isAutoScreen(JSONObject h) {
         return isAvoid(h) && "screen".equals(h.optString("source"));
@@ -321,15 +340,18 @@ final class WidgetShared {
         return boost && key < 62 ? key / 1000.0 - 3 : key;
     }
 
-    /** Pending rows sorted by what to do next. */
+    /** Pending rows sorted by what to do next (never discreet ones: nothing outside the app names them). */
     static java.util.List<JSONObject> plan(Context c) {
+        return plan(habits(c), nowMinute());
+    }
+
+    /** Pure: plan() over given rows at a given minute (JVM tests). */
+    static java.util.List<JSONObject> plan(JSONArray a, int now) {
         java.util.List<JSONObject> out = new java.util.ArrayList<>();
-        JSONArray a = habits(c);
         for (int i = 0; i < a.length(); i++) {
             JSONObject h = a.optJSONObject(i);
-            if (h != null && isPending(h)) out.add(h);
+            if (h != null && isPending(h) && !isDiscreet(h)) out.add(h);
         }
-        final int now = nowMinute();
         java.util.Collections.sort(out, (x, y) -> Double.compare(rankKey(x, now), rankKey(y, now)));
         return out;
     }
@@ -390,7 +412,9 @@ final class WidgetShared {
                 for (int i = 0; i < habits.length(); i++) {
                     JSONObject h = habits.getJSONObject(i);
                     if (dateKey(1).equals(oldDate) && isAvoid(h) && !isAutoScreen(h) && isPending(h)) {
-                        open.put(new JSONObject().put("id", h.optString("id")).put("name", h.optString("name")));
+                        JSONObject it = new JSONObject().put("id", h.optString("id")).put("name", h.optString("name"));
+                        if (isDiscreet(h)) it.put("discreet", true);
+                        open.put(it);
                     }
                     // "Nigdy dwa razy": yesterday below the minimum (or a slip) = a rescue day today.
                     boolean rescue = dateKey(1).equals(oldDate) && missed(h);

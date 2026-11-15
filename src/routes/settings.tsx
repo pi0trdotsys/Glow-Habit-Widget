@@ -18,6 +18,7 @@ import {
   Footprints,
   PhoneOff,
   BedDouble,
+  MessageCircleHeart,
 } from "lucide-react";
 import {
   openUsageSettings,
@@ -45,6 +46,7 @@ import {
   type PermissionState,
 } from "@/lib/notifications";
 import { formatMinute } from "@/lib/habits/utils";
+import { summaryMinute } from "@/lib/habits/day-summary";
 import { L, pick } from "@/lib/i18n";
 import { StepsSources } from "@/components/StepsSources";
 import { KropiSource } from "@/components/KropiSource";
@@ -386,6 +388,15 @@ function SettingsPage() {
                 )}
               </p>
             </div>
+
+            <DaySummaryCard
+              on={notif.daySummary}
+              disabled={permission === "unsupported"}
+              onChange={async (on) => {
+                if (!on || (await ensurePermission()))
+                  setNotifications({ ...notif, daySummary: on });
+              }}
+            />
 
             <div className="rounded-2xl bg-card p-4">
               <div className="flex items-center justify-between">
@@ -898,3 +909,51 @@ function WidgetsCard({ onMessage }: { onMessage: (m: string) => void }) {
     </div>
   );
 }
+
+/** "Podsumowanie dnia": on/off + when it comes today (learned from the user's evenings). */
+function DaySummaryCard({
+  on,
+  disabled,
+  onChange,
+}: {
+  on: boolean;
+  disabled: boolean;
+  onChange: (on: boolean) => void;
+}) {
+  const completions = useHabits((s) => s.completions);
+  const notif = useHabits((s) => s.notifications);
+  const { at, learned } = summaryMinute(completions, notif.review ? hhmmMin(notif.reviewAt) : null);
+  return (
+    <div className="rounded-2xl bg-card p-4" data-day-summary>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <MessageCircleHeart size={18} className="text-primary" />
+          <span className="font-medium">{L("Podsumowanie dnia", "Day recap")}</span>
+        </div>
+        <Toggle checked={on} disabled={disabled} onChange={onChange} />
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">
+        {L(
+          "Wieczorem Szpila pisze jak kumpel, jak ci poszło, i daje jedną radę na jutro, wyciągniętą z twoich danych. Gdy zrobisz wszystko po 18:00, przychodzi od razu.",
+          "In the evening Szpila tells you how the day went, like a mate would, with one tip for tomorrow drawn from your own data. Finish everything after 18:00 and it comes right away.",
+        )}
+      </p>
+      <p className="mt-2 text-xs font-medium">
+        {learned
+          ? L(
+              `Dziś ok. ${formatMinute(at)} (z tego, kiedy zwykle kończysz dzień)`,
+              `Today around ${formatMinute(at)} (from when you usually wrap up the day)`,
+            )
+          : L(
+              `Dziś ok. ${formatMinute(at)}. Za kilka dni dopasuje się do twoich wieczorów.`,
+              `Today around ${formatMinute(at)}. In a few days it adapts to your evenings.`,
+            )}
+      </p>
+    </div>
+  );
+}
+
+const hhmmMin = (t: string) => {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + (m || 0);
+};

@@ -81,6 +81,12 @@ export interface Habit {
    * media apps (an alarm, music or a podcast don't count); "screen" = any screen time.
    */
   lateBasis?: "social" | "screen";
+  /**
+   * Avoid habits only: "dyskretne" - never shown outside the app (notifications, lock
+   * screen, widgets) and on the Today screen only below the fold. Missing = automatic:
+   * on for names generally seen as sensitive (src/lib/habits/discreet.ts).
+   */
+  discreet?: boolean;
 }
 
 export type HabitSource = "steps" | "screen" | "kropi" | "apps";

@@ -168,6 +168,12 @@ The rule is simple and merciless: every day you confirm **"clean today"**.
 No confirmation = a slip. You can still settle yesterday in the morning, until
 noon.
 
+**Discreet.** Some forbidden habits are nobody's business. Such a habit never
+shows in notifications, on the lock screen or on widgets, and on the Today screen
+it sits below the first screen: you only see it when you scroll down. Porn,
+alcohol, cigarettes or gambling are discreet right away, any other one is a
+switch away.
+
 ## ◉ Numbers that tell the truth
 
 - **Week vs week**, but fair: Wednesday 14:35 against Wednesday 14:35 last
@@ -177,6 +183,10 @@ noon.
 - **Links between habits**: _"The day after a late night on the phone you walk
   4,000 fewer steps"_.
 - **CSV export** in one tap, straight into Excel or Sheets.
+- **A day recap from a mate**: in the evening Szpila tells you how it went, what
+  got done, what was missing, and gives one tip for tomorrow from your own data
+  (_"The gym lands at 20% on Wednesdays, tomorrow is Wednesday, do it in the
+  morning"_). It picks the time itself, from when you usually wrap up the day.
 
 ## ◉ No need to open the app
 
