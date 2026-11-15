@@ -15,6 +15,9 @@ export const THEMES = [
   "ocean",
   "sunset",
   "sakura",
+  "halloween",
+  "christmas",
+  "winter",
 ] as const;
 
 export type Theme = (typeof THEMES)[number];
@@ -38,6 +41,9 @@ export const THEME_META: Record<Theme, ThemeMeta> = {
   ocean: { light: false, bg: "#021624", name: ["Ocean", "Ocean"] },
   sunset: { light: false, bg: "#1f0b1d", name: ["Zachód", "Sunset"] },
   sakura: { light: true, bg: "#fdf1f6", name: ["Sakura", "Sakura"] },
+  halloween: { light: false, bg: "#120c1c", name: ["Halloween", "Halloween"] },
+  christmas: { light: false, bg: "#02190d", name: ["Święta", "Christmas"] },
+  winter: { light: false, bg: "#071523", name: ["Zima", "Winter"] },
 };
 
 /** Background of each theme (meta theme-color, native system bars). Mirrors --background. */

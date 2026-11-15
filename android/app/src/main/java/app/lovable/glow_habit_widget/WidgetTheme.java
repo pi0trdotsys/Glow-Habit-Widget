@@ -23,10 +23,12 @@ final class WidgetTheme {
     static final String APP = "app";
     /** Palette ids in the config screen's order (the same ids as the app themes). */
     static final List<String> IDS = Collections.unmodifiableList(Arrays.asList(
-        "dark", "light", "amoled", "glitch", "terminal", "ocean", "sunset", "sakura"));
+        "dark", "light", "amoled", "glitch", "terminal", "ocean", "sunset", "sakura",
+        "halloween", "christmas", "winter"));
     /** What the config screen offers: like the app, then every palette. */
     static final List<String> CHOICES = Collections.unmodifiableList(Arrays.asList(
-        APP, "dark", "light", "amoled", "glitch", "terminal", "ocean", "sunset", "sakura"));
+        APP, "dark", "light", "amoled", "glitch", "terminal", "ocean", "sunset", "sakura",
+        "halloween", "christmas", "winter"));
 
     final String id;
     final boolean light;
@@ -99,6 +101,19 @@ final class WidgetTheme {
             0xFFFFFCFE, 0xFFFBEAF1, 0xFF301924, 0xFF724A5D, 0xFF724A5D, 0xFF4A2C3A,
             0xFFB52E71, 0xFFC50220, 0xFF975700, 0xFF7A3FB8, 0xFF3B5BB0,
             0xFFF1DDE6, 0xFFFFFFFF, 0xFFC50220, false),
+        // Seasonal palettes (twins of [data-theme="halloween" | "christmas" | "winter"]).
+        new WidgetTheme("halloween", false,
+            0xFF20182F, 0xFF120C1C, 0xFFFAF4EC, 0xFFC1B8D4, 0xFFC1B8D4, 0xFFEADCC9,
+            0xFFFF9A3F, 0xFFFF6972, 0xFFFFC249, 0xFFBD96FE, 0xFF6BCBF7,
+            0xFF372C4B, 0xFF120C1C, 0xFFFF6972, false),
+        new WidgetTheme("christmas", false,
+            0xFF062717, 0xFF02190D, 0xFFF7F5EC, 0xFFB7CBB3, 0xFFB7CBB3, 0xFFE4DEC8,
+            0xFFF4C855, 0xFFFF7576, 0xFFFEC84B, 0xFFBF9BFC, 0xFF6ECEFA,
+            0xFF193E2A, 0xFF02190D, 0xFFFF7576, false),
+        new WidgetTheme("winter", false,
+            0xFF0E2235, 0xFF071523, 0xFFEDF7FC, 0xFFAFC8D8, 0xFFAFC8D8, 0xFFCBE2EE,
+            0xFF88E0F6, 0xFFFF7177, 0xFFFBC959, 0xFFBAA3FE, 0xFF6CD3FA,
+            0xFF21374E, 0xFF071523, 0xFFFF7177, false),
     };
 
     // ------------------------------------------------------------------ lookup / resolution
@@ -125,6 +140,9 @@ final class WidgetTheme {
             case "ocean": return "Ocean";
             case "sunset": return en ? "Sunset" : "Zachód";
             case "sakura": return "Sakura";
+            case "halloween": return "Halloween";
+            case "christmas": return en ? "Christmas" : "Święta";
+            case "winter": return en ? "Winter" : "Zima";
             default: return choice;
         }
     }
@@ -241,6 +259,9 @@ final class WidgetTheme {
             case "ocean": return R.drawable.widget_bg_ocean;
             case "sunset": return R.drawable.widget_bg_sunset;
             case "sakura": return R.drawable.widget_bg_sakura;
+            case "halloween": return R.drawable.widget_bg_halloween;
+            case "christmas": return R.drawable.widget_bg_christmas;
+            case "winter": return R.drawable.widget_bg_winter;
             default: return 0;
         }
     }

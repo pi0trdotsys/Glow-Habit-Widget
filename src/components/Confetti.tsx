@@ -6,6 +6,9 @@ const THEMED: Record<string, string[]> = {
   glitch: ["#ff2bd6", "#14f0ff", "#ffffff", "#ff2bd6", "#14f0ff"],
   terminal: ["#3dff6e", "#9dff9d", "#1fd655", "#ffc24a"],
   sakura: ["#e0457b", "#ff9cc0", "#ffd1e1", "#3fa883", "#c86bd8"],
+  halloween: ["#ff8a1f", "#ffb14a", "#b47cf0", "#7d3fd0", "#c6f35e"],
+  christmas: ["#f3c64e", "#e6413e", "#2fae6a", "#ffffff", "#ffe39a"],
+  winter: ["#ffffff", "#a8ecff", "#6cc8ef", "#c9cdfa", "#e8f8ff"],
 };
 
 /** Confetti colours for a theme id (html[data-theme]). */

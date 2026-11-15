@@ -204,7 +204,10 @@ speak **Polish and English**. Pick the language at first launch or any time in
 Settings.
 
 Themes: **Like the phone, Dark, Light, AMOLED, Glitch Pixel** (a pixel font and
-a magenta/cyan split), **Terminal, Ocean, Sunset and Sakura**. The app icon changes with the theme. Widgets follow
+a magenta/cyan split), **Terminal, Ocean, Sunset, Sakura** and the seasonal
+**Halloween** (pumpkin and violet, rising embers and bats), **Christmas** (pine
+green, gold, falling snow) and **Winter** (icy blue, snowflakes). The app icon
+changes with the theme. Widgets follow
 the app or get their own. Settings are split into four tabs: Szpila, Guard,
 Notifications, Data.
 

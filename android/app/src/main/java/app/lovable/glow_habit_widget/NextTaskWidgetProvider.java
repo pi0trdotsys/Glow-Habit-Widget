@@ -100,6 +100,7 @@ public class NextTaskWidgetProvider extends AppWidgetProvider {
         in.total = WidgetShared.widgetHabits(c).length();
         in.counted = WidgetShared.widgetTotal(c);
         in.done = WidgetShared.widgetDone(c);
+        in.fraction = WidgetShared.widgetFraction(c);
         JSONObject forma = state.optJSONObject("forma");
         if (forma != null) {
             in.formaCurrent = forma.optInt("current", 0);

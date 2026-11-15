@@ -206,8 +206,10 @@ Cała aplikacja, szpile (tak, przekleństwa też), powiadomienia i widżety mów
 w każdej chwili w Ustawieniach.
 
 Motywy: **Jak telefon, Ciemny, Jasny, AMOLED, Glitch Pixel** (pikselowa
-czcionka i rozszczepienie magenta/cyjan), **Terminal, Ocean, Zachód i
-Sakura**. Ikona aplikacji zmienia się razem z motywem. Widżety biorą motyw aplikacji albo każdy swój. Ustawienia są
+czcionka i rozszczepienie magenta/cyjan), **Terminal, Ocean, Zachód,
+Sakura** oraz sezonowe **Halloween** (dynia i fiolet, unoszące się iskry i
+nietoperze), **Święta** (choinkowa zieleń, złoto, padający śnieg) i **Zima**
+(lodowy błękit, płatki śniegu). Ikona aplikacji zmienia się razem z motywem. Widżety biorą motyw aplikacji albo każdy swój. Ustawienia są
 podzielone na cztery zakładki: Szpila, Strażnik, Powiadomienia, Dane.
 
 <div align="center">

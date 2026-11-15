@@ -53,6 +53,11 @@ final class NextWidgetContent {
         /** Rows counting toward today's totals and done ones (WidgetShared.countedTotal / doneCount). */
         int counted;
         int done;
+        /**
+         * Today's progress 0..1 with partial amounts (WidgetShared.widgetFraction); drives the
+         * "Dziś 2/5 · 46%" percentage and the mood. Negative = unknown: use done / counted.
+         */
+        float fraction = -1f;
         /** Morning lock active and the habits it still waits for (in settings order). */
         boolean morningLock;
         List<JSONObject> morningPending = new ArrayList<>();
@@ -226,7 +231,7 @@ final class NextWidgetContent {
                 habit(c, next, in);
                 c.ticker = normalTicker(in, next);
                 int late = in.now - dueAt(next, in.now);
-                int pct = percent(in.done, in.counted);
+                int pct = percent(in);
                 mood = late >= 60 && !WidgetShared.isAvoid(next) ? ANGRY : pct >= 75 ? IMPRESSED : SMUG;
         }
         if (c.line == null && !c.ticker.isEmpty()) {
@@ -347,6 +352,13 @@ final class NextWidgetContent {
         return total <= 0 ? 0 : Math.round(done * 100f / total);
     }
 
+    /** Today's percent: fractional when known (partial amounts count), else done / counted. */
+    static int percent(Inputs in) {
+        if (in.counted <= 0) return 0;
+        if (in.fraction < 0f) return percent(in.done, in.counted);
+        return Math.round(100f * Math.min(1f, in.fraction));
+    }
+
     /** "🔥 Forma: 5 dni (rekord 9)" / "🔥 5-day streak (best 9)". */
     static String forma(int current, int best, boolean en) {
         String rec = best > current ? (en ? " (best " + best + ")" : " (rekord " + best + ")") : "";
@@ -402,7 +414,7 @@ final class NextWidgetContent {
         if (in.formaCurrent > 0) out.add(new Line("forma", forma(in.formaCurrent, in.formaBest, en), C_AMBER));
         if (in.counted > 0) {
             out.add(new Line("progress", (en ? "Today " : "Dziś ") + in.done + "/" + in.counted
-                + " · " + percent(in.done, in.counted) + "%", C_ACCENT));
+                + " · " + percent(in) + "%", C_ACCENT));
         }
         out.add(new Line("time", timeLeft(in.now, en), C_MUTED));
         Line social = socialLine(in);

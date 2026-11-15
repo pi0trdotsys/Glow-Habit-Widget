@@ -167,6 +167,72 @@ const waves: Node[] = [80, 86.5].map((y, i) =>
   }),
 );
 
+// Seasonal decorations (mostly in the margin a launcher mask may cut, like the petals).
+/** A bat silhouette in a 32x14 box (same shape as the Halloween .app-bg layer). */
+const BAT =
+  "M16 3.5c-.8-1.6-2-2.3-2.8-2 .5.8.4 1.7-.2 2.2-1.2-1.2-3.4-1.5-5-.6 1.4.4 2.2 1.4 2.3 2.6-2-.6-4.6-.2-6.3 1.3 2.4-.1 4.2.9 5 2.6 1-1.3 3.3-1.9 4.9-1 .3-1.1 1.2-2 2.1-2.2.9.2 1.8 1.1 2.1 2.2 1.6-.9 3.9-.3 4.9 1 .8-1.7 2.6-2.7 5-2.6-1.7-1.5-4.3-1.9-6.3-1.3.1-1.2.9-2.2 2.3-2.6-1.6-.9-3.8-.6-5 .6-.6-.5-.7-1.4-.2-2.2-.8-.3-2 .4-2.8 2z";
+const circleD = (cx: number, cy: number, r: number) =>
+  `M${cx - r},${cy} a${r},${r} 0 1,0 ${2 * r},0 a${r},${r} 0 1,0 ${-2 * r},0 Z`;
+/** Halloween: a pumpkin-orange moon top-right and two bats. */
+const halloweenDeco: Node[] = [
+  // crescent moon top-left, inside what a circle mask keeps
+  path(circleD(31, 31, 7.5), { fill: argb("#FFB14A"), fillAlpha: 0.9 }),
+  path(circleD(34.5, 28.5, 6.6), { fill: argb("#24153A") }),
+  group([path(BAT, { fill: argb("#B48CE6"), fillAlpha: 0.75 })], { tx: 22, ty: 74, scale: 0.5 }),
+  group([path(BAT, { fill: argb("#B48CE6"), fillAlpha: 0.55 })], { tx: 70, ty: 80, scale: 0.4 }),
+];
+/** Christmas: snow dots, a gold star top-left and a red bauble. */
+const star = (cx: number, cy: number, r: number) =>
+  Array.from({ length: 10 }, (_, i) => {
+    const a = (Math.PI / 5) * i - Math.PI / 2;
+    const rr = i % 2 ? r * 0.45 : r;
+    return `${i ? "L" : "M"}${(cx + rr * Math.cos(a)).toFixed(2)},${(cy + rr * Math.sin(a)).toFixed(2)}`;
+  }).join(" ") + " Z";
+const christmasDeco: Node[] = [
+  path(
+    [
+      circleD(30, 20, 1.3),
+      circleD(80, 16, 1.1),
+      circleD(88, 34, 1.4),
+      circleD(20, 70, 1.2),
+      circleD(86, 84, 1.3),
+      circleD(26, 88, 1),
+    ].join(" "),
+    {
+      fill: "#FFFFFFFF",
+      fillAlpha: 0.75,
+    },
+  ),
+  path(star(31, 31, 6), { fill: argb("#F4C855") }),
+  path(circleD(79, 76, 4.2), { fill: argb("#E6413E") }),
+  path(rect(78, 70.6, 2, 1.6), { fill: argb("#F4C855") }),
+];
+/** Winter: two snowflakes and a little powder. */
+const FLAKE =
+  "M12 2v20M3.3 7l17.4 10M3.3 17l17.4-10M9.6 3.6 12 6l2.4-2.4M9.6 20.4 12 18l2.4 2.4M4.2 10.3l3.3.9-.9 3.3M19.8 13.7l-3.3-.9.9-3.3";
+const flake = (tx: number, ty: number, scale: number, alpha: number) =>
+  group(
+    [path(FLAKE, { stroke: "#FFFFFFFF", strokeWidth: 1.6, strokeAlpha: alpha, cap: "round" })],
+    {
+      tx,
+      ty,
+      scale,
+    },
+  );
+const winterDeco: Node[] = [
+  flake(23, 24, 0.62, 0.85),
+  flake(71, 71, 0.5, 0.6),
+  path(
+    [circleD(84, 26, 1.3), circleD(22, 80, 1.2), circleD(30, 64, 0.9), circleD(90, 50, 1)].join(
+      " ",
+    ),
+    {
+      fill: argb("#DDF7FF"),
+      fillAlpha: 0.7,
+    },
+  ),
+];
+
 /** Terminal phosphor greens for every colourful part (habit colours turn green there too). */
 const PHOSPHOR = "#FF62F870";
 
@@ -248,6 +314,33 @@ const STYLES: Record<string, Style> = {
     bg: [fillBg(radial(38, 30, 100, [0, "#FFFFFF"], [1, "#F6D2E2"])), ...petals],
     fill: { [BODY]: "#FF3A2131", "#FFFF7D9C": "#FFF48FB8" },
     stroke: { [LINE]: "#FF5E3A4F", "#FF6B6B80": "#FF8E6A7C" },
+  },
+  halloween: {
+    bg: [
+      fillBg(radial(40, 30, 100, [0, "#3B2160"], [0.55, "#1B1029"], [1, "#0D0814"])),
+      ...halloweenDeco,
+    ],
+    fill: { [BODY]: "#FF140C1F", "#FFC6F35E": "#FFFF9A3F" },
+    stroke: { [LINE]: "#FF35264B" },
+    halo: [["#FF9A3F", 3.4]],
+  },
+  christmas: {
+    bg: [
+      fillBg(radial(40, 30, 100, [0, "#14583A"], [0.55, "#06301C"], [1, "#02190D"])),
+      ...christmasDeco,
+    ],
+    fill: { [BODY]: "#FF06261A" },
+    stroke: { [LINE]: "#FF1F4A33" },
+    halo: [["#F4C855", 3.4]],
+  },
+  winter: {
+    bg: [
+      fillBg(radial(40, 28, 100, [0, "#2C5F8A"], [0.55, "#0F2840"], [1, "#071523"])),
+      ...winterDeco,
+    ],
+    fill: { [BODY]: "#FF0B1C2C" },
+    stroke: { [LINE]: "#FF24405A" },
+    halo: [["#88E0F6", 3.2]],
   },
 };
 

@@ -181,6 +181,33 @@ final class WidgetShared {
         return d;
     }
 
+    /**
+     * Today's progress over the widget rows, 0..1: the average of every counted row's
+     * {@link #fraction}, so partial amounts count (6000 of 8000 steps = 0.75 of that habit),
+     * not only finished rows. Same rule as the "Postęp dnia" notification and the app.
+     */
+    static float widgetFraction(Context c) {
+        return dayFraction(widgetHabits(c));
+    }
+
+    /** Average fraction of the counted rows (undecided screen nights don't count). */
+    static float dayFraction(JSONArray rows) {
+        int n = 0;
+        float sum = 0f;
+        for (int i = 0; i < rows.length(); i++) {
+            JSONObject h = rows.optJSONObject(i);
+            if (h == null || !counts(h)) continue;
+            n++;
+            sum += fraction(h);
+        }
+        return n == 0 ? 0f : sum / n;
+    }
+
+    /** 0..1 -> rounded percent 0..100. */
+    static int percentOf(float fraction) {
+        return Math.round(100f * Math.max(0f, Math.min(1f, fraction)));
+    }
+
     static int countedTotal(Context c) {
         JSONArray h = habits(c);
         int n = 0;
@@ -785,16 +812,24 @@ final class WidgetShared {
 
     /** The progress ring in a widget palette (WidgetTheme: accent, track, text). */
     static Bitmap progressRing(Context c, int done, int total, WidgetTheme t) {
+        return progressRing(c, total > 0 ? done / (float) total : 0f, done + "/" + total, t);
+    }
+
+    /**
+     * The day's progress ring: fills by `fraction` (partial amounts count) with `label`
+     * (e.g. "46%") in the centre; long labels ("100%") get a slightly smaller font.
+     */
+    static Bitmap progressRing(Context c, float fraction, String label, WidgetTheme t) {
         int size = dp(c, 60);
-        Bitmap bmp = ring(c, 60, 6, total > 0 ? done / (float) total : 0, t.accent, false, t.track);
+        Bitmap bmp = ring(c, 60, 6, fraction, t.accent, false, t.track);
         Canvas canvas = new Canvas(bmp);
         Paint txt = new Paint(Paint.ANTI_ALIAS_FLAG);
         txt.setColor(t.text);
         txt.setTextAlign(Paint.Align.CENTER);
         txt.setFakeBoldText(true);
-        txt.setTextSize(dp(c, 15));
+        txt.setTextSize(dp(c, label.length() > 3 ? 13 : 15));
         float ty = size / 2f - (txt.descent() + txt.ascent()) / 2f;
-        canvas.drawText(done + "/" + total, size / 2f, ty, txt);
+        canvas.drawText(label, size / 2f, ty, txt);
         return bmp;
     }
 

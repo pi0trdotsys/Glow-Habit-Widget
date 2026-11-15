@@ -65,9 +65,14 @@ public class HabitWidget2Provider extends AppWidgetProvider {
         int done = WidgetShared.widgetDone(context);
         int n = Math.min(habits.length(), MAX_CELLS); // every row gets a cell; `total` only drives the ring
 
-        rv.setImageViewBitmap(R.id.widget2_ring, WidgetShared.progressRing(context, done, total, theme));
+        // The ring fills by the sum of fractions (6000/8000 steps counts as 0.75 of a habit)
+        // and shows that percentage; the title keeps the count of finished habits.
+        float fraction = WidgetShared.widgetFraction(context);
+        rv.setImageViewBitmap(R.id.widget2_ring,
+            WidgetShared.progressRing(context, fraction, WidgetShared.percentOf(fraction) + "%", theme));
         boolean en = WidgetShared.en(context);
-        rv.setTextViewText(R.id.widget2_title, total > 0 ? (en ? "Today" : "Dziś") : "Loop");
+        rv.setTextViewText(R.id.widget2_title,
+            total > 0 ? (en ? "Today · " : "Dziś · ") + done + "/" + total : "Loop");
         rv.setTextViewText(R.id.widget2_timeleft, total > 0 ? WidgetShared.timeLeft(en) : "");
         rv.setTextViewText(R.id.widget2_empty, en ? "No habits for today" : "Brak zadań na dziś");
 

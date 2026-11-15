@@ -428,6 +428,137 @@
   color-scheme: light;
 }
 
+/* ------------------------------------------------------------------ seasonal palettes */
+
+/* Halloween: pumpkin orange and witchy purple on a near-black violet night. */
+[data-theme="halloween"] {
+  --radius: 1.25rem;
+  --background: oklch(0.17 0.035 300);
+  --foreground: oklch(0.97 0.012 75);
+  --card: oklch(0.23 0.045 300);
+  --card-foreground: oklch(0.97 0.012 75);
+  --popover: oklch(0.23 0.045 300);
+  --popover-foreground: oklch(0.97 0.012 75);
+  --primary: oklch(0.78 0.16 58);
+  --primary-foreground: oklch(0.18 0.035 300);
+  --secondary: oklch(0.3 0.055 300);
+  --secondary-foreground: oklch(0.97 0.012 75);
+  --muted: oklch(0.27 0.05 300);
+  --muted-foreground: oklch(0.8 0.04 300);
+  --accent: oklch(0.74 0.15 305);
+  --accent-foreground: oklch(0.18 0.035 300);
+  --destructive: oklch(0.68 0.2 25);
+  --destructive-foreground: oklch(0.98 0.005 75);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.78 0.16 58);
+  --sidebar: oklch(0.19 0.04 300);
+  --sidebar-foreground: oklch(0.97 0.012 75);
+  --sidebar-primary: oklch(0.78 0.16 58);
+  --sidebar-primary-foreground: oklch(0.18 0.035 300);
+  --sidebar-accent: oklch(0.3 0.055 300);
+  --sidebar-accent-foreground: oklch(0.97 0.012 75);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.78 0.16 58);
+
+  --habit-mint: oklch(0.82 0.12 165);
+  --habit-coral: oklch(0.76 0.16 40);
+  --habit-amber: oklch(0.85 0.15 80);
+  --habit-violet: oklch(0.75 0.15 300);
+  --habit-sky: oklch(0.8 0.11 230);
+  --habit-rose: oklch(0.78 0.15 0);
+  --habit-lime: oklch(0.87 0.17 130);
+  --habit-sand: oklch(0.8 0.06 75);
+  --avoid: oklch(0.72 0.19 20);
+  color-scheme: dark;
+}
+
+/* Christmas: pine green, ornament gold and berry red. */
+[data-theme="christmas"] {
+  --radius: 1.25rem;
+  --background: oklch(0.19 0.04 158);
+  --foreground: oklch(0.97 0.012 95);
+  --card: oklch(0.245 0.05 158);
+  --card-foreground: oklch(0.97 0.012 95);
+  --popover: oklch(0.245 0.05 158);
+  --popover-foreground: oklch(0.97 0.012 95);
+  --primary: oklch(0.85 0.14 88);
+  --primary-foreground: oklch(0.2 0.04 158);
+  --secondary: oklch(0.31 0.055 158);
+  --secondary-foreground: oklch(0.97 0.012 95);
+  --muted: oklch(0.28 0.05 158);
+  --muted-foreground: oklch(0.82 0.04 140);
+  --accent: oklch(0.74 0.17 25);
+  --accent-foreground: oklch(0.2 0.04 158);
+  --destructive: oklch(0.68 0.2 25);
+  --destructive-foreground: oklch(0.98 0.005 95);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.85 0.14 88);
+  --sidebar: oklch(0.21 0.045 158);
+  --sidebar-foreground: oklch(0.97 0.012 95);
+  --sidebar-primary: oklch(0.85 0.14 88);
+  --sidebar-primary-foreground: oklch(0.2 0.04 158);
+  --sidebar-accent: oklch(0.31 0.055 158);
+  --sidebar-accent-foreground: oklch(0.97 0.012 95);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.85 0.14 88);
+
+  --habit-mint: oklch(0.84 0.12 175);
+  --habit-coral: oklch(0.77 0.16 30);
+  --habit-amber: oklch(0.86 0.15 85);
+  --habit-violet: oklch(0.76 0.14 300);
+  --habit-sky: oklch(0.81 0.11 230);
+  --habit-rose: oklch(0.79 0.15 5);
+  --habit-lime: oklch(0.88 0.16 130);
+  --habit-sand: oklch(0.82 0.06 80);
+  --avoid: oklch(0.74 0.18 22);
+  color-scheme: dark;
+}
+
+/* Winter: icy cyan and frost lavender on a deep night blue. */
+[data-theme="winter"] {
+  --radius: 1.25rem;
+  --background: oklch(0.19 0.035 250);
+  --foreground: oklch(0.97 0.012 230);
+  --card: oklch(0.245 0.045 250);
+  --card-foreground: oklch(0.97 0.012 230);
+  --popover: oklch(0.245 0.045 250);
+  --popover-foreground: oklch(0.97 0.012 230);
+  --primary: oklch(0.86 0.09 215);
+  --primary-foreground: oklch(0.2 0.04 250);
+  --secondary: oklch(0.31 0.05 250);
+  --secondary-foreground: oklch(0.97 0.012 230);
+  --muted: oklch(0.28 0.045 250);
+  --muted-foreground: oklch(0.82 0.035 235);
+  --accent: oklch(0.81 0.09 285);
+  --accent-foreground: oklch(0.2 0.04 250);
+  --destructive: oklch(0.68 0.2 25);
+  --destructive-foreground: oklch(0.98 0.005 230);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.86 0.09 215);
+  --sidebar: oklch(0.21 0.04 250);
+  --sidebar-foreground: oklch(0.97 0.012 230);
+  --sidebar-primary: oklch(0.86 0.09 215);
+  --sidebar-primary-foreground: oklch(0.2 0.04 250);
+  --sidebar-accent: oklch(0.31 0.05 250);
+  --sidebar-accent-foreground: oklch(0.97 0.012 230);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.86 0.09 215);
+
+  --habit-mint: oklch(0.84 0.11 175);
+  --habit-coral: oklch(0.77 0.15 30);
+  --habit-amber: oklch(0.86 0.14 85);
+  --habit-violet: oklch(0.77 0.13 295);
+  --habit-sky: oklch(0.82 0.11 225);
+  --habit-rose: oklch(0.79 0.14 5);
+  --habit-lime: oklch(0.88 0.15 135);
+  --habit-sand: oklch(0.82 0.06 80);
+  --avoid: oklch(0.73 0.18 20);
+  color-scheme: dark;
+}
+
 /* ------------------------------------------------------------------ theme effects
    ":not([data-theme="x"] [data-theme]:not([data-theme="x"]) *)" = no other theme nested inside
    x around the element (the nearest data-theme is x), so a preview
@@ -545,6 +676,159 @@
   }
   73% {
     opacity: 0;
+  }
+}
+
+/* Seasonal themes: a soft glow on the app background and slow particles behind the cards
+   (snow for Christmas / Winter, rising embers and bats for Halloween). Same layering as the
+   scanlines above: .app-bg isolated, ::before (far, slow) and ::after (near, faster) at
+   z-index -1, so cards and text always sit on top. Each layer is a repeating 360px-tall tile
+   that moves exactly one tile per cycle (seamless); transform only = composited. With
+   reduced motion the particles stay still. */
+[data-theme="halloween"] .app-bg,
+[data-theme="christmas"] .app-bg,
+[data-theme="winter"] .app-bg {
+  isolation: isolate;
+}
+[data-theme="halloween"] .app-bg {
+  background-image:
+    radial-gradient(70% 38% at 88% 4%, oklch(0.74 0.15 305 / 18%), transparent 70%),
+    radial-gradient(60% 34% at 6% 100%, oklch(0.78 0.16 58 / 12%), transparent 70%);
+}
+[data-theme="christmas"] .app-bg {
+  background-image:
+    radial-gradient(70% 38% at 4% 2%, oklch(0.74 0.17 25 / 15%), transparent 70%),
+    radial-gradient(60% 34% at 96% 100%, oklch(0.85 0.14 88 / 11%), transparent 70%);
+}
+[data-theme="winter"] .app-bg {
+  background-image:
+    radial-gradient(80% 40% at 50% 0%, oklch(0.86 0.09 215 / 16%), transparent 70%),
+    radial-gradient(60% 34% at 100% 100%, oklch(0.81 0.09 285 / 11%), transparent 70%);
+}
+[data-theme="halloween"] .app-bg::before,
+[data-theme="halloween"] .app-bg::after,
+[data-theme="christmas"] .app-bg::before,
+[data-theme="christmas"] .app-bg::after,
+[data-theme="winter"] .app-bg::before,
+[data-theme="winter"] .app-bg::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: -360px;
+  bottom: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-repeat: repeat;
+}
+/* rising layers start low and travel up */
+[data-theme="halloween"] .app-bg::before,
+[data-theme="halloween"] .app-bg::after {
+  top: 0;
+  bottom: -360px;
+}
+
+/* far snow: small soft flakes (Christmas and Winter) */
+[data-theme="christmas"] .app-bg::before,
+[data-theme="winter"] .app-bg::before {
+  background-image:
+    radial-gradient(circle at 18px 30px, oklch(1 0 0 / 75%) 0 1.4px, transparent 2px),
+    radial-gradient(circle at 96px 92px, oklch(1 0 0 / 60%) 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 160px 18px, oklch(1 0 0 / 70%) 0 1.6px, transparent 2.2px),
+    radial-gradient(circle at 54px 170px, oklch(1 0 0 / 55%) 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 196px 210px, oklch(1 0 0 / 70%) 0 1.5px, transparent 2.1px),
+    radial-gradient(circle at 120px 262px, oklch(1 0 0 / 60%) 0 1.3px, transparent 1.9px),
+    radial-gradient(circle at 30px 318px, oklch(1 0 0 / 65%) 0 1.4px, transparent 2px),
+    radial-gradient(circle at 176px 334px, oklch(1 0 0 / 50%) 0 1.1px, transparent 1.7px);
+  background-size: 220px 360px;
+  opacity: 0.55;
+}
+/* Christmas, near: bigger round snow and twinkling ornament-gold sparks */
+[data-theme="christmas"] .app-bg::after {
+  background-image:
+    radial-gradient(circle at 40px 60px, oklch(1 0 0 / 85%) 0 2.4px, transparent 3.2px),
+    radial-gradient(circle at 210px 140px, oklch(0.85 0.14 88 / 90%) 0 1.8px, transparent 4px),
+    radial-gradient(circle at 130px 230px, oklch(1 0 0 / 80%) 0 2.2px, transparent 3px),
+    radial-gradient(circle at 250px 300px, oklch(1 0 0 / 75%) 0 2px, transparent 2.8px),
+    radial-gradient(circle at 80px 330px, oklch(0.74 0.17 25 / 85%) 0 1.6px, transparent 3.4px);
+  background-size: 280px 360px;
+  opacity: 0.7;
+}
+/* Winter, near: six-armed snowflakes. One 260x360 SVG tile holds three flakes, so the
+   layer repeats like the dot tiles and loops seamlessly. */
+[data-theme="winter"] .app-bg::after {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='360' viewBox='0 0 260 360'%3E%3Cdefs%3E%3Cpath id='f' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' d='M12 2v20M3.3 7l17.4 10M3.3 17l17.4-10M9.6 3.6 12 6l2.4-2.4M9.6 20.4 12 18l2.4 2.4M4.2 10.3l3.3.9-.9 3.3M19.8 13.7l-3.3-.9.9-3.3'/%3E%3C/defs%3E%3Cuse href='%23f' transform='translate(40 58) scale(0.95)'/%3E%3Cuse href='%23f' transform='translate(186 196) scale(0.62)' opacity='0.8'/%3E%3Cuse href='%23f' transform='translate(102 296) scale(0.78)' opacity='0.9'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 216px 74px, oklch(1 0 0 / 80%) 0 2.2px, transparent 3px),
+    radial-gradient(circle at 24px 230px, oklch(1 0 0 / 70%) 0 1.8px, transparent 2.6px);
+  background-size: 260px 360px;
+  opacity: 0.6;
+}
+/* Halloween, far: bats drifting up and across (one 300x360 SVG tile with two bats). */
+[data-theme="halloween"] .app-bg::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='360' viewBox='0 0 300 360'%3E%3Cdefs%3E%3Cpath id='b' fill='%23b48ce6' d='M16 3.5c-.8-1.6-2-2.3-2.8-2 .5.8.4 1.7-.2 2.2-1.2-1.2-3.4-1.5-5-.6 1.4.4 2.2 1.4 2.3 2.6-2-.6-4.6-.2-6.3 1.3 2.4-.1 4.2.9 5 2.6 1-1.3 3.3-1.9 4.9-1 .3-1.1 1.2-2 2.1-2.2.9.2 1.8 1.1 2.1 2.2 1.6-.9 3.9-.3 4.9 1 .8-1.7 2.6-2.7 5-2.6-1.7-1.5-4.3-1.9-6.3-1.3.1-1.2.9-2.2 2.3-2.6-1.6-.9-3.8-.6-5 .6-.6-.5-.7-1.4-.2-2.2-.8-.3-2 .4-2.8 2z'/%3E%3C/defs%3E%3Cuse href='%23b' transform='translate(36 72) rotate(-8) scale(0.95)'/%3E%3Cuse href='%23b' transform='translate(206 244) rotate(6) scale(0.62)' opacity='0.8'/%3E%3C/svg%3E");
+  background-size: 300px 360px;
+  opacity: 0.45;
+}
+/* Halloween, near: rising pumpkin-orange embers */
+[data-theme="halloween"] .app-bg::after {
+  background-image:
+    radial-gradient(circle at 30px 40px, oklch(0.8 0.17 60 / 90%) 0 1.6px, transparent 3.6px),
+    radial-gradient(circle at 150px 120px, oklch(0.78 0.16 50 / 80%) 0 1.3px, transparent 3px),
+    radial-gradient(circle at 220px 210px, oklch(0.84 0.15 70 / 85%) 0 1.5px, transparent 3.4px),
+    radial-gradient(circle at 90px 290px, oklch(0.74 0.15 305 / 80%) 0 1.3px, transparent 3px),
+    radial-gradient(circle at 250px 340px, oklch(0.8 0.17 60 / 75%) 0 1.2px, transparent 2.8px);
+  background-size: 270px 360px;
+  opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-theme="christmas"] .app-bg::before,
+  [data-theme="winter"] .app-bg::before {
+    animation: season-fall 34s linear infinite;
+  }
+  [data-theme="christmas"] .app-bg::after,
+  [data-theme="winter"] .app-bg::after {
+    animation: season-fall 19s linear infinite;
+  }
+  [data-theme="halloween"] .app-bg::before {
+    animation: season-rise-drift 40s linear infinite;
+  }
+  [data-theme="halloween"] .app-bg::after {
+    animation: season-rise 16s linear infinite;
+  }
+}
+@keyframes season-fall {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(14px, 180px, 0);
+  }
+  100% {
+    transform: translate3d(0, 360px, 0);
+  }
+}
+@keyframes season-rise {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-10px, -180px, 0);
+  }
+  100% {
+    transform: translate3d(0, -360px, 0);
+  }
+}
+@keyframes season-rise-drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(24px, -180px, 0);
+  }
+  100% {
+    transform: translate3d(0, -360px, 0);
   }
 }
 

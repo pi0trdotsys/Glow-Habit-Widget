@@ -103,7 +103,10 @@ public class HabitWidgetProvider extends AppWidgetProvider {
     private static String headerTitle(Context context) {
         int total = WidgetShared.widgetTotal(context);
         if (total == 0) return "Loop";
-        return WidgetShared.widgetDone(context) + " / " + total + WidgetShared.tr(context, " dziś", " today");
+        // Percentage counts partial amounts; "2 / 5" is the finished habits.
+        int pct = WidgetShared.percentOf(WidgetShared.widgetFraction(context));
+        return pct + "% · " + WidgetShared.widgetDone(context) + " / " + total
+            + WidgetShared.tr(context, " dziś", " today");
     }
 
     private static String headerSubtitle(Context context) {
