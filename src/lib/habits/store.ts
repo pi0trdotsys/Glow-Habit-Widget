@@ -31,6 +31,8 @@ export interface NotificationSettings {
   boosts: boolean;
   /** Persistent notification with today's progress bar + plan for the rest of the day (Android). */
   progress: boolean;
+  /** Android 16+: show "Postęp dnia" as a live notification on the lock screen + status bar chip. */
+  progressLive: boolean;
   /** The nasty sidekick ("Szpila") jabbing you during the day (Android). */
   taunts: boolean;
   tauntLevel: TauntLevel;
@@ -109,6 +111,7 @@ const defaultNotifications: NotificationSettings = {
   reportTime: "19:00",
   boosts: false,
   progress: true,
+  progressLive: true,
   taunts: true,
   tauntLevel: "hard",
   tauntsPerDay: 5,

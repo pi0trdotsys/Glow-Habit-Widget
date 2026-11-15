@@ -189,7 +189,9 @@ Brak potwierdzenia = wpadka. Wczoraj rozliczysz jeszcze rano, do 12:00.
 - **Ustawienia widżetu** przy dodawaniu: motyw, przezroczystość tła pod twoją
   tapetę i co ma pokazywać zmieniająca się linijka.
 - **Stałe powiadomienie** z paskiem postępu, planem i szybkimi przyciskami:
-  **„+1 szklanka”**, **„+15 min Czytanie”**, **„✓ Mycie”**.
+  **„+1 szklanka”**, **„+15 min Czytanie”**, **„✓ Mycie”**. Na Androidzie 16+
+  to **powiadomienie na żywo** (jak w Duolingo): następne zadanie i kolorowy
+  pasek dnia na górze ekranu blokady, a procent w pasku statusu.
 - **Wieczorne rozliczenie** zakazanych jednym powiadomieniem.
 - **Woda z Kropi**: wodę logujesz tylko w [Kropi](https://github.com/pi0trdotsys/Hydration-Buddy), a ml i cel trafiają do Szpili same, od razu po wpisie. Przytrzymanie wody w Szpili dolewa w Kropi.
 - **Zakazane nigdy nie lądują na widżecie**: ekran główny widzi każdy, więc widżety pokazują tylko zadania do zrobienia.

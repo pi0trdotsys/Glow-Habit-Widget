@@ -12,7 +12,7 @@
 // The progress-bar notification and Szpila's jabs are native on Android
 // (HabitNotifier.java reads the widget snapshot at fire time, so they're never
 // stale). On the web, jabs fire from the in-page scheduler below.
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import type { LocalNotificationSchema } from "@capacitor/local-notifications";
 import { useHabits } from "@/lib/habits/store";
@@ -200,6 +200,36 @@ export async function getPermissionState(): Promise<PermissionState> {
   }
   if (!notificationsSupported()) return "unsupported";
   return Notification.permission as PermissionState;
+}
+
+// ---------------------------------------------------------------------------
+// Live Updates (Android 16+): "Postęp dnia" on the lock screen + status bar chip
+// ---------------------------------------------------------------------------
+
+export interface LiveUpdatesStatus {
+  /** Android 16 or newer. */
+  supported: boolean;
+  /** The system lets this app promote live notifications (can be turned off per app). */
+  allowed: boolean;
+}
+interface LiveUpdatesPlugin {
+  liveUpdatesStatus(): Promise<LiveUpdatesStatus>;
+  openLiveUpdatesSettings(): Promise<void>;
+}
+const LiveUpdates = registerPlugin<LiveUpdatesPlugin>("HabitWidget");
+
+export async function liveUpdatesStatus(): Promise<LiveUpdatesStatus> {
+  if (!isNative()) return { supported: false, allowed: false };
+  try {
+    return await LiveUpdates.liveUpdatesStatus();
+  } catch {
+    return { supported: false, allowed: false };
+  }
+}
+
+/** Opens the system screen that turns live notifications on for this app. */
+export async function openLiveUpdatesSettings(): Promise<void> {
+  if (isNative()) await LiveUpdates.openLiveUpdatesSettings().catch(() => {});
 }
 
 // ---------------------------------------------------------------------------

@@ -187,7 +187,9 @@ noon.
 - **Widget settings** when you add one: theme, background transparency to
   match your wallpaper, and what the rotating line shows.
 - **Ongoing notification** with a progress bar, the plan and quick buttons:
-  **"+1 glass"**, **"+15 min Read"**, **"✓ Brush"**.
+  **"+1 glass"**, **"+15 min Read"**, **"✓ Brush"**. On Android 16+ it's a
+  **live notification** (like Duolingo's): the next task and a colourful day bar
+  at the top of the lock screen, with the % in the status bar.
 - **Evening review** of forbidden habits in one notification.
 - **Water from Kropi**: log water only in [Kropi](https://github.com/pi0trdotsys/Hydration-Buddy); the ml and the goal reach Szpila by themselves, right after each entry. Holding water in Szpila adds it in Kropi.
 - **Forbidden habits never land on a widget**: anyone can see the home screen, so widgets only show habits to do.

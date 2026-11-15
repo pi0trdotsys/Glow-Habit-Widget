@@ -204,6 +204,7 @@ export function buildState() {
     fraction: p.fraction,
     settings: {
       progress: notifications.progress,
+      progressLive: notifications.progressLive,
       taunts: notifications.taunts,
       tauntsPerDay: notifications.tauntsPerDay,
       autoBackup,

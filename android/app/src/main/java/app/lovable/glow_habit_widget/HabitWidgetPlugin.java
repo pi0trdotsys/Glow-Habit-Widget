@@ -580,6 +580,37 @@ public class HabitWidgetPlugin extends Plugin {
         call.resolve(ret);
     }
 
+    /**
+     * "Postęp dnia" as a Live Update (Android 16+): { supported, allowed } - allowed = the
+     * system lets this app promote live notifications (the user can turn it off per app).
+     */
+    @PluginMethod
+    public void liveUpdatesStatus(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("supported", Build.VERSION.SDK_INT >= 36);
+        ret.put("allowed", HabitNotifier.canPromote(getContext()));
+        call.resolve(ret);
+    }
+
+    /** The system screen that turns live notifications on / off for this app. */
+    @PluginMethod
+    public void openLiveUpdatesSettings(PluginCall call) {
+        String pkg = getContext().getPackageName();
+        Intent i = new Intent("android.settings.APP_NOTIFICATION_PROMOTION_SETTINGS");
+        i.putExtra(Settings.EXTRA_APP_PACKAGE, pkg);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            getContext().startActivity(i);
+        } catch (Exception e) {
+            // a ROM without that screen (e.g. a vendor skin): the app's notification settings
+            Intent fallback = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+            fallback.putExtra(Settings.EXTRA_APP_PACKAGE, pkg);
+            fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(fallback);
+        }
+        call.resolve();
+    }
+
     /** Usage access can only be granted in system settings; open that screen. */
     @PluginMethod
     public void openUsageSettings(PluginCall call) {

@@ -52,6 +52,7 @@ import { AppsSources } from "@/components/AppSources";
 import { CurfewCard } from "@/components/CurfewCard";
 import { ShopGuardCard } from "@/components/ShopGuardCard";
 import { CalendarCard } from "@/components/CalendarCard";
+import { LiveUpdatesRow } from "@/components/LiveUpdatesRow";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: L("Ustawienia - Szpila", "Settings - Szpila") }] }),
@@ -339,6 +340,13 @@ function SettingsPage() {
                   "A persistent, silent notification with a progress bar for today's habits and a plan to finish the day (Android).",
                 )}
               </p>
+              {notif.progress && (
+                <LiveUpdatesRow
+                  checked={notif.progressLive}
+                  disabled={permission === "unsupported"}
+                  onChange={(on) => setNotifications({ ...notif, progressLive: on })}
+                />
+              )}
             </div>
 
             <div className="rounded-2xl bg-card p-4">

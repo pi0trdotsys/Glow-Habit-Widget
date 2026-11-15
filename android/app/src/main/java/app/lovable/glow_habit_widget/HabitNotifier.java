@@ -14,6 +14,7 @@ import android.os.Build;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.graphics.drawable.IconCompat;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -45,6 +46,13 @@ import java.util.Random;
  */
 final class HabitNotifier {
     static final String CH_PROGRESS = "loop_progress";
+    /**
+     * The Live Update variant (Android 16+). IMPORTANCE_DEFAULT without sound or vibration:
+     * IMPORTANCE_LOW counts as "silent" and the lock screen hides silent notifications by
+     * default, which would keep the live notification off it. A channel's importance can't be
+     * raised after creation, hence a channel of its own.
+     */
+    static final String CH_PROGRESS_LIVE = "loop_progress_live";
     static final String CH_SZPILA = "loop_szpila";
     static final String CH_REVIEW = "loop_review";
     static final int ID_PROGRESS = 7001;
@@ -185,6 +193,18 @@ final class HabitNotifier {
             "Progress bar for today's habits and a plan for the rest of the day"));
         progress.setShowBadge(false);
         WidgetShared.upsertChannel(nm, progress);
+        if (Build.VERSION.SDK_INT >= 36) {
+            NotificationChannel live = new NotificationChannel(CH_PROGRESS_LIVE,
+                WidgetShared.tr(c, "Postęp dnia na żywo", "Live daily progress"), NotificationManager.IMPORTANCE_DEFAULT);
+            live.setDescription(WidgetShared.tr(c,
+                "Następne zadanie i postęp dnia na ekranie blokady i w pasku statusu (bez dźwięku)",
+                "Your next task and today's progress on the lock screen and in the status bar (no sound)"));
+            live.setSound(null, null);
+            live.enableVibration(false);
+            live.setShowBadge(false);
+            live.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+            WidgetShared.upsertChannel(nm, live);
+        }
         NotificationChannel szpila = new NotificationChannel(CH_SZPILA, "Szpila", NotificationManager.IMPORTANCE_DEFAULT);
         szpila.setDescription(WidgetShared.tr(c, "Złośliwe przytyki, gdy zadania leżą odłogiem",
             "Snarky jabs when your habits are left undone"));
@@ -321,10 +341,13 @@ final class HabitNotifier {
         List<JSONObject> plan = WidgetShared.plan(c);
         boolean en = WidgetShared.en(c);
 
-        NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_PROGRESS)
+        // Android 16+: a Live Update (lock screen top + status bar chip) unless turned off.
+        boolean live = Build.VERSION.SDK_INT >= 36 && settings(c).optBoolean("progressLive", true)
+            && !plan.isEmpty();
+
+        NotificationCompat.Builder b = new NotificationCompat.Builder(c, live ? CH_PROGRESS_LIVE : CH_PROGRESS)
             .setSmallIcon(R.drawable.ic_stat_szpila)
             .setColor(WidgetShared.AVOID)
-            .setProgress(100, pct, false)
             .setOnlyAlertOnce(true)
             .setSilent(true)
             .setShowWhen(false)
@@ -338,8 +361,11 @@ final class HabitNotifier {
             if (line.isEmpty()) line = en ? "All done." : "Wszystko zrobione.";
             b.setContentTitle((en ? "All done for today 🎉 " : "Komplet na dziś 🎉 ") + done + "/" + total)
                 .setContentText(line)
+                .setProgress(100, pct, false)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(line))
                 .setOngoing(false);
+        } else if (live) {
+            liveProgress(c, b, rows, plan, done, total, en);
         } else {
             JSONObject next = plan.get(0);
             String amount = WidgetShared.amountText(next);
@@ -355,16 +381,60 @@ final class HabitNotifier {
 
             b.setContentTitle((en ? "Today: " : "Dziś: ") + done + "/" + total + " · " + pct + "%")
                 .setContentText(now)
+                .setProgress(100, pct, false)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(big.toString()))
                 .setOngoing(true);
-            // Quick log: up to 3 buttons ("+1 szklanka", "+15 min Czytanie", "✓ Mycie") - no need to open the app.
-            List<JSONObject> quick = quickRows(plan, 3);
-            for (int i = 0; i < quick.size(); i++) {
-                JSONObject h = quick.get(i);
-                b.addAction(0, quickLabel(h, en), action(c, ACTION_DO_NEXT, h.optString("id"), ID_PROGRESS, 7002 + i));
-            }
+            addQuickActions(c, b, plan, en);
         }
         post(c, ID_PROGRESS, b);
+    }
+
+    /** Quick log: up to 3 buttons ("+1 szklanka", "+15 min Czytanie", "✓ Mycie") - no need to open the app. */
+    private static void addQuickActions(Context c, NotificationCompat.Builder b, List<JSONObject> plan, boolean en) {
+        List<JSONObject> quick = quickRows(plan, 3);
+        for (int i = 0; i < quick.size(); i++) {
+            JSONObject h = quick.get(i);
+            b.addAction(0, quickLabel(h, en), action(c, ACTION_DO_NEXT, h.optString("id"), ID_PROGRESS, 7002 + i));
+        }
+    }
+
+    /**
+     * "Postęp dnia" as an Android 16 Live Update (like Duolingo's): promoted to the top of the
+     * lock screen and a status bar chip with today's %. Promotion rules: ongoing, a title,
+     * ProgressStyle, not colorized, no custom views, channel above IMPORTANCE_MIN - all met
+     * here. The user can still turn live notifications off per app in system settings; then
+     * this is posted as a normal ongoing notification with the same segmented bar.
+     */
+    private static void liveProgress(Context c, NotificationCompat.Builder b, JSONArray rows,
+                                     List<JSONObject> plan, int done, int total, boolean en) {
+        List<LiveProgress.Seg> segs = LiveProgress.segments(rows);
+        int pct = LiveProgress.percent(segs);
+        NotificationCompat.ProgressStyle style = new NotificationCompat.ProgressStyle()
+            .setStyledByProgress(true)
+            .setProgress(LiveProgress.progress(segs))
+            .setProgressTrackerIcon(IconCompat.createWithResource(c, R.drawable.ic_stat_szpila));
+        for (LiveProgress.Seg s : segs) {
+            style.addProgressSegment(new NotificationCompat.ProgressStyle.Segment(LiveProgress.UNITS).setColor(s.color));
+        }
+
+        JSONObject next = plan.get(0);
+        String then = plan.size() > 1 ? plan.get(1).optString("name") : "";
+        String text = LiveProgress.text(done, total, pct, then, "⏳ " + WidgetShared.timeLeft(en), en);
+        b.setContentTitle(LiveProgress.title(next, WidgetShared.amountText(next), en))
+            .setContentText(text)
+            .setSubText(WidgetShared.whenLabel(next, en))
+            .setStyle(style)
+            .setOngoing(true)
+            // habit names aren't secrets: show the task on a secure lock screen too
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setRequestPromotedOngoing(true)
+            .setShortCriticalText(LiveProgress.chip(pct));
+        addQuickActions(c, b, plan, en);
+    }
+
+    /** Can this app's live notifications be promoted right now (Android 16+, not turned off)? */
+    static boolean canPromote(Context c) {
+        return Build.VERSION.SDK_INT >= 36 && NotificationManagerCompat.from(c).canPostPromotedNotifications();
     }
 
     // ------------------------------------------------------------------
