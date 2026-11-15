@@ -966,35 +966,66 @@ function DaySummaryCard({
 /** Sends today's recap right now - to see it (and the AI comment) without waiting for the evening. */
 function TestSummaryButton() {
   const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
   if (!coachSupported()) return null;
   const send = async () => {
-    refreshNative(); // the newest state first
-    await new Promise((r) => setTimeout(r, 600));
-    const st = await testSummary();
-    setMsg(
-      st === "coach"
-        ? L(
-            "Wysłane. Za ok. minutę pierwsze zdanie zmieni się na komentarz AI (🤖).",
-            "Sent. In about a minute the first line turns into the AI comment (🤖).",
-          )
-        : st === "plain"
+    setBusy(true);
+    setMsg(L("Wysyłam…", "Sending…"));
+    try {
+      refreshNative(); // the newest state first
+      await new Promise((r) => setTimeout(r, 600));
+      const p = testSummary();
+      // the recap is out at once; the AI comment takes a while on a CPU-only server
+      setTimeout(
+        () =>
+          setMsg((m) =>
+            m === L("Wysyłam…", "Sending…")
+              ? L(
+                  "Podsumowanie wysłane, czekam na komentarz AI (do minuty)…",
+                  "Recap sent, waiting for the AI comment (up to a minute)…",
+                )
+              : m,
+          ),
+        1500,
+      );
+      const r = await p;
+      const s = r.ms ? ` (${Math.round(r.ms / 1000)} s)` : "";
+      setMsg(
+        r.status === "plain"
           ? L("Wysłane (bez AI: nie ma ustawionego serwera).", "Sent (no AI: no server set up).")
-          : st === "blocked"
+          : r.status === "blocked"
             ? L("Powiadomienia są wyłączone.", "Notifications are off.")
-            : L("Nie ma dziś zadań do podsumowania.", "No habits to sum up today."),
-    );
+            : r.status === "nothing"
+              ? L("Nie ma dziś zadań do podsumowania.", "No habits to sum up today.")
+              : r.comment
+                ? L(`Gotowe${s}: ${r.comment}`, `Done${s}: ${r.comment}`)
+                : r.error === "token"
+                  ? L("Serwer odrzucił token.", "The server rejected the token.")
+                  : r.error === "rejected"
+                    ? L(
+                        `Model nie dał dobrej odpowiedzi${s}, zostaje zwykły tekst. Spróbuj jeszcze raz.`,
+                        `The model gave no usable answer${s}, the usual text stays. Try again.`,
+                      )
+                    : L(
+                        `Serwer AI nie odpowiedział${s}: ${r.error}`,
+                        `The AI server didn't answer${s}: ${r.error}`,
+                      ),
+      );
+    } finally {
+      setBusy(false);
+    }
   };
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-3">
+    <div className="mt-3" data-test-summary>
       <button
         type="button"
+        disabled={busy}
         onClick={() => void send()}
-        className="rounded-full bg-background px-4 py-2 text-sm font-medium"
-        data-test-summary
+        className="rounded-full bg-background px-4 py-2 text-sm font-medium disabled:opacity-50"
       >
         {L("Wyślij próbne podsumowanie", "Send a test recap")}
       </button>
-      {msg && <span className="text-xs text-muted-foreground">{msg}</span>}
+      {msg && <p className="mt-2 text-xs text-muted-foreground">{msg}</p>}
     </div>
   );
 }

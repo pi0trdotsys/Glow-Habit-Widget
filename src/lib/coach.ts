@@ -7,11 +7,20 @@ interface CoachPlugin {
   getCoach(): Promise<{ url: string; hasToken: boolean }>;
   setCoach(opts: { url: string; token?: string }): Promise<{ ok: boolean }>;
   testCoach(): Promise<{ ok: boolean; model?: string; error?: string }>;
-  testSummary(): Promise<{ status: SummaryTest }>;
+  testSummary(): Promise<SummaryTestResult>;
 }
 
 /** "coach" = sent, the AI comment follows; "plain" = sent without a server; else why not. */
 export type SummaryTest = "coach" | "plain" | "nothing" | "blocked";
+
+export interface SummaryTestResult {
+  status: SummaryTest;
+  /** "coach": the AI comment (with 🤖), already swapped into the notification. */
+  comment?: string | null;
+  /** "coach": "token", "rejected" (no good answer from the model) or a network error. */
+  error?: string;
+  ms?: number;
+}
 const Native = registerPlugin<CoachPlugin>("HabitWidget");
 
 export const coachSupported = () => Capacitor.isNativePlatform();
@@ -40,7 +49,10 @@ export async function testCoach(): Promise<{ ok: boolean; model?: string; error?
   return Native.testCoach();
 }
 
-/** "Wyślij próbne podsumowanie": today's recap now (doesn't use up today's real one). */
-export async function testSummary(): Promise<SummaryTest> {
-  return (await Native.testSummary()).status;
+/**
+ * "Wyślij próbne podsumowanie": today's recap now (doesn't use up today's real one); with a coach
+ * server it waits for the comment (up to ~2.5 min) and reports how it went.
+ */
+export async function testSummary(): Promise<SummaryTestResult> {
+  return Native.testSummary();
 }

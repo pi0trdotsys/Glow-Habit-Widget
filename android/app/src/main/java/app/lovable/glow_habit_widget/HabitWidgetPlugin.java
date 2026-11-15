@@ -364,12 +364,36 @@ public class HabitWidgetPlugin extends Plugin {
         call.resolve(ret);
     }
 
-    /** "Wyślij próbne podsumowanie": { status: coach | plain | nothing | blocked }. */
+    /**
+     * "Wyślij próbne podsumowanie": posts today's recap now and, with a coach server, asks it right
+     * here (no background job, so it can't be postponed) and swaps the comment in. Resolves
+     * { status: coach | plain | nothing | blocked, comment?, error?, ms? } once it's known.
+     */
     @PluginMethod
     public void testSummary(PluginCall call) {
+        final android.content.Context c = getContext();
+        final String[] r = HabitNotifier.testSummary(c);
         JSObject ret = new JSObject();
-        ret.put("status", HabitNotifier.testSummary(getContext()));
-        call.resolve(ret);
+        ret.put("status", r[0]);
+        if (!"coach".equals(r[0])) {
+            call.resolve(ret);
+            return;
+        }
+        new Thread(() -> {
+            long t0 = System.currentTimeMillis();
+            try {
+                String comment = CoachClient.comment(c, new org.json.JSONObject(r[4]));
+                if (comment != null) HabitNotifier.coachSummary(c, r[1], comment, r[5]);
+                ret.put("comment", comment != null ? HabitNotifier.coachText(comment) : null);
+                if (comment == null) ret.put("error", "rejected");
+            } catch (SecurityException e) {
+                ret.put("error", "token");
+            } catch (Exception e) {
+                ret.put("error", e.getClass().getSimpleName() + ": " + e.getMessage());
+            }
+            ret.put("ms", System.currentTimeMillis() - t0);
+            call.resolve(ret);
+        }, "coach-test-summary").start();
     }
 
     /** Checks the saved server: { ok, model? , error? } (off the main thread). */

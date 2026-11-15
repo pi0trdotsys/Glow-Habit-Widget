@@ -786,30 +786,34 @@ final class HabitNotifier {
         boolean allDone = rows.length() > 0 && WidgetShared.plan(c).isEmpty();
         if (!DaySummary.due(now, summary.optInt("at", 21 * 60 + 45), allDone)) return;
         p.edit().putString(KEY_LAST_SUMMARY, WidgetShared.today()).apply();
-        postSummary(c, rows, summary, isQuiet(bedtime(s), wake(s), now));
+        String[] t = postSummary(c, rows, summary, isQuiet(bedtime(s), wake(s), now));
+        // Your own coach server (optional): a comment of its own replaces the opener in a minute.
+        if (CoachClient.configured(c)) CoachJob.schedule(c, t[0], t[4], t[3]);
     }
 
-    /** Composes and posts the recap; with a coach server, its comment follows. True = coach asked. */
-    private static boolean postSummary(Context c, JSONArray rows, JSONObject summary, boolean silent) {
+    /** Composes and posts the recap; with a coach server, its comment follows (CoachJob). */
+    private static String[] postSummary(Context c, JSONArray rows, JSONObject summary, boolean silent) {
         String[] t = DaySummary.compose(rows, summary, WidgetShared.en(c), WidgetShared::pick);
         post(c, ID_SUMMARY, summaryBuilder(c, t[0], t[1], t[2]).setSilent(silent));
-        // Your own coach server (optional): a comment of its own replaces the opener in a minute.
-        if (!CoachClient.configured(c)) return false;
-        CoachJob.schedule(c, t[0], t[4], t[3]);
-        return true;
+        return t;
     }
 
     /**
      * "Wyślij próbne podsumowanie" (Settings): today's recap right now, whatever the time and even
-     * if today's went out already (that one isn't counted again). "nothing" = no habits today,
-     * "blocked" = notifications off; otherwise "coach" (a comment follows) or "plain".
+     * if today's went out already (that one isn't counted again). Returns [status, ...the recap
+     * from DaySummary.compose]; status "nothing" = no habits today, "blocked" = notifications off,
+     * else "coach" (the caller asks the server right away) or "plain".
      */
-    static String testSummary(Context c) {
-        if (!canNotify(c)) return "blocked";
+    static String[] testSummary(Context c) {
+        if (!canNotify(c)) return new String[]{"blocked"};
         JSONObject summary = WidgetShared.state(c).optJSONObject("summary");
         JSONArray rows = WidgetShared.withoutDiscreet(WidgetShared.habits(c));
-        if (summary == null || rows.length() == 0) return "nothing";
-        return postSummary(c, rows, summary, false) ? "coach" : "plain";
+        if (summary == null || rows.length() == 0) return new String[]{"nothing"};
+        String[] t = postSummary(c, rows, summary, false);
+        String[] out = new String[t.length + 1];
+        out[0] = CoachClient.configured(c) ? "coach" : "plain";
+        System.arraycopy(t, 0, out, 1, t.length);
+        return out;
     }
 
     private static NotificationCompat.Builder summaryBuilder(Context c, String title, String text, String big) {

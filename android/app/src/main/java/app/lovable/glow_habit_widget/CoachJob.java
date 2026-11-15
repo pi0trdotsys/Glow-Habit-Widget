@@ -27,13 +27,26 @@ public class CoachJob extends JobService {
         extras.putString("rest", rest);
         extras.putString("facts", facts);
         extras.putString("day", WidgetShared.today());
-        JobInfo job = new JobInfo.Builder(JOB_ID, new ComponentName(c, CoachJob.class))
-            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-            .setOverrideDeadline(30 * 60 * 1000L) // no network within 30 min: run anyway, it fails quietly
-            .setExtras(extras)
-            .build();
+        ComponentName self = new ComponentName(c, CoachJob.class);
+        // Android 12+: an expedited job starts right away, even under battery savers that hold
+        // ordinary jobs back for a long time (HyperOS). Older / refused: a normal job with a deadline.
+        if (android.os.Build.VERSION.SDK_INT >= 31) {
+            try {
+                int r = js.schedule(new JobInfo.Builder(JOB_ID, self)
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .setExpedited(true)
+                    .setExtras(extras)
+                    .build());
+                if (r == JobScheduler.RESULT_SUCCESS) return;
+            } catch (Exception ignored) {
+            }
+        }
         try {
-            js.schedule(job);
+            js.schedule(new JobInfo.Builder(JOB_ID, self)
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setOverrideDeadline(30 * 60 * 1000L) // no network within 30 min: run anyway, it fails quietly
+                .setExtras(extras)
+                .build());
         } catch (Exception ignored) {
         }
     }
