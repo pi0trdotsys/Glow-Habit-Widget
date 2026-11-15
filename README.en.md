@@ -239,9 +239,10 @@ Notifications, Data.
 2. Open it on your phone and allow installs from this source.
 3. Launch Szpila, pick a language, tell it your name and allow notifications.
 
-Later versions install from inside the app: Szpila checks for a new release once
-a day, and **Settings → Data → App version** downloads it in one tap. It checks
-the checksum and signature before installing.
+Later versions install from inside the app: Szpila checks for a new release on
+its own (when opened and in the background, even with the app closed), tells you
+with a notification and offers **Update now**. It checks the checksum and
+signature before installing. By hand: **Settings → Data → App version**.
 
 You start with ready-made habits: brush teeth, drink water, 8000 steps, read,
 code, learn a language, scrolling in bed and fast food. Edit them, delete them

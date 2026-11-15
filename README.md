@@ -240,9 +240,10 @@ podzielone na cztery zakładki: Szpila, Strażnik, Powiadomienia, Dane.
 2. Otwórz go na telefonie i zezwól na instalację z tego źródła.
 3. Uruchom Szpilę, wybierz język, podaj imię i zgódź się na powiadomienia.
 
-Kolejne wersje instalujesz już z aplikacji: Szpila raz dziennie sprawdza, czy
-jest nowe wydanie, a w **Ustawienia → Dane → Wersja aplikacji** pobierzesz je
-jednym dotknięciem. Przed instalacją sprawdza sumę kontrolną i podpis.
+Kolejne wersje instalujesz już z aplikacji: Szpila sama sprawdza, czy jest nowe
+wydanie (przy otwarciu i w tle, także gdy aplikacja jest zamknięta), daje znać
+powiadomieniem i proponuje **Zaktualizuj teraz**. Przed instalacją sprawdza sumę
+kontrolną i podpis. Ręcznie: **Ustawienia → Dane → Wersja aplikacji**.
 
 Na start dostajesz gotowe zadania: mycie zębów, wodę, 8000 kroków, czytanie,
 programowanie, naukę języka, scrollowanie w łóżku i fast food. Zmieniasz je,

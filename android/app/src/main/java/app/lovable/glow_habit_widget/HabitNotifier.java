@@ -55,6 +55,7 @@ final class HabitNotifier {
     static final String CH_PROGRESS_LIVE = "loop_progress_live";
     static final String CH_SZPILA = "loop_szpila";
     static final String CH_REVIEW = "loop_review";
+    static final String CH_UPDATE = "loop_update";
     static final int ID_PROGRESS = 7001;
     static final int ID_TAUNT = 7100;
     static final int ID_REVIEW = 7200;
@@ -63,6 +64,7 @@ final class HabitNotifier {
     static final int ID_MORNING = 7250;
     static final int ID_BILL = 7260;
     static final int ID_SUMMARY = 7270;
+    static final int ID_UPDATE = 7500;
 
     static final String ACTION_TICK = "app.lovable.glow_habit_widget.NOTIFIER_TICK";
     static final String ACTION_DO_NEXT = "app.lovable.glow_habit_widget.DO_NEXT";
@@ -133,6 +135,10 @@ final class HabitNotifier {
             maybeMorningReview(c);
             maybeNightBill(c);
             maybeRoast(c);
+        } catch (Exception ignored) {
+        }
+        try {
+            maybeUpdateNotice(c);
         } catch (Exception ignored) {
         }
         BackupStore.autoBackupIfDue(c);
@@ -218,6 +224,11 @@ final class HabitNotifier {
         review.setDescription(WidgetShared.tr(c, "Wieczorne potwierdzenie zakazanych zadań",
             "Evening check-in for forbidden habits"));
         WidgetShared.upsertChannel(nm, review);
+        NotificationChannel update = new NotificationChannel(CH_UPDATE,
+            WidgetShared.tr(c, "Aktualizacje", "Updates"), NotificationManager.IMPORTANCE_DEFAULT);
+        update.setDescription(WidgetShared.tr(c, "Nowa wersja Szpili do zainstalowania",
+            "A new Szpila version to install"));
+        WidgetShared.upsertChannel(nm, update);
     }
 
     private static String plural(int n, boolean en) {
@@ -789,6 +800,27 @@ final class HabitNotifier {
         PendingIntent open = WidgetShared.openAppIntent(c, 7271);
         if (open != null) b.setContentIntent(open);
         post(c, ID_SUMMARY, b);
+    }
+
+    /**
+     * "Nowa wersja Szpili": the phone checks GitHub in the background (UpdateManager, at most
+     * every 6 h) and says so once per version, even with the app closed. Tapping it opens the
+     * app, which offers the update right away (the "Nowa wersja" sheet).
+     */
+    static void maybeUpdateNotice(Context c) {
+        String v = UpdateManager.backgroundCheck(c);
+        if (v == null || !canNotify(c)) return;
+        boolean en = WidgetShared.en(c);
+        NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_UPDATE)
+            .setSmallIcon(R.drawable.ic_stat_szpila)
+            .setColor(WidgetShared.AVOID)
+            .setContentTitle((en ? "⬆️ New Szpila " : "⬆️ Nowa Szpila ") + v)
+            .setContentText(en ? "Tap to update. Takes a moment, your data stays."
+                : "Stuknij, żeby zaktualizować. Chwila i gotowe, dane zostają.")
+            .setAutoCancel(true);
+        PendingIntent open = WidgetShared.openAppIntent(c, 7501);
+        if (open != null) b.setContentIntent(open);
+        post(c, ID_UPDATE, b);
     }
 
     /** "🔒 +2 dyskretne" - discreet habits in a review: a count, never a name. */

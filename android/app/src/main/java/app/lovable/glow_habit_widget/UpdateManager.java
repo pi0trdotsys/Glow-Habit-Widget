@@ -24,6 +24,9 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 /**
  * In-app updates from the GitHub release (src/lib/update.ts finds the release): download the
  * APK into the cache, check it, then hand it to the system installer. Checks before installing:
@@ -34,6 +37,15 @@ import java.util.Set;
 final class UpdateManager {
     /** Only release assets of this repository are downloaded. */
     static final String ALLOWED_PREFIX = "https://github.com/pi0trdotsys/glow-habit-widget/releases/download/";
+
+    /** The update channel: the latest (non-draft, non-pre-release) GitHub release. Mirrors update.ts. */
+    static final String RELEASES_API = "https://api.github.com/repos/pi0trdotsys/glow-habit-widget/releases/latest";
+    /** The background check asks GitHub at most this often (any alarm tick may trigger it). */
+    static final long CHECK_EVERY_MS = 6L * 60 * 60 * 1000;
+    private static final String PREFS = "loop_update";
+    private static final String KEY_CHECKED = "checked_at";
+    private static final String KEY_FOUND = "found";
+    private static final String KEY_NOTIFIED = "notified";
 
     interface Progress {
         void on(long received, long total);
@@ -52,6 +64,86 @@ final class UpdateManager {
         String d = digest.trim().toLowerCase(Locale.ROOT);
         if (d.startsWith("sha256:")) d = d.substring(7);
         return d.matches("[0-9a-f]{64}") ? d : "";
+    }
+
+    /** Numeric dotted compare, -1 / 0 / 1 ("2.10.0" > "2.9.3"); mirrors compareVersions() in update.ts. */
+    static int compare(String a, String b) {
+        String[] pa = a.replaceFirst("^[vV]", "").split("\\.");
+        String[] pb = b.replaceFirst("^[vV]", "").split("\\.");
+        for (int i = 0; i < Math.max(pa.length, pb.length); i++) {
+            int x = i < pa.length ? num(pa[i]) : 0;
+            int y = i < pb.length ? num(pb[i]) : 0;
+            if (x != y) return x > y ? 1 : -1;
+        }
+        return 0;
+    }
+
+    private static int num(String s) {
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    /** The release as an update version ("2.15.0"), or "" (draft, pre-release, odd tag, no allowed APK). Pure. */
+    static String usableVersion(JSONObject r) {
+        if (r == null || r.optBoolean("draft") || r.optBoolean("prerelease")) return "";
+        String v = r.optString("tag_name", "").replaceFirst("^[vV]", "");
+        if (!v.matches("\\d+(\\.\\d+)*")) return "";
+        JSONArray assets = r.optJSONArray("assets");
+        for (int i = 0; assets != null && i < assets.length(); i++) {
+            JSONObject a = assets.optJSONObject(i);
+            if (a != null && allowedUrl(a.optString("browser_download_url"))) return v;
+        }
+        return "";
+    }
+
+    /** Asks GitHub for the latest release (blocking - background threads only). */
+    static String fetchLatest() throws Exception {
+        HttpURLConnection con = (HttpURLConnection) new URL(RELEASES_API).openConnection();
+        con.setConnectTimeout(10_000);
+        con.setReadTimeout(10_000);
+        con.setRequestProperty("Accept", "application/vnd.github+json");
+        try (InputStream in = con.getInputStream()) {
+            if (con.getResponseCode() != 200) return "";
+            java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+            byte[] b = new byte[8192];
+            int n;
+            while ((n = in.read(b)) > 0 && buf.size() < 512 * 1024) buf.write(b, 0, n);
+            return usableVersion(new JSONObject(buf.toString("UTF-8")));
+        } finally {
+            con.disconnect();
+        }
+    }
+
+    /** A newer version the background check found and the app hasn't installed yet, or "". */
+    static String hint(Context c) {
+        String found = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_FOUND, "");
+        return !found.isEmpty() && compare(found, installedVersionName(c)) > 0 ? found : "";
+    }
+
+    /**
+     * Background check (alarm ticks, at most every 6 h): remembers a newer release for the app
+     * (hint) and returns its version the first time it's seen, so the caller notifies once per
+     * version. null = nothing new (or offline / throttled).
+     */
+    static String backgroundCheck(Context c) {
+        android.content.SharedPreferences p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        long now = System.currentTimeMillis();
+        long last = p.getLong(KEY_CHECKED, 0);
+        if (last > 0 && now >= last && now - last < CHECK_EVERY_MS) return null;
+        p.edit().putLong(KEY_CHECKED, now).apply();
+        try {
+            String latest = fetchLatest();
+            if (latest.isEmpty() || compare(latest, installedVersionName(c)) <= 0) return null;
+            p.edit().putString(KEY_FOUND, latest).apply();
+            if (latest.equals(p.getString(KEY_NOTIFIED, ""))) return null;
+            p.edit().putString(KEY_NOTIFIED, latest).apply();
+            return latest;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     static long installedVersionCode(Context c) throws Exception {

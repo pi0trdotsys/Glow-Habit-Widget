@@ -347,6 +347,13 @@ public class HabitWidgetPlugin extends Plugin {
     // ------------------------------------------------------------------
 
     @PluginMethod
+    public void updateHint(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("version", UpdateManager.hint(getContext()));
+        call.resolve(ret);
+    }
+
+    @PluginMethod
     public void appVersion(PluginCall call) {
         JSObject ret = new JSObject();
         ret.put("name", UpdateManager.installedVersionName(getContext()));

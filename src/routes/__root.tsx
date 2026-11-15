@@ -26,8 +26,16 @@ import { useLinesReady } from "../lib/habits/szpila";
 import { THEME_BOOT, watchTheme } from "../lib/theme";
 import { L } from "../lib/i18n";
 import { takePendingRoute } from "../lib/shop";
-import { checkDue, checkForUpdate, updatesSupported } from "../lib/update";
-import { toast } from "sonner";
+import {
+  checkDue,
+  checkForUpdate,
+  compareVersions,
+  laterFor,
+  nativeHint,
+  updatesSupported,
+  type ReleaseInfo,
+} from "../lib/update";
+import { UpdateSheet } from "@/components/UpdateSheet";
 import { SplashScreen } from "@/components/SplashScreen";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -201,25 +209,34 @@ function RootComponent() {
     if (booted) startWidgetBridge();
   }, [booted]);
 
+  // A newer release offers itself ("Nowa wersja" sheet): checked on start and on every return
+  // to the front (at most every 3 h), or right away when the phone's background check found one.
+  const [update, setUpdate] = useState<ReleaseInfo | null>(null);
   useEffect(() => {
-    // Once a day: is there a newer release? A toast leads to Settings -> Dane (UpdateCard).
-    if (!booted || !updatesSupported() || !checkDue()) return;
-    void checkForUpdate()
-      .then((r) => {
-        if (!r.available || !r.latest) return;
-        toast(
-          L(`Nowa wersja Szpili: ${r.latest.version}`, `New Szpila version: ${r.latest.version}`),
-          {
-            duration: 10000,
-            action: {
-              label: L("Aktualizuj", "Update"),
-              onClick: () => void router.navigate({ to: "/settings", search: { tab: "data" } }),
-            },
-          },
-        );
-      })
-      .catch(() => {}); // offline: try again next start
-  }, [booted, router]);
+    if (!booted || !updatesSupported()) return;
+    let busy = false;
+    const look = async () => {
+      if (busy || document.visibilityState !== "visible") return;
+      busy = true;
+      try {
+        let hint = await nativeHint();
+        if (hint && laterFor(hint)) hint = ""; // "Później" to that version: back to the 3 h rhythm
+        if (!hint && !checkDue()) return;
+        const r = await checkForUpdate();
+        if (!r.available || !r.latest || laterFor(r.latest.version)) return;
+        if (hint && compareVersions(r.latest.version, hint) < 0) return;
+        setUpdate(r.latest);
+      } catch {
+        // offline: next start / return to the app
+      } finally {
+        busy = false;
+      }
+    };
+    void look();
+    const onVis = () => void look();
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [booted]);
 
   useEffect(() => {
     if (!booted) return;
@@ -299,6 +316,7 @@ function RootComponent() {
         offset={{ bottom: "calc(env(safe-area-inset-bottom) + 6.5rem)" }}
         mobileOffset={{ bottom: "calc(env(safe-area-inset-bottom) + 6.5rem)" }}
       />
+      <UpdateSheet info={update} onClose={() => setUpdate(null)} />
       <AnimatePresence onExitComplete={() => setBooted(true)}>
         {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
       </AnimatePresence>

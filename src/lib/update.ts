@@ -9,7 +9,11 @@ export const RELEASES_API =
 /** Only assets from this path are accepted (mirrors UpdateManager.ALLOWED_PREFIX). */
 const ASSET_PREFIX = "https://github.com/pi0trdotsys/glow-habit-widget/releases/download/";
 const CHECK_KEY = "szpila-update-check";
-const DAY_MS = 24 * 60 * 60 * 1000;
+const LATER_KEY = "szpila-update-later";
+/** How often the app asks GitHub on its own (on start and every return to the front). */
+export const CHECK_EVERY_MS = 3 * 60 * 60 * 1000;
+/** "Później" hides the offer of that version for this long. */
+export const LATER_MS = 24 * 60 * 60 * 1000;
 
 export interface ReleaseInfo {
   /** "2.12.0" (the tag without the leading "v"). */
@@ -108,13 +112,31 @@ export function notesFor(notes: string, en: boolean): string[] {
     });
 }
 
-/** Is a daily automatic check due (localStorage; errors = due)? */
+/** Is an automatic check due (at most every 3 h; localStorage, errors = due)? */
 export function checkDue(now = Date.now()): boolean {
   try {
     const last = Number(localStorage.getItem(CHECK_KEY) || 0);
-    return !(last > 0 && now - last < DAY_MS);
+    return !(last > 0 && now - last < CHECK_EVERY_MS);
   } catch {
     return true;
+  }
+}
+
+/** Did the user say "Później" to this version less than a day ago? */
+export function laterFor(version: string, now = Date.now()): boolean {
+  try {
+    const [v, at] = (localStorage.getItem(LATER_KEY) || "").split("|");
+    return v === version && now - Number(at || 0) < LATER_MS;
+  } catch {
+    return false;
+  }
+}
+
+export function setLater(version: string, now = Date.now()): void {
+  try {
+    localStorage.setItem(LATER_KEY, `${version}|${now}`);
+  } catch {
+    /* ignore */
   }
 }
 
@@ -130,6 +152,7 @@ interface UpdatePlugin {
   appVersion(): Promise<{ name: string; code: number }>;
   downloadUpdate(opts: { url: string; sha256: string }): Promise<{ ok: boolean; error?: string }>;
   installUpdate(): Promise<{ status: "started" | "permission" | "missing" }>;
+  updateHint(): Promise<{ version: string }>;
   addListener(
     event: "updateProgress",
     cb: (p: { received: number; total: number }) => void,
@@ -187,4 +210,17 @@ export async function downloadUpdate(
 /** "started" = the system installer is up; "permission" = allow "install unknown apps", then retry. */
 export async function installUpdate(): Promise<"started" | "permission" | "missing"> {
   return (await Native.installUpdate()).status;
+}
+
+/**
+ * A newer version the phone found on its own in the background (UpdateManager.backgroundCheck,
+ * which also posted the "Nowa wersja" notification), or "" - forces a check on the next start.
+ */
+export async function nativeHint(): Promise<string> {
+  if (!updatesSupported()) return "";
+  try {
+    return (await Native.updateHint()).version ?? "";
+  } catch {
+    return "";
+  }
 }

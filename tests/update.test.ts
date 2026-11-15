@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { checkDue, compareVersions, notesFor, parseRelease } from "@/lib/update";
+import {
+  checkDue,
+  compareVersions,
+  laterFor,
+  notesFor,
+  parseRelease,
+  setLater,
+} from "@/lib/update";
 
 // Shape of api.github.com/repos/.../releases/latest for v2.12.0 (trimmed; real values).
 const RELEASE = {
@@ -84,13 +91,21 @@ describe("in-app updates: release parsing", () => {
     ]);
   });
 
-  test("the automatic check runs at most once a day", () => {
+  test("the app checks on its own at most every 3 hours", () => {
     localStorage.removeItem("szpila-update-check");
     const now = Date.UTC(2026, 10, 15, 12);
     expect(checkDue(now)).toBe(true);
     localStorage.setItem("szpila-update-check", String(now - 60 * 60 * 1000));
     expect(checkDue(now)).toBe(false);
-    localStorage.setItem("szpila-update-check", String(now - 25 * 60 * 60 * 1000));
+    localStorage.setItem("szpila-update-check", String(now - 3 * 60 * 60 * 1000 - 1));
     expect(checkDue(now)).toBe(true);
+  });
+
+  test("“Później” hides that version for a day, never a newer one", () => {
+    const now = Date.UTC(2026, 10, 15, 12);
+    setLater("2.15.0", now);
+    expect(laterFor("2.15.0", now + 60 * 60 * 1000)).toBe(true);
+    expect(laterFor("2.16.0", now + 60 * 60 * 1000)).toBe(false);
+    expect(laterFor("2.15.0", now + 25 * 60 * 60 * 1000)).toBe(false);
   });
 });
