@@ -86,6 +86,8 @@ final class HabitNotifier {
     private static final String KEY_LAST_MORNING = "last_morning";
     private static final String KEY_LAST_BILL = "last_bill";
     private static final String KEY_LAST_SUMMARY = "last_summary";
+    /** The last recap as shown ({title, text, at, ai}) - the app's "/recap" screen shows it whole. */
+    private static final String KEY_RECAP = "last_recap";
     /** Yesterday stays answerable until noon - mirrors AVOID_GRACE_MIN in utils.ts. */
     static final int GRACE_MIN = 12 * 60;
     /** A jab fires if its slot passed less than this many minutes ago (MIUI delays alarms). */
@@ -824,9 +826,29 @@ final class HabitNotifier {
             .setContentText(text)
             .setStyle(new NotificationCompat.BigTextStyle().bigText(big))
             .setAutoCancel(true);
-        PendingIntent open = WidgetShared.openAppIntent(c, 7271);
+        // Long recaps get cut in the notification on some phones: a tap shows the whole one.
+        PendingIntent open = WidgetShared.openAppIntent(c, 7271, "/recap");
         if (open != null) b.setContentIntent(open);
+        saveRecap(c, title, big, big.startsWith("🤖"));
         return b;
+    }
+
+    private static void saveRecap(Context c, String title, String text, boolean ai) {
+        try {
+            own(c).edit().putString(KEY_RECAP, new JSONObject().put("title", title).put("text", text)
+                .put("at", System.currentTimeMillis()).put("ai", ai).toString()).apply();
+        } catch (Exception ignored) {
+        }
+    }
+
+    /** The last recap ({title, text, at, ai}) or null. */
+    static JSONObject lastRecap(Context c) {
+        try {
+            String s = own(c).getString(KEY_RECAP, "");
+            return s.isEmpty() ? null : new JSONObject(s);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /** The coach's comment instead of the opener - only while the recap is still showing, silently. */

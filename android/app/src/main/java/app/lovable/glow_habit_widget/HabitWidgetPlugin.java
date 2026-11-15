@@ -396,6 +396,20 @@ public class HabitWidgetPlugin extends Plugin {
         }, "coach-test-summary").start();
     }
 
+    /** The last day recap as shown: { title, text, at, ai } or {} (the "/recap" screen). */
+    @PluginMethod
+    public void lastRecap(PluginCall call) {
+        org.json.JSONObject r = HabitNotifier.lastRecap(getContext());
+        JSObject ret = new JSObject();
+        if (r != null) {
+            ret.put("title", r.optString("title"));
+            ret.put("text", r.optString("text"));
+            ret.put("at", r.optLong("at"));
+            ret.put("ai", r.optBoolean("ai"));
+        }
+        call.resolve(ret);
+    }
+
     /** Checks the saved server: { ok, model? , error? } (off the main thread). */
     @PluginMethod
     public void testCoach(PluginCall call) {

@@ -20,6 +20,23 @@ public class MainActivity extends BridgeActivity {
         });
         // An icon switch that never got applied (e.g. the app was killed while in front).
         if (savedInstanceState == null) applyAppIcon();
+        takeRoute(getIntent());
+    }
+
+    /** A notification that opens a given screen (e.g. the day recap -> "/recap"). */
+    @Override
+    protected void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        takeRoute(intent);
+    }
+
+    private void takeRoute(android.content.Intent intent) {
+        if (intent == null) return;
+        String route = intent.getStringExtra(WidgetShared.EXTRA_ROUTE);
+        if (route == null || !route.startsWith("/") || route.startsWith("//")) return;
+        intent.removeExtra(WidgetShared.EXTRA_ROUTE);
+        ShopGuard.setPendingRoute(getApplicationContext(), route);
     }
 
     /**

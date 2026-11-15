@@ -70,7 +70,8 @@ public class DaySummaryTest {
         assertTrue(big, big.contains("✅ Zrobione: Mycie zębów"));
         assertTrue(big, big.contains("⏳ Zabrakło: Kroki (6000/8000), Woda"));
         assertTrue(big, big.contains("💥 Wpadki: Fast food"));
-        assertTrue(big, big.endsWith("💡 Woda: rano.")); // water got the least done (0%)
+        // the tip right after the comment, the lists last (cut first on phones that cut)
+        assertTrue(big, big.startsWith("Ola, ok 55% (2/5).\n\n💡 Woda: rano.\n\n✅")); // water got the least done
         // the coach server gets facts only, and the rest of the text stays the app's own
         JSONObject f = new JSONObject(t[3]);
         assertEquals(55, f.getInt("pct"));
@@ -99,7 +100,7 @@ public class DaySummaryTest {
         JSONArray rows = new JSONArray().put(build("teeth", "Mycie zębów", 2, 2));
         String[] t = DaySummary.compose(rows, summary(), true, DaySummary.FIRST);
         assertEquals("🍻 Day recap · 100%", t[0]);
-        assertTrue(t[2], t[2].endsWith("💡 Zacznij przed 10:00."));
+        assertTrue(t[2], t[2].contains("💡 Zacznij przed 10:00.\n\n✅"));
         assertFalse(t[2].contains("⏳"));
     }
 

@@ -85,15 +85,17 @@ final class DaySummary {
         opener = opener.replace("{pct}", String.valueOf(pct))
             .replace("{done}", String.valueOf(done)).replace("{total}", String.valueOf(total));
 
+        // Most important first: the comment, the tip, then the lists (the app shows them anyway) -
+        // a long recap gets cut at the end on some phones (HyperOS), so the lists go, not the tip.
         StringBuilder big = new StringBuilder();
-        if (!ok.isEmpty()) big.append("\n✅ ").append(en ? "Done: " : "Zrobione: ").append(join(ok, 5, en));
-        if (!short_.isEmpty()) big.append("\n⏳ ").append(en ? "Missing: " : "Zabrakło: ").append(join(short_, 4, en));
-        if (!slips.isEmpty()) big.append("\n💥 ").append(en ? "Slips: " : "Wpadki: ").append(join(slips, 3, en));
-
         String tip = "";
         if (worst != null) tip = pick.from(summary.optJSONObject("tips").optJSONArray(worst.optString("id")));
         if (tip.isEmpty() && summary != null) tip = pick.from(summary.optJSONArray("general"));
         if (!tip.isEmpty()) big.append("\n\n💡 ").append(tip);
+        if (!ok.isEmpty() || !short_.isEmpty() || !slips.isEmpty()) big.append("\n");
+        if (!ok.isEmpty()) big.append("\n✅ ").append(en ? "Done: " : "Zrobione: ").append(join(ok, 4, en));
+        if (!short_.isEmpty()) big.append("\n⏳ ").append(en ? "Missing: " : "Zabrakło: ").append(join(short_, 4, en));
+        if (!slips.isEmpty()) big.append("\n💥 ").append(en ? "Slips: " : "Wpadki: ").append(join(slips, 3, en));
 
         String title = (en ? "🍻 Day recap · " : "🍻 Podsumowanie dnia · ") + pct + "%";
         String rest = big.toString();

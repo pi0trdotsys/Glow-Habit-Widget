@@ -892,8 +892,17 @@ final class WidgetShared {
     }
 
     static PendingIntent openAppIntent(Context context, int requestCode) {
+        return openAppIntent(context, requestCode, null);
+    }
+
+    /** Extra for MainActivity: an app screen to open ("/recap"), see ShopGuard.setPendingRoute. */
+    static final String EXTRA_ROUTE = "szpila_route";
+
+    /** Opens the app on a given screen (null = wherever it was). */
+    static PendingIntent openAppIntent(Context context, int requestCode, String route) {
         Intent open = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
         if (open == null) return null;
+        if (route != null) open.putExtra(EXTRA_ROUTE, route);
         return PendingIntent.getActivity(
             context, requestCode, open,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);

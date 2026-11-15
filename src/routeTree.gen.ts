@@ -14,6 +14,7 @@ import { Route as WidgetRouteImport } from './routes/widget'
 import { Route as SzpilaRouteImport } from './routes/szpila'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReportRouteImport } from './routes/report'
+import { Route as RecapRouteImport } from './routes/recap'
 import { Route as HabitsRouteImport } from './routes/habits'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as HabitsIndexRouteImport } from './routes/habits.index'
@@ -45,6 +46,11 @@ const ReportRoute = ReportRouteImport.update({
   path: '/report',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecapRoute = RecapRouteImport.update({
+  id: '/recap',
+  path: '/recap',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HabitsRoute = HabitsRouteImport.update({
   id: '/habits',
   path: '/habits',
@@ -74,6 +80,7 @@ const HabitsIdRoute = HabitsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/habits': typeof HabitsRouteWithChildren
+  '/recap': typeof RecapRoute
   '/report': typeof ReportRoute
   '/settings': typeof SettingsRoute
   '/szpila': typeof SzpilaRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/recap': typeof RecapRoute
   '/report': typeof ReportRoute
   '/settings': typeof SettingsRoute
   '/szpila': typeof SzpilaRoute
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/habits': typeof HabitsRouteWithChildren
+  '/recap': typeof RecapRoute
   '/report': typeof ReportRoute
   '/settings': typeof SettingsRoute
   '/szpila': typeof SzpilaRoute
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/habits'
+    | '/recap'
     | '/report'
     | '/settings'
     | '/szpila'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/recap'
     | '/report'
     | '/settings'
     | '/szpila'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/habits'
+    | '/recap'
     | '/report'
     | '/settings'
     | '/szpila'
@@ -148,6 +160,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HabitsRoute: typeof HabitsRouteWithChildren
+  RecapRoute: typeof RecapRoute
   ReportRoute: typeof ReportRoute
   SettingsRoute: typeof SettingsRoute
   SzpilaRoute: typeof SzpilaRoute
@@ -190,6 +203,13 @@ declare module '@tanstack/react-router' {
       path: '/report'
       fullPath: '/report'
       preLoaderRoute: typeof ReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recap': {
+      id: '/recap'
+      path: '/recap'
+      fullPath: '/recap'
+      preLoaderRoute: typeof RecapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/habits': {
@@ -248,6 +268,7 @@ const HabitsRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HabitsRoute: HabitsRouteWithChildren,
+  RecapRoute: RecapRoute,
   ReportRoute: ReportRoute,
   SettingsRoute: SettingsRoute,
   SzpilaRoute: SzpilaRoute,

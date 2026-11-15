@@ -8,6 +8,7 @@ interface CoachPlugin {
   setCoach(opts: { url: string; token?: string }): Promise<{ ok: boolean }>;
   testCoach(): Promise<{ ok: boolean; model?: string; error?: string }>;
   testSummary(): Promise<SummaryTestResult>;
+  lastRecap(): Promise<Partial<Recap>>;
 }
 
 /** "coach" = sent, the AI comment follows; "plain" = sent without a server; else why not. */
@@ -55,4 +56,23 @@ export async function testCoach(): Promise<{ ok: boolean; model?: string; error?
  */
 export async function testSummary(): Promise<SummaryTestResult> {
   return Native.testSummary();
+}
+
+export interface Recap {
+  title: string;
+  text: string;
+  at: number;
+  /** The first line was written by the coach model (🤖). */
+  ai: boolean;
+}
+
+/** The last day recap exactly as it was shown (the notification may have cut it). */
+export async function lastRecap(): Promise<Recap | null> {
+  if (!coachSupported()) return null;
+  try {
+    const r = (await Native.lastRecap()) as Partial<Recap>;
+    return r.text ? (r as Recap) : null;
+  } catch {
+    return null;
+  }
 }
