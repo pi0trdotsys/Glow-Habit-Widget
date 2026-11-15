@@ -364,6 +364,14 @@ public class HabitWidgetPlugin extends Plugin {
         call.resolve(ret);
     }
 
+    /** "Wyślij próbne podsumowanie": { status: coach | plain | nothing | blocked }. */
+    @PluginMethod
+    public void testSummary(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("status", HabitNotifier.testSummary(getContext()));
+        call.resolve(ret);
+    }
+
     /** Checks the saved server: { ok, model? , error? } (off the main thread). */
     @PluginMethod
     public void testCoach(PluginCall call) {

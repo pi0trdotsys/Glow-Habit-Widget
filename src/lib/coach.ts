@@ -7,7 +7,11 @@ interface CoachPlugin {
   getCoach(): Promise<{ url: string; hasToken: boolean }>;
   setCoach(opts: { url: string; token?: string }): Promise<{ ok: boolean }>;
   testCoach(): Promise<{ ok: boolean; model?: string; error?: string }>;
+  testSummary(): Promise<{ status: SummaryTest }>;
 }
+
+/** "coach" = sent, the AI comment follows; "plain" = sent without a server; else why not. */
+export type SummaryTest = "coach" | "plain" | "nothing" | "blocked";
 const Native = registerPlugin<CoachPlugin>("HabitWidget");
 
 export const coachSupported = () => Capacitor.isNativePlatform();
@@ -34,4 +38,9 @@ export async function setCoach(url: string, token: string): Promise<boolean> {
 
 export async function testCoach(): Promise<{ ok: boolean; model?: string; error?: string }> {
   return Native.testCoach();
+}
+
+/** "Wyślij próbne podsumowanie": today's recap now (doesn't use up today's real one). */
+export async function testSummary(): Promise<SummaryTest> {
+  return (await Native.testSummary()).status;
 }

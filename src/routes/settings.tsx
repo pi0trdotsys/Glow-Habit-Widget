@@ -38,7 +38,7 @@ import { Toggle } from "@/components/HabitForm";
 import { AppShell } from "@/components/AppShell";
 import { useHabits } from "@/lib/habits/store";
 import { lastAutoBackup, restoreBackup, saveBackup } from "@/lib/backup";
-import { pinWidget, type WidgetKind } from "@/lib/widget/bridge";
+import { pinWidget, refreshNative, type WidgetKind } from "@/lib/widget/bridge";
 import {
   getPermissionState,
   requestNotificationPermission,
@@ -47,7 +47,14 @@ import {
 } from "@/lib/notifications";
 import { formatMinute } from "@/lib/habits/utils";
 import { summaryMinute } from "@/lib/habits/day-summary";
-import { coachSupported, getCoach, normalizeCoachUrl, setCoach, testCoach } from "@/lib/coach";
+import {
+  coachSupported,
+  getCoach,
+  normalizeCoachUrl,
+  setCoach,
+  testCoach,
+  testSummary,
+} from "@/lib/coach";
 import { L, pick } from "@/lib/i18n";
 import { StepsSources } from "@/components/StepsSources";
 import { KropiSource } from "@/components/KropiSource";
@@ -950,7 +957,44 @@ function DaySummaryCard({
               `Today around ${formatMinute(at)}. In a few days it adapts to your evenings.`,
             )}
       </p>
+      {on && <TestSummaryButton />}
       {on && <CoachBox />}
+    </div>
+  );
+}
+
+/** Sends today's recap right now - to see it (and the AI comment) without waiting for the evening. */
+function TestSummaryButton() {
+  const [msg, setMsg] = useState("");
+  if (!coachSupported()) return null;
+  const send = async () => {
+    refreshNative(); // the newest state first
+    await new Promise((r) => setTimeout(r, 600));
+    const st = await testSummary();
+    setMsg(
+      st === "coach"
+        ? L(
+            "Wysłane. Za ok. minutę pierwsze zdanie zmieni się na komentarz AI (🤖).",
+            "Sent. In about a minute the first line turns into the AI comment (🤖).",
+          )
+        : st === "plain"
+          ? L("Wysłane (bez AI: nie ma ustawionego serwera).", "Sent (no AI: no server set up).")
+          : st === "blocked"
+            ? L("Powiadomienia są wyłączone.", "Notifications are off.")
+            : L("Nie ma dziś zadań do podsumowania.", "No habits to sum up today."),
+    );
+  };
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        onClick={() => void send()}
+        className="rounded-full bg-background px-4 py-2 text-sm font-medium"
+        data-test-summary
+      >
+        {L("Wyślij próbne podsumowanie", "Send a test recap")}
+      </button>
+      {msg && <span className="text-xs text-muted-foreground">{msg}</span>}
     </div>
   );
 }

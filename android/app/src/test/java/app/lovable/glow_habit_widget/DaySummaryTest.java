@@ -81,6 +81,11 @@ public class DaySummaryTest {
     }
 
     @Test
+    public void theAiCommentIsMarked() {
+        assertEquals("🤖 Piotr, w połowie drogi.", HabitNotifier.coachText("  Piotr, w połowie drogi. "));
+    }
+
+    @Test
     public void coachServerMustBeHttps() {
         assertEquals("https://szpila.example.eu", CoachClient.normalizeUrl(" https://szpila.example.eu/ "));
         assertEquals("https://box.local:8443/coach", CoachClient.normalizeUrl("https://box.local:8443/coach"));

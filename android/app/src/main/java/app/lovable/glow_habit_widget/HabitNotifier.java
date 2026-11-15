@@ -786,12 +786,30 @@ final class HabitNotifier {
         boolean allDone = rows.length() > 0 && WidgetShared.plan(c).isEmpty();
         if (!DaySummary.due(now, summary.optInt("at", 21 * 60 + 45), allDone)) return;
         p.edit().putString(KEY_LAST_SUMMARY, WidgetShared.today()).apply();
+        postSummary(c, rows, summary, isQuiet(bedtime(s), wake(s), now));
+    }
 
-        boolean en = WidgetShared.en(c);
-        String[] t = DaySummary.compose(rows, summary, en, WidgetShared::pick);
-        post(c, ID_SUMMARY, summaryBuilder(c, t[0], t[1], t[2]).setSilent(isQuiet(bedtime(s), wake(s), now)));
+    /** Composes and posts the recap; with a coach server, its comment follows. True = coach asked. */
+    private static boolean postSummary(Context c, JSONArray rows, JSONObject summary, boolean silent) {
+        String[] t = DaySummary.compose(rows, summary, WidgetShared.en(c), WidgetShared::pick);
+        post(c, ID_SUMMARY, summaryBuilder(c, t[0], t[1], t[2]).setSilent(silent));
         // Your own coach server (optional): a comment of its own replaces the opener in a minute.
-        if (CoachClient.configured(c)) CoachJob.schedule(c, t[0], t[4], t[3]);
+        if (!CoachClient.configured(c)) return false;
+        CoachJob.schedule(c, t[0], t[4], t[3]);
+        return true;
+    }
+
+    /**
+     * "Wyślij próbne podsumowanie" (Settings): today's recap right now, whatever the time and even
+     * if today's went out already (that one isn't counted again). "nothing" = no habits today,
+     * "blocked" = notifications off; otherwise "coach" (a comment follows) or "plain".
+     */
+    static String testSummary(Context c) {
+        if (!canNotify(c)) return "blocked";
+        JSONObject summary = WidgetShared.state(c).optJSONObject("summary");
+        JSONArray rows = WidgetShared.withoutDiscreet(WidgetShared.habits(c));
+        if (summary == null || rows.length() == 0) return "nothing";
+        return postSummary(c, rows, summary, false) ? "coach" : "plain";
     }
 
     private static NotificationCompat.Builder summaryBuilder(Context c, String title, String text, String big) {
@@ -810,7 +828,13 @@ final class HabitNotifier {
     /** The coach's comment instead of the opener - only while the recap is still showing, silently. */
     static void coachSummary(Context c, String title, String comment, String rest) {
         if (!canNotify(c) || !isShowing(c, ID_SUMMARY)) return;
-        post(c, ID_SUMMARY, summaryBuilder(c, title, comment, comment + rest).setSilent(true).setOnlyAlertOnce(true));
+        String text = coachText(comment);
+        post(c, ID_SUMMARY, summaryBuilder(c, title, text, text + rest).setSilent(true).setOnlyAlertOnce(true));
+    }
+
+    /** The model's comment, marked so it's clear the AI wrote it. Pure. */
+    static String coachText(String comment) {
+        return "🤖 " + comment.trim();
     }
 
     private static boolean isShowing(Context c, int id) {
