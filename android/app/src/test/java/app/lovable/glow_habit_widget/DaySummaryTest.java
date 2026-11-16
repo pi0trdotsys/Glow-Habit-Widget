@@ -79,6 +79,10 @@ public class DaySummaryTest {
         assertEquals("Kroki", f.getJSONArray("missing").getString(0));
         assertEquals("Fast food", f.getJSONArray("slips").getString(0));
         assertEquals(t[1] + t[4], t[2]);
+        // the notification: the comment + the tip only, the lists stay on the recap screen
+        assertEquals("\n\n💡 Woda: rano.", t[5]);
+        assertFalse(t[1] + t[5], (t[1] + t[5]).contains("✅"));
+        assertTrue(t[4], t[4].startsWith(t[5]));
     }
 
     @Test

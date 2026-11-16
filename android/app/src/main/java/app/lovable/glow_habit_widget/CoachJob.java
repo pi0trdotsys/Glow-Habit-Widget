@@ -19,11 +19,12 @@ public class CoachJob extends JobService {
     private static final int JOB_ID = 7272;
     private Thread worker;
 
-    static void schedule(Context c, String title, String rest, String facts) {
+    static void schedule(Context c, String title, String tip, String rest, String facts) {
         JobScheduler js = (JobScheduler) c.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         if (js == null) return;
         PersistableBundle extras = new PersistableBundle();
         extras.putString("title", title);
+        extras.putString("tip", tip);
         extras.putString("rest", rest);
         extras.putString("facts", facts);
         extras.putString("day", WidgetShared.today());
@@ -60,7 +61,8 @@ public class CoachJob extends JobService {
                 // a recap from an earlier day isn't worth a comment any more
                 if (WidgetShared.today().equals(x.getString("day", ""))) {
                     String text = CoachClient.comment(c, new JSONObject(x.getString("facts", "{}")));
-                    if (text != null) HabitNotifier.coachSummary(c, x.getString("title", ""), text, x.getString("rest", ""));
+                    if (text != null) HabitNotifier.coachSummary(c, x.getString("title", ""), text,
+                        x.getString("tip", ""), x.getString("rest", ""));
                 }
             } catch (Exception ignored) {
                 // server off / offline / slow: the app's own text stays

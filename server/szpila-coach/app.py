@@ -30,14 +30,14 @@ FAILS: dict[str, list[float]] = {}
 SYSTEM = {
     "pl": (
         "Jesteś Szpilą, złośliwą, ale życzliwą kotką z aplikacji do nawyków. Na podstawie danych "
-        "o dniu piszesz krótki komentarz jak kumpel: dokładnie 2 zdania, po polsku. Zasady: nie "
+        "o dniu piszesz krótki komentarz jak kumpel: dokładnie 2 krótkie zdania, po polsku. Zasady: nie "
         "podawaj żadnych liczb; nie wymyślaj niczego spoza danych; nie używaj form zależnych od "
         "płci (zamiast zrobiłeś/zrobiłaś pisz udało się, masz, poszło); bez list, nagłówków, "
         "gwiazdek i emotek. Odpowiadasz tylko komentarzem."
     ),
     "en": (
         "You are Szpila, a snarky but kind cat from a habit app. From the facts about the day you "
-        "write a short comment like a mate would: exactly 2 sentences, in English. Rules: no "
+        "write a short comment like a mate would: exactly 2 short sentences, in English. Rules: no "
         "numbers at all; nothing beyond the facts; no lists, headings, asterisks or emoji. Reply "
         "with the comment only."
     ),
@@ -126,9 +126,22 @@ def acceptable(text: str, lang: str, pct: int = 100) -> str | None:
         return None
     if overstates(t, pct, lang):
         return None
-    # at most three sentences
-    parts = re.split(r"(?<=[.!?])\s+", t)
-    return " ".join(parts[:3])
+    return fit(t)
+
+
+# The comment goes into a phone notification next to a tip; long ones get cut there.
+MAX_CHARS = 240
+
+
+def fit(t: str) -> str | None:
+    """At most two sentences and MAX_CHARS, cut between sentences; None if even one is too long."""
+    out = ""
+    for s in re.split(r"(?<=[.!?])\s+", t)[:2]:
+        nxt = f"{out} {s}".strip()
+        if len(nxt) > MAX_CHARS:
+            break
+        out = nxt
+    return out if len(out) >= 30 else None
 
 
 def ollama_chat(messages, temperature: float) -> str:

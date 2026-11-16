@@ -36,9 +36,11 @@ final class DaySummary {
     }
 
     /**
-     * [title, text, big text, coach facts (JSON), the part after the opener]. `rows` = today's
-     * rows without discreet ones; `pick` chooses from pools. The facts go to the optional coach
-     * server (CoachJob), which may replace the opener with a comment of its own.
+     * [title, opener, the whole recap, coach facts (JSON), the whole part after the opener, the
+     * tip part ("\n\n💡 ..." or "")]. The notification shows only opener + tip (phones cut long
+     * ones, HyperOS after a few lines); the whole recap, lists included, is on the "/recap" screen.
+     * `rows` = today's rows without discreet ones; `pick` chooses from pools. The facts go to the
+     * optional coach server (CoachJob), which may replace the opener with a comment of its own.
      */
     static String[] compose(JSONArray rows, JSONObject summary, boolean en, Picker pick) {
         List<JSONObject> counted = new ArrayList<>();
@@ -89,9 +91,11 @@ final class DaySummary {
         // a long recap gets cut at the end on some phones (HyperOS), so the lists go, not the tip.
         StringBuilder big = new StringBuilder();
         String tip = "";
+        String tipPart = "";
         if (worst != null) tip = pick.from(summary.optJSONObject("tips").optJSONArray(worst.optString("id")));
         if (tip.isEmpty() && summary != null) tip = pick.from(summary.optJSONArray("general"));
-        if (!tip.isEmpty()) big.append("\n\n💡 ").append(tip);
+        if (!tip.isEmpty()) tipPart = "\n\n💡 " + tip;
+        big.append(tipPart);
         if (!ok.isEmpty() || !short_.isEmpty() || !slips.isEmpty()) big.append("\n");
         if (!ok.isEmpty()) big.append("\n✅ ").append(en ? "Done: " : "Zrobione: ").append(join(ok, 4, en));
         if (!short_.isEmpty()) big.append("\n⏳ ").append(en ? "Missing: " : "Zabrakło: ").append(join(short_, 4, en));
@@ -108,7 +112,7 @@ final class DaySummary {
                 .put("slips", new JSONArray(slips));
         } catch (Exception ignored) {
         }
-        return new String[]{title, opener, opener + rest, facts.toString(), rest};
+        return new String[]{title, opener, opener + rest, facts.toString(), rest, tipPart};
     }
 
     private static boolean hasTips(JSONObject summary, JSONObject h) {

@@ -790,13 +790,13 @@ final class HabitNotifier {
         p.edit().putString(KEY_LAST_SUMMARY, WidgetShared.today()).apply();
         String[] t = postSummary(c, rows, summary, isQuiet(bedtime(s), wake(s), now));
         // Your own coach server (optional): a comment of its own replaces the opener in a minute.
-        if (CoachClient.configured(c)) CoachJob.schedule(c, t[0], t[4], t[3]);
+        if (CoachClient.configured(c)) CoachJob.schedule(c, t[0], t[5], t[4], t[3]);
     }
 
     /** Composes and posts the recap; with a coach server, its comment follows (CoachJob). */
     private static String[] postSummary(Context c, JSONArray rows, JSONObject summary, boolean silent) {
         String[] t = DaySummary.compose(rows, summary, WidgetShared.en(c), WidgetShared::pick);
-        post(c, ID_SUMMARY, summaryBuilder(c, t[0], t[1], t[2]).setSilent(silent));
+        post(c, ID_SUMMARY, summaryBuilder(c, t[0], t[1], t[1] + t[5], t[2]).setSilent(silent));
         return t;
     }
 
@@ -818,18 +818,27 @@ final class HabitNotifier {
         return out;
     }
 
-    private static NotificationCompat.Builder summaryBuilder(Context c, String title, String text, String big) {
+    /**
+     * `shown` = the comment + the tip only: phones cut long notifications (HyperOS after a few
+     * lines), so the lists live on the "/recap" screen with the `whole` text - a tap or the
+     * "Całe podsumowanie" button opens it.
+     */
+    private static NotificationCompat.Builder summaryBuilder(Context c, String title, String text, String shown,
+            String whole) {
+        boolean en = WidgetShared.en(c);
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_REVIEW)
             .setSmallIcon(R.drawable.ic_stat_szpila)
             .setColor(WidgetShared.AVOID)
             .setContentTitle(title)
             .setContentText(text)
-            .setStyle(new NotificationCompat.BigTextStyle().bigText(big))
+            .setStyle(new NotificationCompat.BigTextStyle().bigText(shown))
             .setAutoCancel(true);
-        // Long recaps get cut in the notification on some phones: a tap shows the whole one.
         PendingIntent open = WidgetShared.openAppIntent(c, 7271, "/recap");
-        if (open != null) b.setContentIntent(open);
-        saveRecap(c, title, big, big.startsWith("🤖"));
+        if (open != null) {
+            b.setContentIntent(open);
+            b.addAction(0, en ? "📖 Full recap" : "📖 Całe podsumowanie", open);
+        }
+        saveRecap(c, title, whole, whole.startsWith("🤖"));
         return b;
     }
 
@@ -852,10 +861,11 @@ final class HabitNotifier {
     }
 
     /** The coach's comment instead of the opener - only while the recap is still showing, silently. */
-    static void coachSummary(Context c, String title, String comment, String rest) {
+    static void coachSummary(Context c, String title, String comment, String tip, String rest) {
         if (!canNotify(c) || !isShowing(c, ID_SUMMARY)) return;
         String text = coachText(comment);
-        post(c, ID_SUMMARY, summaryBuilder(c, title, text, text + rest).setSilent(true).setOnlyAlertOnce(true));
+        post(c, ID_SUMMARY, summaryBuilder(c, title, text, text + tip, text + rest)
+            .setSilent(true).setOnlyAlertOnce(true));
     }
 
     /** The model's comment, marked so it's clear the AI wrote it. Pure. */

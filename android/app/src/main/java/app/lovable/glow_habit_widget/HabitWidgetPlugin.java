@@ -383,7 +383,7 @@ public class HabitWidgetPlugin extends Plugin {
             long t0 = System.currentTimeMillis();
             try {
                 String comment = CoachClient.comment(c, new org.json.JSONObject(r[4]));
-                if (comment != null) HabitNotifier.coachSummary(c, r[1], comment, r[5]);
+                if (comment != null) HabitNotifier.coachSummary(c, r[1], comment, r[6], r[5]);
                 ret.put("comment", comment != null ? HabitNotifier.coachText(comment) : null);
                 if (comment == null) ret.put("error", "rejected");
             } catch (SecurityException e) {
