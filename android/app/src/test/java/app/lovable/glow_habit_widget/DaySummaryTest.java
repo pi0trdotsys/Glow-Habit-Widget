@@ -130,4 +130,21 @@ public class DaySummaryTest {
         assertEquals("🔒 +12 dyskretnych", HabitNotifier.discreetLine(12, false));
         assertEquals("🔒 +2 discreet", HabitNotifier.discreetLine(2, true));
     }
+
+    @Test
+    public void recapHistoryKeepsOnePerDayNewestFirst() throws Exception {
+        JSONArray log = new JSONArray();
+        log = HabitNotifier.pushRecap(log, new JSONObject().put("day", "2026-11-14").put("text", "a"), 3);
+        log = HabitNotifier.pushRecap(log, new JSONObject().put("day", "2026-11-15").put("text", "b"), 3);
+        // the AI comment for the same day replaces the plain one
+        log = HabitNotifier.pushRecap(log, new JSONObject().put("day", "2026-11-15").put("text", "🤖 b"), 3);
+        assertEquals(2, log.length());
+        assertEquals("🤖 b", log.getJSONObject(0).getString("text"));
+        assertEquals("a", log.getJSONObject(1).getString("text"));
+        log = HabitNotifier.pushRecap(log, new JSONObject().put("day", "2026-11-16").put("text", "c"), 3);
+        log = HabitNotifier.pushRecap(log, new JSONObject().put("day", "2026-11-17").put("text", "d"), 3);
+        assertEquals(3, log.length()); // the oldest one went
+        assertEquals("d", log.getJSONObject(0).getString("text"));
+        assertEquals("🤖 b", log.getJSONObject(2).getString("text"));
+    }
 }

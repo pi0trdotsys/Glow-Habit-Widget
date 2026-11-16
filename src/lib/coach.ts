@@ -9,6 +9,7 @@ interface CoachPlugin {
   testCoach(): Promise<{ ok: boolean; model?: string; error?: string }>;
   testSummary(): Promise<SummaryTestResult>;
   lastRecap(): Promise<Partial<Recap>>;
+  recaps(): Promise<{ items?: Recap[] }>;
 }
 
 /** "coach" = sent, the AI comment follows; "plain" = sent without a server; else why not. */
@@ -59,6 +60,8 @@ export async function testSummary(): Promise<SummaryTestResult> {
 }
 
 export interface Recap {
+  /** "yyyy-MM-dd" (missing on the one recap saved before the history existed). */
+  day?: string;
   title: string;
   text: string;
   at: number;
@@ -75,4 +78,47 @@ export async function lastRecap(): Promise<Recap | null> {
   } catch {
     return null;
   }
+}
+
+/** Every recap, newest first, one per day (kept natively, the last 60). */
+export async function recaps(): Promise<Recap[]> {
+  if (!coachSupported()) return [];
+  try {
+    const items = ((await Native.recaps()).items ?? []).filter((r) => r && r.text);
+    if (items.length > 0) return items;
+  } catch {
+    // an older native side: just the last one
+  }
+  const last = await lastRecap();
+  return last ? [last] : [];
+}
+
+const dayKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+/** The recap's day ("yyyy-MM-dd"), from `day` or else from when it was shown. */
+export function recapDay(r: Recap): string {
+  return r.day || dayKey(new Date(r.at));
+}
+
+/**
+ * The recap for the "Dziś" card: today's, or last night's until noon (it comes late in the
+ * evening, so the morning is when it gets read). Pure.
+ */
+export function homeRecap(items: Recap[], now: Date): Recap | null {
+  const r = items[0];
+  if (!r) return null;
+  const day = recapDay(r);
+  if (day === dayKey(now)) return r;
+  const y = new Date(now);
+  y.setDate(y.getDate() - 1);
+  return day === dayKey(y) && now.getHours() < 12 ? r : null;
+}
+
+/** The recap's text in blocks: [the comment, the tip, the lists...] (split on blank lines). */
+export function recapBlocks(text: string): string[] {
+  return text
+    .split(/\n\s*\n/)
+    .map((b) => b.trim())
+    .filter(Boolean);
 }

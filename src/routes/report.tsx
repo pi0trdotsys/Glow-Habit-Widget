@@ -11,6 +11,8 @@ import { AVOID_COLOR, HABIT_COLOR_VAR } from "@/lib/habits/colors";
 import { MonthsView, TrendView } from "@/components/LongStats";
 import { useState } from "react";
 import { L, isEn } from "@/lib/i18n";
+import { coachSupported } from "@/lib/coach";
+import { ChevronRight } from "lucide-react";
 
 type Tab = "week" | "trend" | "months";
 const tabList = (): { id: Tab; label: string }[] => [
@@ -109,6 +111,22 @@ function ReportPage() {
           )}
         </p>
       </header>
+      {coachSupported() && (
+        <Link
+          to="/recap"
+          className="mx-5 mb-4 flex items-center justify-between gap-3 rounded-2xl bg-card px-4 py-3 text-sm"
+          data-recaps-link
+        >
+          <span>
+            🍻 {L("Podsumowania dnia", "Day recaps")}
+            <span className="text-muted-foreground">
+              {" "}
+              · {L("z komentarzami 🤖", "with the 🤖 comments")}
+            </span>
+          </span>
+          <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
+        </Link>
+      )}
       {tabs}
 
       <section className="mx-5 rounded-3xl bg-card p-5">

@@ -38,6 +38,7 @@ import { isKropi, kropiAdd } from "@/lib/kropi";
 import { syncKropiNow } from "@/lib/sensors";
 import { focusHabit } from "@/lib/habits/focus";
 import { FreeWindowHint } from "@/components/FreeWindowHint";
+import { RecapHomeCard } from "@/components/RecapHomeCard";
 import { useCalendarPlan } from "@/lib/calendar-device";
 import { isDiscreet } from "@/lib/habits/discreet";
 
@@ -174,6 +175,7 @@ function TodayPage() {
             allDone={allDone}
             force={forceGuard}
           />
+          <RecapHomeCard />
           {settleYesterday.length > 0 && (
             <section
               className="rounded-2xl p-3"

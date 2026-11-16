@@ -283,7 +283,12 @@ function RootComponent() {
     follow();
     const onVis = () => document.visibilityState === "visible" && follow();
     document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
+    // tapped while the app was on screen (the shade pulled over it): no visibilitychange then
+    window.addEventListener("szpilaroute", follow);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("szpilaroute", follow);
+    };
   }, [router]);
 
   useEffect(() => {

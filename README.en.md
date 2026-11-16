@@ -188,7 +188,8 @@ switch away.
   (_"The gym lands at 20% on Wednesdays, tomorrow is Wednesday, do it in the
   morning"_). It picks the time itself, from when you usually wrap up the day.
   Optionally a small AI model on your own server writes the comment
-  ([server/szpila-coach](server/szpila-coach)).
+  ([server/szpila-coach](server/szpila-coach)). Every recap, the 🤖 comments
+  included, stays in the app: a card on the Today screen and the history in Report.
 
 ## ◉ No need to open the app
 

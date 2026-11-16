@@ -189,7 +189,9 @@ przełącznikiem.
   zrobione, czego zabrakło, i daje jedną radę na jutro z twoich danych (_„Siłownia
   w środę wychodzi ci na 20%, jutro środa, zrób to rano”_). Godzinę dobiera sama,
   z tego, kiedy zwykle kończysz dzień. Opcjonalnie komentarz dopisuje mały model AI
-  na twoim własnym serwerze ([server/szpila-coach](server/szpila-coach)).
+  na twoim własnym serwerze ([server/szpila-coach](server/szpila-coach)). Wszystkie
+  podsumowania, razem z komentarzami 🤖, zostają w aplikacji: karta na ekranie Dziś
+  i historia w Raporcie.
 
 ## ◉ Bez otwierania aplikacji
 

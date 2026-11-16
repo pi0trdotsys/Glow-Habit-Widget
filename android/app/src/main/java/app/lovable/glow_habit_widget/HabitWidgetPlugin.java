@@ -410,6 +410,18 @@ public class HabitWidgetPlugin extends Plugin {
         call.resolve(ret);
     }
 
+    /** The recap history: { items: [{ day, title, text, at, ai }] }, newest first. */
+    @PluginMethod
+    public void recaps(PluginCall call) {
+        JSObject ret = new JSObject();
+        try {
+            ret.put("items", new com.getcapacitor.JSArray(HabitNotifier.recaps(getContext()).toString()));
+        } catch (Exception e) {
+            ret.put("items", new com.getcapacitor.JSArray());
+        }
+        call.resolve(ret);
+    }
+
     /** Checks the saved server: { ok, model? , error? } (off the main thread). */
     @PluginMethod
     public void testCoach(PluginCall call) {

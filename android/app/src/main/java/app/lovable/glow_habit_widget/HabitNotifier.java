@@ -88,6 +88,9 @@ final class HabitNotifier {
     private static final String KEY_LAST_SUMMARY = "last_summary";
     /** The last recap as shown ({title, text, at, ai}) - the app's "/recap" screen shows it whole. */
     private static final String KEY_RECAP = "last_recap";
+    /** Every recap, newest first, one per day (the app's "/recap" history). */
+    private static final String KEY_RECAPS = "recaps";
+    static final int RECAPS_KEPT = 60;
     /** Yesterday stays answerable until noon - mirrors AVOID_GRACE_MIN in utils.ts. */
     static final int GRACE_MIN = 12 * 60;
     /** A jab fires if its slot passed less than this many minutes ago (MIUI delays alarms). */
@@ -844,9 +847,41 @@ final class HabitNotifier {
 
     private static void saveRecap(Context c, String title, String text, boolean ai) {
         try {
-            own(c).edit().putString(KEY_RECAP, new JSONObject().put("title", title).put("text", text)
-                .put("at", System.currentTimeMillis()).put("ai", ai).toString()).apply();
+            JSONObject r = new JSONObject().put("day", WidgetShared.today()).put("title", title)
+                .put("text", text).put("at", System.currentTimeMillis()).put("ai", ai);
+            SharedPreferences p = own(c);
+            JSONArray log;
+            try {
+                log = new JSONArray(p.getString(KEY_RECAPS, "[]"));
+            } catch (Exception e) {
+                log = new JSONArray();
+            }
+            p.edit().putString(KEY_RECAP, r.toString())
+                .putString(KEY_RECAPS, pushRecap(log, r, RECAPS_KEPT).toString()).apply();
         } catch (Exception ignored) {
+        }
+    }
+
+    /**
+     * The recap history, newest first: `r` replaces the one of its day (the AI comment arriving,
+     * a test one), older ones stay; at most `max`. Pure (RecapLogTest).
+     */
+    static JSONArray pushRecap(JSONArray log, JSONObject r, int max) {
+        JSONArray out = new JSONArray().put(r);
+        String day = r.optString("day");
+        for (int i = 0; i < log.length() && out.length() < max; i++) {
+            JSONObject o = log.optJSONObject(i);
+            if (o != null && !day.equals(o.optString("day"))) out.put(o);
+        }
+        return out;
+    }
+
+    /** The recap history ([{day, title, text, at, ai}], newest first). */
+    static JSONArray recaps(Context c) {
+        try {
+            return new JSONArray(own(c).getString(KEY_RECAPS, "[]"));
+        } catch (Exception e) {
+            return new JSONArray();
         }
     }
 

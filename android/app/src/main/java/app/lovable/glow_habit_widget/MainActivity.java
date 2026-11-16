@@ -28,15 +28,20 @@ public class MainActivity extends BridgeActivity {
     protected void onNewIntent(android.content.Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        takeRoute(intent);
+        if (takeRoute(intent) && bridge != null) {
+            // Tapped while Szpila was already on screen (e.g. from the pulled-down shade): the page
+            // never went hidden, so no "visibilitychange" - tell it there's a screen to open.
+            bridge.triggerWindowJSEvent("szpilaroute");
+        }
     }
 
-    private void takeRoute(android.content.Intent intent) {
-        if (intent == null) return;
+    private boolean takeRoute(android.content.Intent intent) {
+        if (intent == null) return false;
         String route = intent.getStringExtra(WidgetShared.EXTRA_ROUTE);
-        if (route == null || !route.startsWith("/") || route.startsWith("//")) return;
+        if (route == null || !route.startsWith("/") || route.startsWith("//")) return false;
         intent.removeExtra(WidgetShared.EXTRA_ROUTE);
         ShopGuard.setPendingRoute(getApplicationContext(), route);
+        return true;
     }
 
     /**
