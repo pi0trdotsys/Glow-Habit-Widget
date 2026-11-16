@@ -178,4 +178,23 @@ public class DaySummaryTest {
         assertEquals("🤖 w", log.getJSONObject(0).getString("text"));
         assertEquals("d", log.getJSONObject(1).getString("text"));
     }
+
+    @Test
+    public void theForecastForTheCoachHasRisksWithReasonsAndTodaysPlan() throws Exception {
+        Forecast.Item gym = new Forecast.Item("g", 0.7, "x");
+        gym.name = "Siłownia";
+        gym.reason = "sleep";
+        JSONArray rows = new JSONArray()
+            .put(build("g", "Siłownia", 0, 1))
+            .put(build("w", "Woda", 8, 8))                       // done: not in the plan
+            .put(avoid("s", "Słodycze", "pending"))              // avoid: a risk, not a plan item
+            .put(avoid("p", "Sekret", "pending").put("discreet", true));
+        JSONObject f = new JSONObject(Forecast.coachFacts(java.util.Collections.singletonList(gym), rows, 1, "Piotr", "hard", false));
+        assertEquals("forecast", f.getString("kind"));
+        assertEquals(1, f.getInt("wd"));
+        assertEquals("sleep", f.getJSONArray("risks").getJSONObject(0).getString("reason"));
+        assertEquals(1, f.getJSONArray("plan").length());
+        assertEquals("Siłownia", f.getJSONArray("plan").getString(0));
+        assertFalse(f.toString().contains("Sekret"));
+    }
 }

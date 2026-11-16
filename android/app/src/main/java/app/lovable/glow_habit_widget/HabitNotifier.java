@@ -65,6 +65,7 @@ final class HabitNotifier {
     static final int ID_BILL = 7260;
     static final int ID_SUMMARY = 7270;
     static final int ID_UPDATE = 7500;
+    static final int ID_FORECAST = 7280;
 
     static final String ACTION_TICK = "app.lovable.glow_habit_widget.NOTIFIER_TICK";
     static final String ACTION_DO_NEXT = "app.lovable.glow_habit_widget.DO_NEXT";
@@ -86,6 +87,10 @@ final class HabitNotifier {
     private static final String KEY_LAST_MORNING = "last_morning";
     private static final String KEY_LAST_BILL = "last_bill";
     private static final String KEY_LAST_SUMMARY = "last_summary";
+    /** The day the coach was asked for the morning forecast. */
+    private static final String KEY_LAST_FORECAST = "last_forecast";
+    /** Today's forecast from the coach ({day, text}) - the app's "Prognoza na dziś" shows it too. */
+    private static final String KEY_FORECAST_AI = "forecast_ai";
     /** The last recap as shown ({title, text, at, ai}) - the app's "/recap" screen shows it whole. */
     private static final String KEY_RECAP = "last_recap";
     /** Every recap, newest first, one per day (the app's "/recap" history). */
@@ -139,6 +144,7 @@ final class HabitNotifier {
             maybeDaySummary(c);
             maybeMorningReview(c);
             maybeNightBill(c);
+            maybeMorningForecast(c);
             maybeRoast(c);
         } catch (Exception ignored) {
         }
@@ -1061,20 +1067,133 @@ final class HabitNotifier {
 
     private static void billPost(Context c, JSONObject r) {
         String[] t = billText(r, WidgetShared.state(c).optJSONObject("bill"), WidgetShared.en(c));
+        String base = t[1];
         // "Prognoza na dziś": habits likely to fall through after this night (Forecast.java).
         String forecast = forecastBlock(c, r);
         if (!forecast.isEmpty()) t[1] = t[1] + "\n\n" + forecast;
-        String first = t[1].split("\n")[0];
+        String title = (r.optInt("social") > 0 ? EMOJI_ANGRY : EMOJI_IMPRESSED) + " " + t[0];
+        JSONObject ai = aiForecast(c); // already written today (the app opened first)
+        if (ai != null) t[1] = base + "\n\n🔮 " + ai.optString("text");
+        post(c, ID_BILL, billBuilder(c, title, t[1]));
+        // Your own coach server (optional): its forecast replaces the block in a minute.
+        if (ai == null && CoachClient.configured(c)) askForecast(c, r, title, base);
+    }
+
+    private static NotificationCompat.Builder billBuilder(Context c, String title, String body) {
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_REVIEW)
             .setSmallIcon(R.drawable.ic_stat_szpila)
             .setColor(WidgetShared.AVOID)
-            .setContentTitle((r.optInt("social") > 0 ? EMOJI_ANGRY : EMOJI_IMPRESSED) + " " + t[0])
-            .setContentText(first)
-            .setStyle(new NotificationCompat.BigTextStyle().bigText(t[1]))
+            .setContentTitle(title)
+            .setContentText(body.split("\n")[0])
+            .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
             .setAutoCancel(true);
         PendingIntent openApp = WidgetShared.openAppIntent(c, 7261);
         if (openApp != null) b.setContentIntent(openApp);
-        post(c, ID_BILL, b);
+        return b;
+    }
+
+    /**
+     * "Prognoza na dziś" from the coach when there's no night bill to carry it (no screen-time
+     * access, or the review off): once a morning, its own notification once the answer is in.
+     */
+    static void maybeMorningForecast(Context c) {
+        if (!CoachClient.configured(c) || !canNotify(c)) return;
+        JSONObject s = settings(c);
+        int now = WidgetShared.nowMinute();
+        if (now < wake(s) || now >= GRACE_MIN) return;
+        SharedPreferences p = own(c);
+        String today = WidgetShared.today();
+        if (today.equals(p.getString(KEY_LAST_FORECAST, "")) || aiForecast(c) != null) return;
+        // the night bill comes first and brings the forecast along (billPost)
+        if (s.optBoolean("review", true) && ScreenTime.granted(c) && !today.equals(p.getString(KEY_LAST_BILL, ""))) return;
+        if (!askForecast(c, ScreenTime.granted(c) ? NightStats.report(c, 1) : null, "", "")) {
+            p.edit().putString(KEY_LAST_FORECAST, today).apply(); // nothing to forecast today
+        }
+    }
+
+    /** Schedules the coach's forecast (CoachJob "forecast"); false when there's nothing to ask. */
+    private static boolean askForecast(Context c, JSONObject report, String title, String base) {
+        String facts = forecastFacts(c, report);
+        if (facts == null) return false;
+        own(c).edit().putString(KEY_LAST_FORECAST, WidgetShared.today()).apply();
+        CoachJob.schedule(c, "forecast", title, base, "", facts);
+        return true;
+    }
+
+    /** The coach's facts for today's forecast, or null with no risk and no plan. */
+    static String forecastFacts(Context c, JSONObject report) {
+        try {
+            JSONObject state = WidgetShared.state(c);
+            int wd = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1; // 0 = Sunday, like JS getDay()
+            List<Forecast.Item> items = Forecast.morningItems(state, report, wd, WidgetShared.today(),
+                WidgetShared.dateKey(1), WidgetShared.nowMinute());
+            JSONObject summary = state.optJSONObject("summary");
+            String f = Forecast.coachFacts(items, WidgetShared.withoutDiscreet(WidgetShared.habits(c)), wd,
+                state.optString("userName", ""), summary != null ? summary.optString("level", "hard") : "hard",
+                WidgetShared.en(c));
+            JSONObject o = new JSONObject(f);
+            return o.optJSONArray("risks").length() == 0 && o.optJSONArray("plan").length() == 0 ? null : f;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * The coach's forecast: kept for the app, swapped into the night bill if it's still there
+     * (`title` set = it came with the bill), else its own notification.
+     */
+    static void coachForecast(Context c, String title, String comment, String base) {
+        String text = coachText(comment);
+        try {
+            own(c).edit().putString(KEY_FORECAST_AI,
+                new JSONObject().put("day", WidgetShared.today()).put("text", text).toString()).apply();
+        } catch (Exception ignored) {
+        }
+        if (!canNotify(c)) return;
+        if (!title.isEmpty()) {
+            if (isShowing(c, ID_BILL)) {
+                post(c, ID_BILL, billBuilder(c, title, base + "\n\n🔮 " + text).setSilent(true).setOnlyAlertOnce(true));
+            }
+            return;
+        }
+        boolean en = WidgetShared.en(c);
+        NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_REVIEW)
+            .setSmallIcon(R.drawable.ic_stat_szpila)
+            .setColor(WidgetShared.AVOID)
+            .setContentTitle(en ? "🔮 Today's forecast" : "🔮 Prognoza na dziś")
+            .setContentText(text)
+            .setStyle(new NotificationCompat.BigTextStyle().bigText(text))
+            .setAutoCancel(true);
+        PendingIntent openApp = WidgetShared.openAppIntent(c, 7281, "/");
+        if (openApp != null) b.setContentIntent(openApp);
+        post(c, ID_FORECAST, b);
+    }
+
+    /** Today's forecast from the coach ({day, text}) or null. */
+    static JSONObject aiForecast(Context c) {
+        try {
+            JSONObject o = new JSONObject(own(c).getString(KEY_FORECAST_AI, "{}"));
+            return WidgetShared.today().equals(o.optString("day")) && !o.optString("text").isEmpty() ? o : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** One the app asked for itself (opened before the morning job ran). */
+    static void saveAiForecast(Context c, String text) {
+        try {
+            own(c).edit().putString(KEY_FORECAST_AI,
+                new JSONObject().put("day", WidgetShared.today()).put("text", text).toString()).apply();
+        } catch (Exception ignored) {
+        }
+    }
+
+    /** "Napisz próbną prognozę" (Settings): [status, facts]; the plugin asks and posts. */
+    static String[] testForecast(Context c) {
+        if (!canNotify(c)) return new String[]{"blocked"};
+        String f = forecastFacts(c, ScreenTime.granted(c) ? NightStats.report(c, 1) : null);
+        if (f == null) return new String[]{"nothing"};
+        return new String[]{CoachClient.configured(c) ? "coach" : "plain", f};
     }
 
     /** This morning's risk forecast from the snapshot's models and last night's report ("" = none). */

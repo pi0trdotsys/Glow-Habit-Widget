@@ -54,10 +54,11 @@ import {
   setCoach,
   testCoach,
   testSummary,
+  testForecast,
   testWeek,
   type SummaryTestResult,
 } from "@/lib/coach";
-import { requestForecast } from "@/lib/ai-forecast";
+import { announceForecast } from "@/lib/ai-forecast";
 import { L, pick } from "@/lib/i18n";
 import { StepsSources } from "@/components/StepsSources";
 import { KropiSource } from "@/components/KropiSource";
@@ -1003,16 +1004,12 @@ function TestCoachButton({ kind }: { kind: TestKind }) {
       );
       const r: SummaryTestResult =
         kind === "forecast"
-          ? await requestForecast(new Date(), true).then((f) => ({
-              status: f.error === "nothing" ? "nothing" : f.error === "off" ? "plain" : "coach",
-              comment: f.text,
-              error: f.error,
-              ms: f.ms,
-            }))
+          ? await testForecast()
           : kind === "week"
             ? await testWeek()
             : await testSummary();
       clearTimeout(waiting);
+      if (kind === "forecast" && r.comment) announceForecast(r.comment);
       const s = r.ms ? ` (${Math.round(r.ms / 1000)} s)` : "";
       setMsg(
         r.status === "plain"

@@ -14,6 +14,9 @@ interface CoachPlugin {
   coachComment(opts: {
     facts: object;
   }): Promise<{ text?: string | null; error?: string; ms?: number }>;
+  testForecast(): Promise<SummaryTestResult>;
+  aiForecast(): Promise<{ day?: string; text?: string }>;
+  saveAiForecast(opts: { text: string }): Promise<void>;
 }
 
 /** "coach" = sent, the AI comment follows; "plain" = sent without a server; else why not. */
@@ -148,5 +151,35 @@ export async function coachComment(
     return await Native.coachComment({ facts });
   } catch (e) {
     return { error: String(e) };
+  }
+}
+
+/** "Napisz próbną prognozę": the coach's forecast now, as the morning notification. */
+export async function testForecast(): Promise<SummaryTestResult> {
+  if (!coachSupported()) return { status: "nothing" };
+  try {
+    return await Native.testForecast();
+  } catch (e) {
+    return { status: "coach", error: String(e) };
+  }
+}
+
+/** Today's forecast from the coach (the morning job's or the app's own), or null. */
+export async function storedForecast(): Promise<string | null> {
+  if (!coachSupported()) return null;
+  try {
+    return (await Native.aiForecast()).text || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Keeps a forecast the app asked for, so the morning notification uses it instead of asking. */
+export async function keepForecast(text: string): Promise<void> {
+  if (!coachSupported()) return;
+  try {
+    await Native.saveAiForecast({ text });
+  } catch {
+    // an older native side: the app shows it this time anyway
   }
 }

@@ -19,13 +19,14 @@ import org.json.JSONObject;
 public class CoachJob extends JobService {
     private static final int JOB_DAY = 7272;
     private static final int JOB_WEEK = 7273;
+    private static final int JOB_FORECAST = 7274;
     private Thread worker;
 
     /** `shown` = what goes into the notification under the comment, `rest` = the whole rest. */
     static void schedule(Context c, String kind, String title, String shown, String rest, String facts) {
         JobScheduler js = (JobScheduler) c.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         if (js == null) return;
-        int jobId = "week".equals(kind) ? JOB_WEEK : JOB_DAY;
+        int jobId = "week".equals(kind) ? JOB_WEEK : "forecast".equals(kind) ? JOB_FORECAST : JOB_DAY;
         PersistableBundle extras = new PersistableBundle();
         extras.putString("kind", kind);
         extras.putString("title", title);
@@ -82,6 +83,7 @@ public class CoachJob extends JobService {
     /** The comment to where its kind goes (the job and the Settings test both end here). */
     static void deliver(Context c, String kind, String title, String comment, String shown, String rest) {
         if ("week".equals(kind)) HabitNotifier.coachWeek(c, title, comment, shown, rest);
+        else if ("forecast".equals(kind)) HabitNotifier.coachForecast(c, title, comment, shown);
         else HabitNotifier.coachSummary(c, title, comment, shown, rest);
     }
 

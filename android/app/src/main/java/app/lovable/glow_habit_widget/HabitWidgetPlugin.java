@@ -374,7 +374,7 @@ public class HabitWidgetPlugin extends Plugin {
         final android.content.Context c = getContext();
         final String[] r = HabitNotifier.testSummary(c);
         // [status, title, opener, whole, facts, rest, tip]
-        runCoachTest(call, c, r, "day", r.length > 6 ? r[6] : "", r.length > 5 ? r[5] : "", r.length > 4 ? r[4] : "");
+        runCoachTest(call, c, r, "day", r.length > 1 ? r[1] : "", r.length > 6 ? r[6] : "", r.length > 5 ? r[5] : "", r.length > 4 ? r[4] : "");
     }
 
     /** "Wyślij próbny tydzień": the weekly recap now + the coach's comment, like testSummary. */
@@ -383,11 +383,11 @@ public class HabitWidgetPlugin extends Plugin {
         final android.content.Context c = getContext();
         final String[] r = HabitNotifier.testWeek(c);
         // [status, title, stats, whole, facts]
-        runCoachTest(call, c, r, "week", r.length > 2 ? r[2] : "", r.length > 3 ? r[3] : "", r.length > 4 ? r[4] : "");
+        runCoachTest(call, c, r, "week", r.length > 1 ? r[1] : "", r.length > 2 ? r[2] : "", r.length > 3 ? r[3] : "", r.length > 4 ? r[4] : "");
     }
 
     private void runCoachTest(PluginCall call, android.content.Context c, String[] r, String kind,
-            String shown, String rest, String facts) {
+            String title, String shown, String rest, String facts) {
         JSObject ret = new JSObject();
         ret.put("status", r[0]);
         if (!"coach".equals(r[0])) {
@@ -398,7 +398,7 @@ public class HabitWidgetPlugin extends Plugin {
             long t0 = System.currentTimeMillis();
             try {
                 String comment = CoachClient.comment(c, new org.json.JSONObject(facts));
-                if (comment != null) CoachJob.deliver(c, kind, r[1], comment, shown, rest);
+                if (comment != null) CoachJob.deliver(c, kind, title, comment, shown, rest);
                 ret.put("comment", comment != null ? HabitNotifier.coachText(comment) : null);
                 if (comment == null) ret.put("error", "rejected");
             } catch (SecurityException e) {
@@ -409,6 +409,34 @@ public class HabitWidgetPlugin extends Plugin {
             ret.put("ms", System.currentTimeMillis() - t0);
             call.resolve(ret);
         }, "coach-test-" + kind).start();
+    }
+
+    /** "Napisz próbną prognozę": asks the coach now and posts "Prognoza na dziś". */
+    @PluginMethod
+    public void testForecast(PluginCall call) {
+        final android.content.Context c = getContext();
+        final String[] r = HabitNotifier.testForecast(c);
+        runCoachTest(call, c, r, "forecast", "", "", "", r.length > 1 ? r[1] : "");
+    }
+
+    /** Today's forecast from the coach: { day, text } or {} (the app's "Prognoza na dziś"). */
+    @PluginMethod
+    public void aiForecast(PluginCall call) {
+        org.json.JSONObject o = HabitNotifier.aiForecast(getContext());
+        JSObject ret = new JSObject();
+        if (o != null) {
+            ret.put("day", o.optString("day"));
+            ret.put("text", o.optString("text"));
+        }
+        call.resolve(ret);
+    }
+
+    /** Keeps a forecast the app asked for itself, so the morning job doesn't ask again. */
+    @PluginMethod
+    public void saveAiForecast(PluginCall call) {
+        String text = call.getString("text", "");
+        if (text != null && !text.isEmpty()) HabitNotifier.saveAiForecast(getContext(), text);
+        call.resolve();
     }
 
     /**

@@ -1,56 +1,22 @@
-// "Prognoza na dziś" written by the coach (your own AI server): asked once a morning when the
-// forecast shows (05:00-12:00), kept for the day on this device. Without a server, or while it
-// thinks, the app's own forecast stays.
+// "Prognoza na dziś" written by the coach (your own AI server). Usually the morning notification
+// asks for it (HabitNotifier.maybeMorningForecast / the night bill) and keeps it natively; if the
+// app is opened first (05:00-12:00), the app asks once and hands it over, so it's written once a
+// day and the notification and the app say the same. Without a server the app's own forecast stays.
 import { useEffect, useState } from "react";
-import { coachComment, coachSupported, getCoach } from "@/lib/coach";
+import { coachComment, coachSupported, getCoach, keepForecast, storedForecast } from "@/lib/coach";
 import { forecastFacts } from "@/lib/habits/coach-facts";
 import { dayForecast, showForecastAt } from "@/lib/habits/forecast";
 import { useHabits } from "@/lib/habits/store";
 import { todayKey } from "@/lib/habits/utils";
 
-const KEY = "szpila.aiForecast.v1";
-
-interface Cached {
-  day: string;
-  text: string;
-  at: number;
-}
-
-/** Today's AI forecast, or null. */
-export function cachedForecast(day: string): string | null {
-  try {
-    const c = JSON.parse(localStorage.getItem(KEY) ?? "null") as Cached | null;
-    return c && c.day === day && c.text ? c.text : null;
-  } catch {
-    return null;
-  }
-}
-
-function save(day: string, text: string) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify({ day, text, at: Date.now() } satisfies Cached));
-  } catch {
-    // no storage: it's asked again next time
-  }
-}
-
-const listeners = new Set<(day: string, text: string) => void>();
+const listeners = new Set<(text: string) => void>();
 let tried = "";
 let inflight: Promise<{ text?: string | null; error?: string; ms?: number }> | null = null;
 
-/**
- * Asks the coach for today's forecast now (also the Settings test: `force` = whatever the hour,
- * even if there is one already). Resolves with the text (🤖 ...) or why not.
- */
+/** Asks the coach for today's forecast (once at a time). Resolves with the text (🤖 ...) or why not. */
 export async function requestForecast(
   now = new Date(),
-  force = false,
 ): Promise<{ text?: string | null; error?: string; ms?: number }> {
-  const day = todayKey(now);
-  if (!force) {
-    const hit = cachedForecast(day);
-    if (hit) return { text: hit };
-  }
   if (inflight) return inflight;
   const s = useHabits.getState();
   const items = dayForecast(
@@ -67,36 +33,50 @@ export async function requestForecast(
   });
   const r = await inflight;
   if (r.text) {
-    save(day, r.text);
-    listeners.forEach((f) => f(day, r.text as string));
+    void keepForecast(r.text);
+    announceForecast(r.text);
   }
   return r;
 }
 
-/** Today's AI forecast for the "Prognoza na dziś" slide: cached, or asked once a morning. */
+/** A new forecast for today (the app's request or the Settings test): the slide updates. */
+export function announceForecast(text: string) {
+  listeners.forEach((f) => f(text));
+}
+
+/** Today's AI forecast for the "Prognoza na dziś" slide: the stored one, or asked once a morning. */
 export function useAiForecast(now: Date): string | null {
   const day = todayKey(now);
   const show = coachSupported() && showForecastAt(now);
-  const [text, setText] = useState<string | null>(() => (show ? cachedForecast(day) : null));
+  const [text, setText] = useState<string | null>(null);
   useEffect(() => {
     if (!show) {
       setText(null);
       return;
     }
-    const on = (d: string, t: string) => d === day && setText(t);
+    let live = true;
+    const on = (t: string) => live && setText(t);
     listeners.add(on);
-    const hit = cachedForecast(day);
-    if (hit) setText(hit);
-    else if (tried !== day) {
-      tried = day;
-      void getCoach().then((c) => {
-        if (c.url && c.hasToken) void requestForecast(now);
+    const load = () =>
+      void storedForecast().then((hit) => {
+        if (!live) return;
+        if (hit) setText(hit);
+        else if (tried !== day) {
+          tried = day;
+          void getCoach().then((c) => {
+            if (c.url && c.hasToken) void requestForecast(new Date());
+          });
+        }
       });
-    }
+    load();
+    // the morning job may write it while the app sits in the background
+    const onVis = () => document.visibilityState === "visible" && load();
+    document.addEventListener("visibilitychange", onVis);
     return () => {
+      live = false;
       listeners.delete(on);
+      document.removeEventListener("visibilitychange", onVis);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, day]);
   return text;
 }

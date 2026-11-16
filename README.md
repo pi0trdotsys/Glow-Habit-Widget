@@ -192,7 +192,7 @@ przełącznikiem.
   na twoim własnym serwerze ([server/szpila-coach](server/szpila-coach)). Wszystkie
   podsumowania, razem z komentarzami 🤖, zostają w aplikacji: karta na ekranie Dziś
   i historia w Raporcie. Ten sam serwer pisze też niedzielny komentarz do tygodnia
-  i poranną prognozę na dziś.
+  i poranną prognozę na dziś (w porannym powiadomieniu i na ekranie Dziś).
 
 ## ◉ Bez otwierania aplikacji
 

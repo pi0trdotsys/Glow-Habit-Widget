@@ -49,6 +49,10 @@ final class Forecast {
         final String id;
         final double p;
         final String text;
+        /** For the coach server: the habit's name, why (reason key) and "build" / "avoid". */
+        String name = "";
+        String reason = "";
+        String kind = "build";
 
         Item(String id, double p, String text) {
             this.id = id;
@@ -167,8 +171,12 @@ final class Forecast {
         String line = pool.optString((int) (hash(date + "|" + id) % pool.length()));
         JSONObject ph = fc.optJSONObject("reasons");
         String reason = reasonText(r.reason, m, wd, social, screen, sleep, ph != null ? ph : new JSONObject());
-        return new Item(id, r.p, fill(line, m.optString("name"), r.pct, reason, m.optString("min", ""),
+        Item it = new Item(id, r.p, fill(line, m.optString("name"), r.pct, reason, m.optString("min", ""),
             WidgetShared.fmtMinute(until(nowMin))));
+        it.name = m.optString("name");
+        it.reason = r.reason;
+        it.kind = "avoid".equals(m.optString("kind")) ? "avoid" : "build";
+        return it;
     }
 
     /**
@@ -179,6 +187,13 @@ final class Forecast {
      */
     static List<String> morning(JSONObject state, JSONObject report, int wd, String date, String yesterday, int nowMin) {
         List<String> out = new ArrayList<>();
+        for (Item it : morningItems(state, report, wd, date, yesterday, nowMin)) out.add(it.text);
+        return out;
+    }
+
+    /** morning() as items (riskiest first, at most two) - the coach server gets their names and why. */
+    static List<Item> morningItems(JSONObject state, JSONObject report, int wd, String date, String yesterday, int nowMin) {
+        List<Item> out = new ArrayList<>();
         JSONObject fc = state != null ? state.optJSONObject("forecast") : null;
         JSONArray models = fc != null ? fc.optJSONArray("models") : null;
         if (models == null) return out;
@@ -207,8 +222,34 @@ final class Forecast {
             if (it != null) items.add(it);
         }
         Collections.sort(items, (a, b) -> Double.compare(b.p, a.p));
-        for (int i = 0; i < Math.min(MAX_ITEMS, items.size()); i++) out.add(items.get(i).text);
+        for (int i = 0; i < Math.min(MAX_ITEMS, items.size()); i++) out.add(items.get(i));
         return out;
+    }
+
+    /**
+     * What the coach server gets for "Prognoza na dziś" (mirrors forecastFacts in coach-facts.ts):
+     * the risky habits with reason keys, today's open build habits. `rows` = today's rows without
+     * discreet ones (the forecast models never have them). Pure.
+     */
+    static String coachFacts(List<Item> items, JSONArray rows, int wd, String name, String level, boolean en) {
+        JSONObject f = new JSONObject();
+        try {
+            JSONArray risks = new JSONArray();
+            for (Item it : items) {
+                risks.put(new JSONObject().put("name", it.name).put("reason", it.reason).put("kind", it.kind));
+            }
+            JSONArray plan = new JSONArray();
+            for (int i = 0; rows != null && i < rows.length() && plan.length() < 8; i++) {
+                JSONObject h = rows.optJSONObject(i);
+                if (h == null || WidgetShared.isAvoid(h) || WidgetShared.isDiscreet(h) || WidgetShared.isDone(h)) continue;
+                plan.put(h.optString("name"));
+            }
+            f.put("kind", "forecast").put("lang", en ? "en" : "pl").put("wd", wd)
+                .put("name", name == null ? "" : name).put("level", level == null ? "hard" : level)
+                .put("risks", risks).put("plan", plan);
+        } catch (Exception ignored) {
+        }
+        return f.toString();
     }
 
     static boolean dueOn(JSONObject m, int wd) {
