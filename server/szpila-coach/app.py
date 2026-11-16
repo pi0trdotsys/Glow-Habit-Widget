@@ -22,6 +22,8 @@ MODEL = os.environ.get("COACH_MODEL", "bielik-4.5b-v3-q4")
 PORT = int(os.environ.get("COACH_PORT", "8790"))
 MAX_BODY = 8 * 1024
 
+# Start another try only this soon after the first (the phone waits 150 s).
+ATTEMPT_BUDGET_S = 85
 # One generation at a time (CPU-only box shared with other services).
 GEN_LOCK = threading.Lock()
 # Failed auth attempts per client, for a simple back-off.
@@ -114,34 +116,54 @@ def overstates(text: str, pct: int, lang: str) -> bool:
     return any(pct < low and re.search(rx, text, re.IGNORECASE) for low, rx in CLAIMS[lang])
 
 
-def acceptable(text: str, lang: str, pct: int = 100) -> str | None:
-    """The comment, tidied up, or None when it breaks a rule."""
-    t = EMOJI.sub("", text).replace("\u2014", "-").replace("\u2013", "-").strip().strip('"„”')
+def bad_sentence(s: str, lang: str, pct: int, names: list[str]) -> str | None:
+    """Why one sentence breaks a rule (a short code for the log), or None."""
+    bare = s
+    for n in names:  # a habit called "8000 kroków" may be named as it is
+        bare = re.sub(re.escape(n), "", bare, flags=re.IGNORECASE)
+    if re.search(r"\d", bare):
+        return "digit"
+    if lang == "pl" and GENDERED.search(s):
+        return "gender"
+    if overstates(s, pct, lang):
+        return "overstates"
+    return None
+
+
+def acceptable(text: str, lang: str, pct: int = 100, names: list[str] | None = None) -> tuple[str | None, str]:
+    """(the comment tidied up, or None; a reason code for the log). A sentence that breaks a
+    rule is dropped, not the whole comment - the model slips on one phrase far more often."""
+    t = EMOJI.sub("", text).replace("\u2014", "-").replace("\u2013", "-")
+    t = FORMATTING.sub("", t).strip().strip('"„”')
     t = re.sub(r"\s+", " ", t)
-    if not 30 <= len(t) <= 360:
-        return None
-    if re.search(r"\d", t) or FORMATTING.search(t):
-        return None
-    if lang == "pl" and GENDERED.search(t):
-        return None
-    if overstates(t, pct, lang):
-        return None
-    return fit(t)
+    if len(t) < 30:
+        return None, "short"
+    kept, why = [], []
+    for s in re.split(r"(?<=[.!?])\s+", t):
+        r = bad_sentence(s, lang, pct, names or [])
+        if r:
+            why.append(r)
+        else:
+            kept.append(s)
+    out = fit(kept)
+    if not out:
+        return None, ",".join(why) or "long"
+    return out, "ok" if not why else "ok-dropped:" + ",".join(why)
 
 
 # The comment goes into a phone notification next to a tip; long ones get cut there.
 MAX_CHARS = 240
 
 
-def fit(t: str) -> str | None:
-    """At most two sentences and MAX_CHARS, cut between sentences; None if even one is too long."""
+def fit(sentences: list[str]) -> str | None:
+    """At most two sentences and MAX_CHARS, cut between sentences; None if under 40 chars."""
     out = ""
-    for s in re.split(r"(?<=[.!?])\s+", t)[:2]:
+    for s in sentences[:2]:
         nxt = f"{out} {s}".strip()
         if len(nxt) > MAX_CHARS:
             break
         out = nxt
-    return out if len(out) >= 30 else None
+    return out if len(out) >= 40 else None
 
 
 def ollama_chat(messages, temperature: float) -> str:
@@ -182,9 +204,15 @@ def comment(f: dict) -> str | None:
         {"role": "assistant", "content": ex_bot},
         {"role": "user", "content": facts_text(f, lang)},
     ]
+    names = [n for k in ("done", "missing", "slips") for n in clean_list(f.get(k))]
+    t0 = time.monotonic()
     with GEN_LOCK:
-        for temperature in (0.7, 0.4):
-            ok = acceptable(ollama_chat(messages, temperature), lang, pct_of(f))
+        # a few tries while the phone still waits (it gives up after 150 s; one try ~15-35 s)
+        for i, temperature in enumerate((0.7, 0.5, 0.8, 0.6), 1):
+            if i > 1 and time.monotonic() - t0 > ATTEMPT_BUDGET_S:
+                break
+            ok, why = acceptable(ollama_chat(messages, temperature), lang, pct_of(f), names)
+            print(f"comment try {i}: {why}", flush=True)  # reason codes only, never the text
             if ok:
                 return ok
     return None
