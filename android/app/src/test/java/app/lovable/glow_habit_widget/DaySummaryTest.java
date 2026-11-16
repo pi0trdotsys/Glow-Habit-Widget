@@ -147,4 +147,35 @@ public class DaySummaryTest {
         assertEquals("d", log.getJSONObject(0).getString("text"));
         assertEquals("🤖 b", log.getJSONObject(2).getString("text"));
     }
+
+    @Test
+    public void theWeekInNumbersAndForTheCoach() throws Exception {
+        JSONObject wk = new JSONObject().put("pct", 35).put("prev", 52).put("slips", 3)
+            .put("best", new JSONArray().put("Mycie zębów"))
+            .put("worst", new JSONArray().put("Siłownia").put("Czytanie"));
+        assertEquals("🗓️ Twój tydzień · 35%", HabitNotifier.weekTitle(wk, false));
+        assertEquals("📊 35% · tydzień temu 52%\n✅ Najlepiej: Mycie zębów\n⏳ Najsłabiej: Siłownia, Czytanie\n💥 Wpadki: 3",
+            HabitNotifier.weekStats(wk, false));
+        JSONObject f = new JSONObject(HabitNotifier.weekFacts(wk, "Piotr", "hard", false));
+        assertEquals("week", f.getString("kind"));
+        assertEquals(52, f.getInt("prev"));
+        assertEquals("Siłownia", f.getJSONArray("worst").getString(0));
+        // the first week: nothing to compare with
+        JSONObject first = new JSONObject().put("pct", 60).put("prev", JSONObject.NULL);
+        assertEquals("📊 60%", HabitNotifier.weekStats(first, true));
+        assertFalse(new JSONObject(HabitNotifier.weekFacts(first, "", "soft", true)).has("prev"));
+        assertEquals("", HabitNotifier.weekStats(null, false));
+        assertEquals("🗓️ Your week", HabitNotifier.weekTitle(null, true));
+    }
+
+    @Test
+    public void aWeekAndADayOfTheSameDateBothStayInTheHistory() throws Exception {
+        JSONArray log = new JSONArray();
+        log = HabitNotifier.pushRecap(log, new JSONObject().put("day", "2026-11-15").put("kind", "week").put("text", "w"), 5);
+        log = HabitNotifier.pushRecap(log, new JSONObject().put("day", "2026-11-15").put("kind", "day").put("text", "d"), 5);
+        log = HabitNotifier.pushRecap(log, new JSONObject().put("day", "2026-11-15").put("kind", "week").put("text", "🤖 w"), 5);
+        assertEquals(2, log.length());
+        assertEquals("🤖 w", log.getJSONObject(0).getString("text"));
+        assertEquals("d", log.getJSONObject(1).getString("text"));
+    }
 }

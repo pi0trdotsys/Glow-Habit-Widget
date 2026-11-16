@@ -9,9 +9,9 @@ import { MonthCalendar } from "@/components/MonthCalendar";
 import { ForecastHitRate } from "@/components/RiskCard";
 import { AVOID_COLOR, HABIT_COLOR_VAR } from "@/lib/habits/colors";
 import { MonthsView, TrendView } from "@/components/LongStats";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { L, isEn } from "@/lib/i18n";
-import { coachSupported } from "@/lib/coach";
+import { coachSupported, recapBlocks, recaps, type Recap } from "@/lib/coach";
 import { ChevronRight } from "lucide-react";
 
 type Tab = "week" | "trend" | "months";
@@ -111,22 +111,7 @@ function ReportPage() {
           )}
         </p>
       </header>
-      {coachSupported() && (
-        <Link
-          to="/recap"
-          className="mx-5 mb-4 flex items-center justify-between gap-3 rounded-2xl bg-card px-4 py-3 text-sm"
-          data-recaps-link
-        >
-          <span>
-            🍻 {L("Podsumowania dnia", "Day recaps")}
-            <span className="text-muted-foreground">
-              {" "}
-              · {L("z komentarzami 🤖", "with the 🤖 comments")}
-            </span>
-          </span>
-          <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
-        </Link>
-      )}
+      <RecapsLink />
       {tabs}
 
       <section className="mx-5 rounded-3xl bg-card p-5">
@@ -313,5 +298,38 @@ function MiniBar({ value, max, color }: { value: number; max: number; color: str
         style={{ width: `${Math.min(100, (value / max) * 100)}%`, backgroundColor: color }}
       />
     </div>
+  );
+}
+
+/**
+ * The way to every day recap and Sunday's week (with the 🤖 comments): the last week's comment
+ * shows right here.
+ */
+function RecapsLink() {
+  const [week, setWeek] = useState<Recap | null>(null);
+  useEffect(() => {
+    void recaps().then((items) => setWeek(items.find((r) => r.kind === "week") ?? null));
+  }, []);
+  if (!coachSupported()) return null;
+  const lead = week ? recapBlocks(week.text)[0] : null;
+  return (
+    <Link to="/recap" className="mx-5 mb-4 block rounded-2xl bg-card px-4 py-3" data-recaps-link>
+      {week && lead && (
+        <div className="mb-2" data-week-comment>
+          <div className="text-sm font-semibold">{week.title}</div>
+          <p className="mt-1 line-clamp-4 text-sm leading-relaxed">{lead}</p>
+        </div>
+      )}
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span>
+          🍻 {L("Podsumowania dnia i tygodnia", "Day and week recaps")}
+          <span className="text-muted-foreground">
+            {" "}
+            · {L("z komentarzami 🤖", "with the 🤖 comments")}
+          </span>
+        </span>
+        <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
+      </div>
+    </Link>
   );
 }

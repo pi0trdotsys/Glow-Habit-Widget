@@ -52,6 +52,7 @@ import { jabSnapshot } from "@/lib/habits/jabs";
 import { syncJabs } from "@/lib/jab-sync";
 import { discreetLabel, isDiscreet } from "@/lib/habits/discreet";
 import { summarySnapshot } from "@/lib/habits/day-summary";
+import { weekFacts } from "@/lib/habits/coach-facts";
 
 const STATE_KEY = "widget_state";
 const PENDING_KEY = "widget_pending";
@@ -230,6 +231,8 @@ export function buildState() {
       today,
     ),
     roast: weeklyRoast(open, completions, level, userName, focus),
+    // Sunday's "Twój tydzień" (HabitNotifier.postWeek) and the coach's facts for it.
+    week: weekFacts(open, completions, today),
     // Forbidden habits from yesterday still waiting for an answer (open until noon) - morning review.
     yesterday: {
       date: todayKey(addDays(today, -1)),

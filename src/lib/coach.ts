@@ -10,6 +10,10 @@ interface CoachPlugin {
   testSummary(): Promise<SummaryTestResult>;
   lastRecap(): Promise<Partial<Recap>>;
   recaps(): Promise<{ items?: Recap[] }>;
+  testWeek(): Promise<SummaryTestResult>;
+  coachComment(opts: {
+    facts: object;
+  }): Promise<{ text?: string | null; error?: string; ms?: number }>;
 }
 
 /** "coach" = sent, the AI comment follows; "plain" = sent without a server; else why not. */
@@ -62,6 +66,8 @@ export async function testSummary(): Promise<SummaryTestResult> {
 export interface Recap {
   /** "yyyy-MM-dd" (missing on the one recap saved before the history existed). */
   day?: string;
+  /** "day" (the evening recap, the default) or "week" (Sunday's). */
+  kind?: "day" | "week";
   title: string;
   text: string;
   at: number;
@@ -121,4 +127,26 @@ export function recapBlocks(text: string): string[] {
     .split(/\n\s*\n/)
     .map((b) => b.trim())
     .filter(Boolean);
+}
+
+/** "Wyślij próbny tydzień": Sunday's recap now, then the coach's comment on it. */
+export async function testWeek(): Promise<SummaryTestResult> {
+  if (!coachSupported()) return { status: "nothing" };
+  try {
+    return await Native.testWeek();
+  } catch (e) {
+    return { status: "coach", error: String(e) };
+  }
+}
+
+/** A comment from the coach for facts built here (the forecast): text with 🤖, or why not. */
+export async function coachComment(
+  facts: object,
+): Promise<{ text?: string | null; error?: string; ms?: number }> {
+  if (!coachSupported()) return { error: "off" };
+  try {
+    return await Native.coachComment({ facts });
+  } catch (e) {
+    return { error: String(e) };
+  }
 }

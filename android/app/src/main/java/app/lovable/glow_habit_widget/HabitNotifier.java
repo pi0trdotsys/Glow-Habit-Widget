@@ -793,7 +793,7 @@ final class HabitNotifier {
         p.edit().putString(KEY_LAST_SUMMARY, WidgetShared.today()).apply();
         String[] t = postSummary(c, rows, summary, isQuiet(bedtime(s), wake(s), now));
         // Your own coach server (optional): a comment of its own replaces the opener in a minute.
-        if (CoachClient.configured(c)) CoachJob.schedule(c, t[0], t[5], t[4], t[3]);
+        if (CoachClient.configured(c)) CoachJob.schedule(c, "day", t[0], t[5], t[4], t[3]);
     }
 
     /** Composes and posts the recap; with a coach server, its comment follows (CoachJob). */
@@ -841,14 +841,14 @@ final class HabitNotifier {
             b.setContentIntent(open);
             b.addAction(0, en ? "📖 Full recap" : "📖 Całe podsumowanie", open);
         }
-        saveRecap(c, title, whole, whole.startsWith("🤖"));
+        saveRecap(c, "day", title, whole, whole.startsWith("🤖"));
         return b;
     }
 
-    private static void saveRecap(Context c, String title, String text, boolean ai) {
+    private static void saveRecap(Context c, String kind, String title, String text, boolean ai) {
         try {
-            JSONObject r = new JSONObject().put("day", WidgetShared.today()).put("title", title)
-                .put("text", text).put("at", System.currentTimeMillis()).put("ai", ai);
+            JSONObject r = new JSONObject().put("day", WidgetShared.today()).put("kind", kind)
+                .put("title", title).put("text", text).put("at", System.currentTimeMillis()).put("ai", ai);
             SharedPreferences p = own(c);
             JSONArray log;
             try {
@@ -856,22 +856,23 @@ final class HabitNotifier {
             } catch (Exception e) {
                 log = new JSONArray();
             }
-            p.edit().putString(KEY_RECAP, r.toString())
-                .putString(KEY_RECAPS, pushRecap(log, r, RECAPS_KEPT).toString()).apply();
+            SharedPreferences.Editor e = p.edit().putString(KEY_RECAPS, pushRecap(log, r, RECAPS_KEPT).toString());
+            if ("day".equals(kind)) e.putString(KEY_RECAP, r.toString());
+            e.apply();
         } catch (Exception ignored) {
         }
     }
 
     /**
-     * The recap history, newest first: `r` replaces the one of its day (the AI comment arriving,
-     * a test one), older ones stay; at most `max`. Pure (RecapLogTest).
+     * The recap history, newest first: `r` replaces the one of its day and kind ("day" / "week":
+     * the AI comment arriving, a test one), older ones stay; at most `max`. Pure (DaySummaryTest).
      */
     static JSONArray pushRecap(JSONArray log, JSONObject r, int max) {
         JSONArray out = new JSONArray().put(r);
-        String day = r.optString("day");
+        String key = r.optString("day") + "/" + r.optString("kind", "day");
         for (int i = 0; i < log.length() && out.length() < max; i++) {
             JSONObject o = log.optJSONObject(i);
-            if (o != null && !day.equals(o.optString("day"))) out.put(o);
+            if (o != null && !key.equals(o.optString("day") + "/" + o.optString("kind", "day"))) out.put(o);
         }
         return out;
     }
@@ -1095,19 +1096,114 @@ final class HabitNotifier {
         if (cal.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY || now < ROAST_MINUTE || now - ROAST_MINUTE > 120) return;
         SharedPreferences p = own(c);
         if (WidgetShared.today().equals(p.getString(KEY_LAST_ROAST, ""))) return;
-        String roast = WidgetShared.state(c).optString("roast", "");
         p.edit().putString(KEY_LAST_ROAST, WidgetShared.today()).apply();
-        if (roast.isEmpty()) return;
+        String[] w = postWeek(c);
+        // Your own coach server (optional): its comment on the week follows in a minute.
+        if (w != null && CoachClient.configured(c)) CoachJob.schedule(c, "week", w[0], w[1], w[2], w[3]);
+    }
+
+    /**
+     * "Podsumowanie tygodnia" (Sunday 20:00): the week in numbers (snapshot "week", see
+     * coach-facts.ts) + Szpila's roast; also kept in the app's recap history. Returns
+     * [title, stats, stats + roast, coach facts] or null when there's nothing to say.
+     */
+    private static String[] postWeek(Context c) {
+        JSONObject state = WidgetShared.state(c);
+        boolean en = WidgetShared.en(c);
+        JSONObject wk = state.optJSONObject("week");
+        String roast = state.optString("roast", "").trim();
+        String stats = weekStats(wk, en);
+        if (roast.isEmpty() && stats.isEmpty()) return null;
+        String title = weekTitle(wk, en);
+        String whole = stats.isEmpty() ? roast : roast.isEmpty() ? stats : stats + "\n\n" + roast;
+        String first = roast.isEmpty() ? stats.split("\n")[0] : roast;
+        post(c, ID_ROAST, weekBuilder(c, title, first, roast.isEmpty() ? stats : roast + (stats.isEmpty() ? "" : "\n\n" + stats)));
+        saveRecap(c, "week", title, whole, false);
+        JSONObject summary = state.optJSONObject("summary");
+        String facts = weekFacts(wk, state.optString("userName", ""),
+            summary != null ? summary.optString("level", "hard") : "hard", en);
+        return new String[]{title, stats, whole, facts};
+    }
+
+    private static NotificationCompat.Builder weekBuilder(Context c, String title, String text, String big) {
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CH_SZPILA)
             .setSmallIcon(R.drawable.ic_stat_szpila)
             .setColor(WidgetShared.AVOID)
-            .setContentTitle(EMOJI_NORMAL + WidgetShared.tr(c, " Szpila: podsumowanie tygodnia", " Szpila: weekly roast"))
-            .setContentText(roast)
-            .setStyle(new NotificationCompat.BigTextStyle().bigText(roast))
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(new NotificationCompat.BigTextStyle().bigText(big))
             .setAutoCancel(true);
-        PendingIntent open = WidgetShared.openAppIntent(c, 7300);
-        if (open != null) b.setContentIntent(open);
-        post(c, ID_ROAST, b);
+        PendingIntent open = WidgetShared.openAppIntent(c, 7300, "/recap");
+        if (open != null) {
+            b.setContentIntent(open);
+            b.addAction(0, WidgetShared.en(c) ? "📖 Whole week" : "📖 Cały tydzień", open);
+        }
+        return b;
+    }
+
+    /** The coach's comment on the week: into the history, and the notification if still there. */
+    static void coachWeek(Context c, String title, String comment, String stats, String whole) {
+        String text = coachText(comment);
+        saveRecap(c, "week", title, text + "\n\n" + whole, true);
+        if (!canNotify(c) || !isShowing(c, ID_ROAST)) return;
+        post(c, ID_ROAST, weekBuilder(c, title, text, stats.isEmpty() ? text : text + "\n\n" + stats)
+            .setSilent(true).setOnlyAlertOnce(true));
+    }
+
+    /** "Wyślij próbny tydzień" (Settings): [status, title, stats, whole, facts]; see testSummary. */
+    static String[] testWeek(Context c) {
+        if (!canNotify(c)) return new String[]{"blocked"};
+        String[] w = postWeek(c);
+        if (w == null) return new String[]{"nothing"};
+        return new String[]{CoachClient.configured(c) ? "coach" : "plain", w[0], w[1], w[2], w[3]};
+    }
+
+    /** "🗓️ Tydzień · 62%". Pure. */
+    static String weekTitle(JSONObject wk, boolean en) {
+        String t = en ? "🗓️ Your week" : "🗓️ Twój tydzień";
+        return wk != null && wk.has("pct") ? t + " · " + wk.optInt("pct") + "%" : t;
+    }
+
+    /** "📊 62% · tydzień temu 55%", best / weakest habits, slips. "" without data. Pure. */
+    static String weekStats(JSONObject wk, boolean en) {
+        if (wk == null || !wk.has("pct")) return "";
+        StringBuilder b = new StringBuilder("📊 ").append(wk.optInt("pct")).append("%");
+        if (!wk.isNull("prev") && wk.has("prev")) {
+            b.append(en ? " · last week " : " · tydzień temu ").append(wk.optInt("prev")).append("%");
+        }
+        List<String> best = names(wk.optJSONArray("best"));
+        List<String> worst = names(wk.optJSONArray("worst"));
+        if (!best.isEmpty()) b.append("\n✅ ").append(en ? "Best: " : "Najlepiej: ").append(DaySummary.join(best, 3, en));
+        if (!worst.isEmpty()) b.append("\n⏳ ").append(en ? "Weakest: " : "Najsłabiej: ").append(DaySummary.join(worst, 3, en));
+        int slips = wk.optInt("slips");
+        if (slips > 0) b.append("\n💥 ").append(en ? "Slips: " : "Wpadki: ").append(slips);
+        return b.toString();
+    }
+
+    /** What the coach server gets for the week (names and words, no discreet habits). Pure. */
+    static String weekFacts(JSONObject wk, String name, String level, boolean en) {
+        JSONObject f = new JSONObject();
+        try {
+            f.put("kind", "week").put("lang", en ? "en" : "pl").put("name", name == null ? "" : name)
+                .put("level", level);
+            if (wk != null) {
+                f.put("pct", wk.optInt("pct")).put("slips", wk.optInt("slips"))
+                    .put("best", new JSONArray(names(wk.optJSONArray("best"))))
+                    .put("worst", new JSONArray(names(wk.optJSONArray("worst"))));
+                if (wk.has("prev") && !wk.isNull("prev")) f.put("prev", wk.optInt("prev"));
+            }
+        } catch (Exception ignored) {
+        }
+        return f.toString();
+    }
+
+    private static List<String> names(JSONArray a) {
+        List<String> out = new ArrayList<>();
+        for (int i = 0; a != null && i < a.length(); i++) {
+            String n = a.optString(i, "").trim();
+            if (!n.isEmpty()) out.add(n);
+        }
+        return out;
     }
 
     // ------------------------------------------------------------------

@@ -11,20 +11,25 @@ import android.os.PersistableBundle;
 import org.json.JSONObject;
 
 /**
- * "Podsumowanie dnia" with the coach: the recap goes out at once with the app's own opener;
- * this job (network required, may take a minute on a CPU-only server) asks the coach server
- * for a comment and, if the recap is still on screen, swaps the opener for it - silently.
+ * The coach's comments: the day recap ("day") and Sunday's week ("week") go out at once with
+ * the app's own text; this job (network required, may take a minute on a CPU-only server) asks
+ * the coach server for a comment, keeps it in the app's recap history and, if the notification
+ * is still on screen, swaps it in - silently.
  */
 public class CoachJob extends JobService {
-    private static final int JOB_ID = 7272;
+    private static final int JOB_DAY = 7272;
+    private static final int JOB_WEEK = 7273;
     private Thread worker;
 
-    static void schedule(Context c, String title, String tip, String rest, String facts) {
+    /** `shown` = what goes into the notification under the comment, `rest` = the whole rest. */
+    static void schedule(Context c, String kind, String title, String shown, String rest, String facts) {
         JobScheduler js = (JobScheduler) c.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         if (js == null) return;
+        int jobId = "week".equals(kind) ? JOB_WEEK : JOB_DAY;
         PersistableBundle extras = new PersistableBundle();
+        extras.putString("kind", kind);
         extras.putString("title", title);
-        extras.putString("tip", tip);
+        extras.putString("tip", shown);
         extras.putString("rest", rest);
         extras.putString("facts", facts);
         extras.putString("day", WidgetShared.today());
@@ -33,7 +38,7 @@ public class CoachJob extends JobService {
         // ordinary jobs back for a long time (HyperOS). Older / refused: a normal job with a deadline.
         if (android.os.Build.VERSION.SDK_INT >= 31) {
             try {
-                int r = js.schedule(new JobInfo.Builder(JOB_ID, self)
+                int r = js.schedule(new JobInfo.Builder(jobId, self)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                     .setExpedited(true)
                     .setExtras(extras)
@@ -43,7 +48,7 @@ public class CoachJob extends JobService {
             }
         }
         try {
-            js.schedule(new JobInfo.Builder(JOB_ID, self)
+            js.schedule(new JobInfo.Builder(jobId, self)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setOverrideDeadline(30 * 60 * 1000L) // no network within 30 min: run anyway, it fails quietly
                 .setExtras(extras)
@@ -61,7 +66,7 @@ public class CoachJob extends JobService {
                 // a recap from an earlier day isn't worth a comment any more
                 if (WidgetShared.today().equals(x.getString("day", ""))) {
                     String text = CoachClient.comment(c, new JSONObject(x.getString("facts", "{}")));
-                    if (text != null) HabitNotifier.coachSummary(c, x.getString("title", ""), text,
+                    if (text != null) deliver(c, x.getString("kind", "day"), x.getString("title", ""), text,
                         x.getString("tip", ""), x.getString("rest", ""));
                 }
             } catch (Exception ignored) {
@@ -72,6 +77,12 @@ public class CoachJob extends JobService {
         }, "szpila-coach");
         worker.start();
         return true;
+    }
+
+    /** The comment to where its kind goes (the job and the Settings test both end here). */
+    static void deliver(Context c, String kind, String title, String comment, String shown, String rest) {
+        if ("week".equals(kind)) HabitNotifier.coachWeek(c, title, comment, shown, rest);
+        else HabitNotifier.coachSummary(c, title, comment, shown, rest);
     }
 
     @Override

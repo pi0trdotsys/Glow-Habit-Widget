@@ -54,7 +54,10 @@ import {
   setCoach,
   testCoach,
   testSummary,
+  testWeek,
+  type SummaryTestResult,
 } from "@/lib/coach";
+import { requestForecast } from "@/lib/ai-forecast";
 import { L, pick } from "@/lib/i18n";
 import { StepsSources } from "@/components/StepsSources";
 import { KropiSource } from "@/components/KropiSource";
@@ -957,38 +960,59 @@ function DaySummaryCard({
               `Today around ${formatMinute(at)}. In a few days it adapts to your evenings.`,
             )}
       </p>
-      {on && <TestSummaryButton />}
+      {on && <TestCoachButton kind="day" />}
       {on && <CoachBox />}
+      {on && <TestCoachButton kind="week" />}
+      {on && <TestCoachButton kind="forecast" />}
     </div>
   );
 }
 
 /** Sends today's recap right now - to see it (and the AI comment) without waiting for the evening. */
-function TestSummaryButton() {
+type TestKind = "day" | "week" | "forecast";
+
+/** "Wyślij próbne …": the day recap, Sunday's week or the morning forecast, right now. */
+function TestCoachButton({ kind }: { kind: TestKind }) {
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   if (!coachSupported()) return null;
+  const sending = L("Wysyłam…", "Sending…");
   const send = async () => {
     setBusy(true);
-    setMsg(L("Wysyłam…", "Sending…"));
+    setMsg(sending);
     try {
       refreshNative(); // the newest state first
       await new Promise((r) => setTimeout(r, 600));
-      const p = testSummary();
-      // the recap is out at once; the AI comment takes a while on a CPU-only server
-      setTimeout(
+      // the notification is out at once; the AI comment takes a while on a CPU-only server
+      const waiting = setTimeout(
         () =>
           setMsg((m) =>
-            m === L("Wysyłam…", "Sending…")
-              ? L(
-                  "Podsumowanie wysłane, czekam na komentarz AI (do minuty)…",
-                  "Recap sent, waiting for the AI comment (up to a minute)…",
-                )
+            m === sending
+              ? kind === "forecast"
+                ? L(
+                    "Czekam na prognozę AI (do minuty)…",
+                    "Waiting for the AI forecast (up to a minute)…",
+                  )
+                : L(
+                    "Wysłane, czekam na komentarz AI (do minuty)…",
+                    "Sent, waiting for the AI comment (up to a minute)…",
+                  )
               : m,
           ),
         1500,
       );
-      const r = await p;
+      const r: SummaryTestResult =
+        kind === "forecast"
+          ? await requestForecast(new Date(), true).then((f) => ({
+              status: f.error === "nothing" ? "nothing" : f.error === "off" ? "plain" : "coach",
+              comment: f.text,
+              error: f.error,
+              ms: f.ms,
+            }))
+          : kind === "week"
+            ? await testWeek()
+            : await testSummary();
+      clearTimeout(waiting);
       const s = r.ms ? ` (${Math.round(r.ms / 1000)} s)` : "";
       setMsg(
         r.status === "plain"
@@ -996,7 +1020,9 @@ function TestSummaryButton() {
           : r.status === "blocked"
             ? L("Powiadomienia są wyłączone.", "Notifications are off.")
             : r.status === "nothing"
-              ? L("Nie ma dziś zadań do podsumowania.", "No habits to sum up today.")
+              ? kind === "week"
+                ? L("Za mało danych z tego tygodnia.", "Not enough data from this week.")
+                : L("Nie ma dziś zadań.", "No habits today.")
               : r.comment
                 ? L(`Gotowe${s}: ${r.comment}`, `Done${s}: ${r.comment}`)
                 : r.error === "token"
@@ -1015,15 +1041,20 @@ function TestSummaryButton() {
       setBusy(false);
     }
   };
+  const label = {
+    day: L("Wyślij próbne podsumowanie dnia", "Send a test day recap"),
+    week: L("Wyślij próbne podsumowanie tygodnia", "Send a test week recap"),
+    forecast: L("Napisz próbną prognozę na dziś", "Write a test forecast for today"),
+  }[kind];
   return (
-    <div className="mt-3" data-test-summary>
+    <div className="mt-3" data-test-coach={kind}>
       <button
         type="button"
         disabled={busy}
         onClick={() => void send()}
         className="rounded-full bg-background px-4 py-2 text-sm font-medium disabled:opacity-50"
       >
-        {L("Wyślij próbne podsumowanie", "Send a test recap")}
+        {label}
       </button>
       {msg && <p className="mt-2 text-xs text-muted-foreground">{msg}</p>}
     </div>

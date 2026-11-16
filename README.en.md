@@ -190,6 +190,7 @@ switch away.
   Optionally a small AI model on your own server writes the comment
   ([server/szpila-coach](server/szpila-coach)). Every recap, the 🤖 comments
   included, stays in the app: a card on the Today screen and the history in Report.
+  The same server also writes Sunday's comment on the week and the morning forecast.
 
 ## ◉ No need to open the app
 

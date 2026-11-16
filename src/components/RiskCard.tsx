@@ -26,9 +26,12 @@ export function useRiskForecast(now: Date): ForecastItem[] {
   );
 }
 
-/** Today's slide: "Prognoza na dziś" with Szpila's warning per risky habit. */
-export function RiskCard({ items }: { items: ForecastItem[] }) {
-  if (items.length === 0) return null;
+/**
+ * Today's slide: "Prognoza na dziś" with Szpila's warning per risky habit; with your own AI
+ * server, its forecast (🤖, see ai-forecast.ts) leads and the app's numbers follow, smaller.
+ */
+export function RiskCard({ items, ai }: { items: ForecastItem[]; ai?: string | null }) {
+  if (items.length === 0 && !ai) return null;
   return (
     <section
       data-risk-slide
@@ -41,9 +44,18 @@ export function RiskCard({ items }: { items: ForecastItem[] }) {
       <div className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
         🔮 {L("Prognoza na dziś", "Today's forecast")}
       </div>
-      <ul className="mt-1.5 space-y-1.5">
+      {ai && (
+        <p className="mt-1.5 text-sm leading-snug" data-risk-ai>
+          {ai}
+        </p>
+      )}
+      <ul className={ai ? "mt-2 space-y-1" : "mt-1.5 space-y-1.5"}>
         {items.map((i) => (
-          <li key={i.habitId} className="text-sm leading-snug" data-risk-item={i.habitId}>
+          <li
+            key={i.habitId}
+            className={ai ? "text-xs leading-snug text-muted-foreground" : "text-sm leading-snug"}
+            data-risk-item={i.habitId}
+          >
             {i.text}
           </li>
         ))}

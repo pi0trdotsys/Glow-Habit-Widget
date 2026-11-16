@@ -373,6 +373,21 @@ public class HabitWidgetPlugin extends Plugin {
     public void testSummary(PluginCall call) {
         final android.content.Context c = getContext();
         final String[] r = HabitNotifier.testSummary(c);
+        // [status, title, opener, whole, facts, rest, tip]
+        runCoachTest(call, c, r, "day", r.length > 6 ? r[6] : "", r.length > 5 ? r[5] : "", r.length > 4 ? r[4] : "");
+    }
+
+    /** "Wyślij próbny tydzień": the weekly recap now + the coach's comment, like testSummary. */
+    @PluginMethod
+    public void testWeek(PluginCall call) {
+        final android.content.Context c = getContext();
+        final String[] r = HabitNotifier.testWeek(c);
+        // [status, title, stats, whole, facts]
+        runCoachTest(call, c, r, "week", r.length > 2 ? r[2] : "", r.length > 3 ? r[3] : "", r.length > 4 ? r[4] : "");
+    }
+
+    private void runCoachTest(PluginCall call, android.content.Context c, String[] r, String kind,
+            String shown, String rest, String facts) {
         JSObject ret = new JSObject();
         ret.put("status", r[0]);
         if (!"coach".equals(r[0])) {
@@ -382,8 +397,8 @@ public class HabitWidgetPlugin extends Plugin {
         new Thread(() -> {
             long t0 = System.currentTimeMillis();
             try {
-                String comment = CoachClient.comment(c, new org.json.JSONObject(r[4]));
-                if (comment != null) HabitNotifier.coachSummary(c, r[1], comment, r[6], r[5]);
+                String comment = CoachClient.comment(c, new org.json.JSONObject(facts));
+                if (comment != null) CoachJob.deliver(c, kind, r[1], comment, shown, rest);
                 ret.put("comment", comment != null ? HabitNotifier.coachText(comment) : null);
                 if (comment == null) ret.put("error", "rejected");
             } catch (SecurityException e) {
@@ -393,7 +408,36 @@ public class HabitWidgetPlugin extends Plugin {
             }
             ret.put("ms", System.currentTimeMillis() - t0);
             call.resolve(ret);
-        }, "coach-test-summary").start();
+        }, "coach-test-" + kind).start();
+    }
+
+    /**
+     * A comment straight from the coach server for facts the web side built ("forecast"):
+     * { text (with 🤖) | null, error?, ms } - off the main thread; the token never leaves here.
+     */
+    @PluginMethod
+    public void coachComment(PluginCall call) {
+        final android.content.Context c = getContext();
+        final JSObject facts = call.getObject("facts", new JSObject());
+        new Thread(() -> {
+            JSObject ret = new JSObject();
+            long t0 = System.currentTimeMillis();
+            try {
+                if (!CoachClient.configured(c)) {
+                    ret.put("error", "off");
+                } else {
+                    String comment = CoachClient.comment(c, new org.json.JSONObject(facts.toString()));
+                    ret.put("text", comment != null ? HabitNotifier.coachText(comment) : null);
+                    if (comment == null) ret.put("error", "rejected");
+                }
+            } catch (SecurityException e) {
+                ret.put("error", "token");
+            } catch (Exception e) {
+                ret.put("error", e.getClass().getSimpleName() + ": " + e.getMessage());
+            }
+            ret.put("ms", System.currentTimeMillis() - t0);
+            call.resolve(ret);
+        }, "coach-comment").start();
     }
 
     /** The last day recap as shown: { title, text, at, ai } or {} (the "/recap" screen). */

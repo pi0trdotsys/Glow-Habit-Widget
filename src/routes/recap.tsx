@@ -6,7 +6,7 @@ import { recapBlocks, recapDay, recaps, type Recap } from "@/lib/coach";
 import { isEn, L } from "@/lib/i18n";
 
 export const Route = createFileRoute("/recap")({
-  head: () => ({ meta: [{ title: L("Podsumowania dnia - Szpila", "Day recaps - Szpila") }] }),
+  head: () => ({ meta: [{ title: L("Podsumowania - Szpila", "Recaps - Szpila") }] }),
   component: RecapPage,
 });
 
@@ -33,7 +33,7 @@ function RecapPage() {
           <ChevronLeft size={22} />
         </Link>
         <h1 className="font-display text-2xl font-bold tracking-tight">
-          {L("Podsumowania dnia", "Day recaps")}
+          {L("Podsumowania", "Recaps")}
         </h1>
       </header>
       <div className="space-y-3 px-5" data-recap>
@@ -46,7 +46,7 @@ function RecapPage() {
           </p>
         ) : (
           items.map((r, i) => {
-            const key = `${recapDay(r)}-${r.at}`;
+            const key = `${recapDay(r)}-${r.kind ?? "day"}-${r.at}`;
             const expanded = i === 0 || open === key;
             return (
               <RecapCard

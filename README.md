@@ -191,7 +191,8 @@ przełącznikiem.
   z tego, kiedy zwykle kończysz dzień. Opcjonalnie komentarz dopisuje mały model AI
   na twoim własnym serwerze ([server/szpila-coach](server/szpila-coach)). Wszystkie
   podsumowania, razem z komentarzami 🤖, zostają w aplikacji: karta na ekranie Dziś
-  i historia w Raporcie.
+  i historia w Raporcie. Ten sam serwer pisze też niedzielny komentarz do tygodnia
+  i poranną prognozę na dziś.
 
 ## ◉ Bez otwierania aplikacji
 

@@ -6,6 +6,7 @@ import { FocusCard } from "./FocusCard";
 import { useHabits } from "@/lib/habits/store";
 import { WishReadyCard, useWishReady } from "./WishReadyCard";
 import { RiskCard, useRiskForecast } from "./RiskCard";
+import { useAiForecast } from "@/lib/ai-forecast";
 import type { SzpilaSay } from "@/lib/habits/szpila";
 import { L } from "@/lib/i18n";
 
@@ -78,13 +79,14 @@ export function StatusCarousel({
   const hasHabits = useHabits((s) => s.habits.length > 0);
   const wishReady = useWishReady(now);
   const risk = useRiskForecast(now);
+  const aiRisk = useAiForecast(now);
   const ids = statusSlideIds({
     morning: guard.morning.length > 0,
     bill: !!bill,
     social: !!guard.social,
     focus: hasHabits,
     wish: wishReady.length > 0,
-    risk: risk.length > 0,
+    risk: risk.length > 0 || !!aiRisk,
   });
   const track = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
@@ -110,7 +112,7 @@ export function StatusCarousel({
     social: guard.social ? <SocialTodayCard {...guard.social} /> : null,
     focus: <FocusCard now={now} />,
     wish: <WishReadyCard ready={wishReady} />,
-    risk: <RiskCard items={risk} />,
+    risk: <RiskCard items={risk} ai={aiRisk} />,
   };
 
   const onScroll = () => {

@@ -1,9 +1,17 @@
 # szpila-coach
 
-Opcjonalny serwer do „Podsumowania dnia”: mały lokalny model (Ollama) dopisuje komentarz jak
-od kumpla. Telefon wysyła tylko procent dnia i nazwy zadań (nigdy dyskretnych), a dostaje dwa
-zdania. Każda odpowiedź jest sprawdzana (bez liczb, bez form zależnych od płci, bez
-zawyżania wyniku, bez formatowania); gdy się nie uda, aplikacja zostaje przy własnym tekście.
+Opcjonalny serwer dla Szpili: mały lokalny model (Ollama) pisze komentarze jak od kumpla.
+Jeden endpoint, `POST /v1/comment`, pole `kind`:
+
+- `day` (domyślnie): wieczorne podsumowanie dnia (procent, co zrobione, czego zabrakło, wpadki),
+- `week`: niedzielny komentarz do tygodnia (procent vs poprzedni tydzień, najlepsze i najsłabsze),
+- `forecast`: poranna prognoza na dziś (zagrożone zadania i dlaczego, plan na dziś).
+
+Telefon wysyła tylko procenty i nazwy zadań (nigdy dyskretnych). Każda odpowiedź jest
+sprawdzana: bez liczb, bez form zależnych od płci, ton musi pasować do wyniku (żadnych pochwał
+przy słabym dniu), poprawne imię, bez zadań spoza listy, bez formatowania. Zdanie łamiące
+regułę jest wycinane; gdy nic dobrego nie zostanie, serwer próbuje ponownie, a w ostateczności
+aplikacja zostaje przy własnym tekście. W logach są tylko kody powodów, nigdy treść.
 
 ## Uruchomienie
 
