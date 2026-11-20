@@ -68,7 +68,7 @@ public class NextWidgetTest {
         assertEquals(NextWidgetContent.Mode.NORMAL, c.mode);
         assertEquals("w", c.main.optString("id"));
         assertEquals("Picie wody", c.name);
-        assertEquals("3/8 szklanek · za 20 min", c.status);
+        assertEquals("3/8 · za 20 min", c.status); // the unit goes when it would not fit
         assertEquals(NextWidgetContent.C_ACCENT, c.statusColor);
         assertEquals(0xFF4CC3FF, c.ringColor);
         assertEquals(3f / 8f, c.ringFraction, 1e-6);
@@ -81,17 +81,17 @@ public class NextWidgetTest {
         NextWidgetContent.Inputs in = day();
         in.plan.set(0, water(3, NOON - 40));
         NextWidgetContent.Content c = NextWidgetContent.build(in);
-        assertEquals("⏰ 40 min · 3/8 szklanek", c.status);
+        assertEquals("⏰ 40 min · 3/8", c.status);
         assertEquals(NextWidgetContent.C_RED, c.statusColor);
         // due within the last half hour: "teraz", amber
         in.plan.set(0, water(3, NOON - 10));
         c = NextWidgetContent.build(in);
-        assertEquals("teraz · 3/8 szklanek", c.status);
+        assertEquals("teraz · 3/8", c.status);
         assertEquals(NextWidgetContent.C_AMBER, c.statusColor);
         // an hour late: the cat gets angry
         in.plan.set(0, water(3, NOON - 80));
         c = NextWidgetContent.build(in);
-        assertEquals("⏰ 1 h · 3/8 szklanek", c.status);
+        assertEquals("⏰ 1 h · 3/8", c.status);
         assertEquals(NextWidgetContent.ANGRY, c.mood);
         // single check without an amount
         assertEquals("⏰ 2 h", NextWidgetContent.wideStatus(check("t", "Zęby", 600), 600, NOON, false));
@@ -324,7 +324,7 @@ public class NextWidgetTest {
         in.usedMin = 42;
         in.limitMin = 60;
         NextWidgetContent.Content c = NextWidgetContent.build(in);
-        assertEquals("3/8 szklanek · in 20 min", c.status);
+        assertEquals("3/8 · in 20 min", c.status);
         List<NextWidgetContent.Line> t = c.ticker;
         assertEquals("🔥 5-day streak (best 9)", t.get(1).text);
         assertEquals("Today 5/11 · 45%", t.get(2).text);

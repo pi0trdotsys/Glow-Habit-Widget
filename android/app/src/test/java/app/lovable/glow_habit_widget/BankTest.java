@@ -198,11 +198,11 @@ public class BankTest {
         assertTrue(in.overLimit);
         NextWidgetContent.Content c = NextWidgetContent.build(in);
         assertEquals(NextWidgetContent.Mode.OVER_LIMIT, c.mode);
-        assertEquals("💰 Bank pusty · +10 min za zadanie", c.line.text);
+        assertEquals("💰 Bank pusty · +10 min/zadanie", c.line.text);
         assertEquals("w", c.main.optString("id")); // the next habit = the way to earn
         in.en = true;
         in.bankPerHabit = 15;
-        assertEquals("💰 Bank empty · +15 min per habit", NextWidgetContent.build(in).line.text);
+        assertEquals("💰 Bank empty · +15 min/habit", NextWidgetContent.build(in).line.text);
         // fixed mode keeps "limit 0 = off"
         in.bank = false;
         NextWidgetContent.guard(in, DayGuard.DAY, 0, true, 0, 0, false, false, 0, 0, 300);

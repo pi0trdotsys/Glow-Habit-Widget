@@ -181,8 +181,8 @@ final class NextWidgetContent {
             case OVER_LIMIT:
                 if (next != null) habit(c, next, in); else done(c, in);
                 c.line = in.bank
-                    ? new Line("limit", en ? "💰 Bank empty · +" + in.bankPerHabit + " min per habit"
-                        : "💰 Bank pusty · +" + in.bankPerHabit + " min za zadanie", C_RED)
+                    ? new Line("limit", en ? "💰 Bank empty · +" + in.bankPerHabit + " min/habit"
+                        : "💰 Bank pusty · +" + in.bankPerHabit + " min/zadanie", C_RED)
                     : new Line("limit", "📱 " + in.usedMin + "/" + in.limitMin + " min · "
                         + (en ? "limit exceeded" : "limit przekroczony"), C_RED);
                 mood = ANGRY;
@@ -323,13 +323,23 @@ final class NextWidgetContent {
         return WidgetShared.whenLabel(at, now, en);
     }
 
+    /**
+     * The longest wide status that still fits a 2x1 next to the ring at a readable size (a phone
+     * with bigger system fonts showed "⏰ 36 min · 0/8 …"): longer ones drop the unit.
+     */
+    static final int WIDE_STATUS_MAX = 16;
+
     /** Wide status: the amount and when; urgent first so the ellipsis never eats the delay. */
     static String wideStatus(JSONObject h, int at, int now, boolean en) {
         String when = whenShort(at, now, en);
         if (WidgetShared.isAvoid(h)) return (en ? "confirm · " : "potwierdź · ") + when;
         String amount = WidgetShared.amountText(h);
         if (amount.isEmpty()) return when;
-        return at - now <= 0 ? when + " · " + amount : amount + " · " + when;
+        String full = at - now <= 0 ? when + " · " + amount : amount + " · " + when;
+        if (full.length() <= WIDE_STATUS_MAX) return full;
+        // the ring already shows the progress: "0/8" is enough, the unit goes
+        String bare = WidgetShared.amount(h) + "/" + WidgetShared.target(h);
+        return at - now <= 0 ? when + " · " + bare : bare + " · " + when;
     }
 
     /** Red when overdue (or a forbidden habit to confirm), amber when due now, else the accent. */
