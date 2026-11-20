@@ -28,7 +28,8 @@ import java.util.Map;
  * step; tapping the text opens the app. Re-ranked on every update, including
  * the 30-min system tick and HabitNotifier's hourly alarm.
  *
- * 1x1 uses widget3_root; from ~110dp wide it's widget3_wide: name + status
+ * 1x1 uses widget3_root; from ~110dp wide it's widget3_wide (one row: the rotating line is
+ * one scrolling line), and stretched to ~100dp high widget3_tall (two lines): name + status
  * next to the ring and Szpila with a rotating line (tap the cat for the next
  * one) or the guard's banner. What to show is decided in NextWidgetContent.
  */
@@ -37,6 +38,8 @@ public class NextTaskWidgetProvider extends AppWidgetProvider {
     private static final String PREFS = "loop_next_widget";
     /** Width (dp) from which the wide layout is used. */
     static final int WIDE_MIN_DP = 110;
+    /** Height (dp) from which the wide one gets the two-line rotating line (widget3_tall). */
+    static final int TALL_MIN_DP = 100;
 
     @Override
     public void onUpdate(Context context, AppWidgetManager mgr, int[] ids) {
@@ -66,6 +69,8 @@ public class NextTaskWidgetProvider extends AppWidgetProvider {
             Map<SizeF, RemoteViews> bySize = new HashMap<>();
             bySize.put(new SizeF(40f, 40f), small);
             bySize.put(new SizeF(WIDE_MIN_DP, 40f), render(context, content, widgetId, true, opacity, theme));
+            bySize.put(new SizeF(WIDE_MIN_DP, TALL_MIN_DP),
+                render(context, content, widgetId, R.layout.widget3_tall, opacity, theme));
             rv = new RemoteViews(bySize);
         } else {
             rv = isWide(mgr, widgetId) ? render(context, content, widgetId, true, opacity, theme) : small;
@@ -132,7 +137,14 @@ public class NextTaskWidgetProvider extends AppWidgetProvider {
     /** One size of the widget in a palette (also the WidgetConfigActivity preview). */
     static RemoteViews render(Context context, NextWidgetContent.Content content, int widgetId, boolean wide,
                               int opacity, WidgetTheme theme) {
-        RemoteViews rv = new RemoteViews(context.getPackageName(), wide ? R.layout.widget3_wide : R.layout.widget3_root);
+        return render(context, content, widgetId, wide ? R.layout.widget3_wide : R.layout.widget3_root, opacity, theme);
+    }
+
+    /** `layout`: widget3_root (1x1), widget3_wide (one row, wider) or widget3_tall (two rows+). */
+    static RemoteViews render(Context context, NextWidgetContent.Content content, int widgetId, int layout,
+                              int opacity, WidgetTheme theme) {
+        boolean wide = layout != R.layout.widget3_root;
+        RemoteViews rv = new RemoteViews(context.getPackageName(), layout);
         theme.background(rv, opacity);
         rv.setTextColor(R.id.next_name, theme.text);
         JSONObject h = content.main;

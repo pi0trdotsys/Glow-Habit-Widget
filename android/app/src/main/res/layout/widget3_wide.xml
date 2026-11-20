@@ -2,9 +2,9 @@
 <!-- 2x1 (and wider) "Następne zadanie": the planner's pick in its ring (tap = hold-to-complete)
      with Szpila as a badge on it, and on the right: the name, the status and a two-line rotating
      line (tap it or the cat for the next one) or the guard's banner (morning lock, social limit,
-     bedtime). Texts shrink to fit (autoSize) instead of being cut: the two-line one takes all the
-     height left under the name and status, so bigger system fonts (HyperOS) shrink it instead of
-     pushing its second line under the edge. Same view ids as widget3_root. -->
+     bedtime). One row high there's room for three lines with bigger system fonts (HyperOS cut a
+     second rotating line under the edge), so the rotating line is ONE line here and a longer one
+     scrolls (marquee); stretched taller, widget3_tall gives it two. Same view ids as widget3_root. -->
 <!-- The background is an ImageView behind the content: its alpha is the per-widget
      opacity (WidgetPrefs.applyOpacity, chosen in WidgetConfigActivity). -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -65,7 +65,7 @@
 
     <LinearLayout
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
         android:layout_marginStart="6dp"
         android:orientation="vertical">
@@ -89,21 +89,19 @@
                 style="@style/WidgetTextShadow" />
         </LinearLayout>
 
-        <!-- the rotating line: up to two lines in all the height that's left, shrinking to fit -->
+        <!-- the rotating line: one line, a longer one scrolls -->
         <LinearLayout android:id="@+id/next_cat_row"
-            android:layout_width="match_parent" android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="2dp">
             <TextView android:id="@+id/next_ticker"
-                android:layout_width="match_parent" android:layout_height="match_parent"
-                android:gravity="center_vertical|start"
-                android:maxLines="2" android:ellipsize="end"
-                android:lineSpacingMultiplier="0.92"
-                android:autoSizeTextType="uniform"
-                android:autoSizeMinTextSize="7sp" android:autoSizeMaxTextSize="10.5sp"
-                android:autoSizeStepGranularity="0.5sp"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:ellipsize="marquee" android:marqueeRepeatLimit="marquee_forever"
+                android:focusable="true" android:focusableInTouchMode="true"
                 android:text="@string/widget_next_preview_ticker" android:textColor="#d5d8e2"
-                style="@style/WidgetTextShadow" />
+                android:textSize="10sp" style="@style/WidgetTextShadow">
+                <requestFocus />
+            </TextView>
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
